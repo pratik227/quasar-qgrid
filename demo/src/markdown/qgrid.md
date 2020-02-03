@@ -104,3 +104,15 @@ can be found [here](https://quasar-qgrid.netlify.com/examples).
 
 can be found [here](https://github.com/pratik227/quasar-qgrid/tree/master/demo).
 
+
+# Support
+
+If this helped you in any way, you can contribute to the package's long term survival by supporting me:
+
+### [💜 Support my open-source work on GitHub](https://github.com/sponsors/pratik227)
+
+Be sure to check out my sponsor page.
+
+(GitHub currently **doubles your support**! So if you support me with $10/mo, I will $20 instead! They're alchemists 🦾😉)
+
+Thank you so much!!!
