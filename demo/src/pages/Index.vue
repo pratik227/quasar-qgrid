@@ -4,6 +4,7 @@
     <json-api-viewer
       title="QGrid API"
       :json="json"
+      starting-inner-tab="style"
     />
 
     <q-page-scroller position="bottom-right" :scroll-offset="150" :offset="[18, 18]">

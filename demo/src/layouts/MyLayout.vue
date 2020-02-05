@@ -128,7 +128,7 @@
     <section class="page-header q-pa-none q-ma-none">
       <div class="text-h1 project-name">QGrid</div>
       <div class="donate"><a :href="donateUrl" target="_blank" title="Donate"><i class="fas fa-heart" style="color: blue"></i></a></div>
-      <q-btn type="a" href="locationUrl" target="_blank" class="btn q-mr-sm" label="View on GitHub" no-caps />
+      <q-btn type="a" :href="locationUrl" target="_blank" class="btn q-mr-sm" label="View on GitHub" no-caps />
       <q-btn to="/docs" class="btn q-mr-sm" label="Docs" no-caps/>
       <q-btn to="/examples" class="btn q-mr-sm" label="Examples" no-caps/>
       <q-btn type="a" :href="donateUrl" target="_blank" class="btn" label="Donate" no-caps />
@@ -150,7 +150,8 @@ export default {
   data () {
     return {
       leftDrawerOpen: true,
-      donateUrl:'https://github.com/sponsors/pratik227'
+      donateUrl:'https://github.com/sponsors/pratik227',
+      locationUrl:'https://github.com/pratik227/quasar-qgrid'
     }
   }
 }
