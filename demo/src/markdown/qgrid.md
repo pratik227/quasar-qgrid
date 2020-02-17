@@ -29,7 +29,8 @@ quasar ext remove qgrid
                         label: 'Dessert (100g serving)',
                         align: 'left',
                         field: 'name',
-                        sortable: true
+                        sortable: true,
+                        filter_type:'select' // Default is text with input filed
                     },
                     {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true},
                     {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
@@ -113,6 +114,6 @@ If this helped you in any way, you can contribute to the package's long term sur
 
 Be sure to check out my sponsor page.
 
-(GitHub currently **doubles your support**! So if you support me with $10/mo, I will $20 instead! They're alchemists 🦾😉)
+(GitHub currently **doubles your support**! So if you support me with $10/mo, I will get $20 instead! They're alchemists 😉)
 
 Thank you so much!!!

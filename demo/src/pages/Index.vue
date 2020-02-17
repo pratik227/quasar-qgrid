@@ -113,6 +113,14 @@
                         "columns_filter": {
                             "type": "boolean",
                             "desc":"For enabling column filter",
+                        },
+                        "global_search": {
+                            "type": "boolean",
+                            "desc":"For enabling Global Search filter",
+                        },
+                        "fullscreen": {
+                            "type": "boolean",
+                            "desc":"Fullscreen mode",
                         }
                     },
                     "Events":{

@@ -5,7 +5,7 @@
                :columns="columns"
                row-key="name" :class="classes"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
-               :square="square" :selection="selection_prop" :selected.sync="selected_prop"
+               :square="square" :selection="selection_prop" :selected.sync="selected_prop" :filter="filter"
       >
 
         <template v-slot:header="props">
@@ -58,18 +58,33 @@
 
             </q-th>
             <q-th :key="col.name" v-for="col in props.cols" style="padding: 0px 0px 0px 0px;">
-              <q-input dense color="teal" class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
+              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense color="teal" class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
                 <template v-if="filter_data[col.field]" v-slot:append>
                   <q-icon name="cancel" @click.stop="filter_data[col.field] = ''" class="cursor-pointer"/>
                 </template>
               </q-input>
+
+              <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
+                        multiple emit-value filled v-model="column_options_selected[col.field]"
+                        :options="column_options[col.field]" dense>
+                <template v-slot:append>
+                  <q-icon v-if="column_options_selected[col.field].length>0" name="close" @click.stop="$set(column_options_selected,col.field,[])" class="cursor-pointer"/>
+                </template>
+              </q-select>
             </q-th>
           </q-tr>
 
         </template>
 
 
-        <template v-slot:top-right v-if="excel_download || csv_download">
+        <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search">
+
+
+           <q-input filled v-if="global_search" borderless dense debounce="300" v-model="filter" class="q-mr-md" placeholder="Search">
+            <template v-slot:append>
+              <q-icon name="search"/>
+            </template>
+          </q-input>
 
           <q-btn
                   class="bg-grey-2 q-mr-sm" icon="fas fa-file-excel"
@@ -82,6 +97,22 @@
                   no-caps v-if="csv_download"
                   @click="exportTable('csv')"
           />
+
+
+          <q-btn v-if="fullscreen"
+              flat
+              round
+              class="q-ml-sm"
+              dense
+              :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+              @click="props.toggleFullscreen"
+
+            >
+              <q-tooltip
+                :disable="$q.platform.is.mobile"
+                v-close-popup
+              >{{props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen'}}</q-tooltip>
+            </q-btn>
 
         </template>
 
@@ -138,7 +169,7 @@
 
     export default {
         name: "Grid",
-        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected'],
+        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected','fullscreen','global_search'],
         // props: {
         //   data: {
         //     type: [Array, Object],
@@ -212,7 +243,8 @@
                 filter_flags: {},
                 selection_prop: '',
                 name: '',
-                selected_prop: []
+                selected_prop: [],
+                filter:''
             }
         },
         computed: {
