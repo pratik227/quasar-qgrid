@@ -121,6 +121,14 @@
                         "fullscreen": {
                             "type": "boolean",
                             "desc":"Fullscreen mode",
+                        },
+                        "pagination":{
+                            "type":"Object",
+                            "desc":"Pagination object; You can use the '.sync' modifier on it if you want to have access on the current pagination in your components; When not using the .sync modifier it simply initializes the pagination on first render",
+                        },
+                        "visible-columns":{
+                            "type":"Array ",
+                            "desc":"Array of Strings defining column names ('name' property of each column from 'columns' prop definitions); Columns marked as 'required' are not affected by this property",
                         }
                     },
                     "Events":{

@@ -3,7 +3,7 @@
       <q-table :id="uuid"
                :data="getFilteredValuesData"
                :columns="columns"
-               row-key="name" :class="classes"
+               row-key="name" :class="classes" :visible-columns="visible_columns" :pagination="pagination"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" :selected.sync="selected_prop" :filter="filter"
       >
@@ -169,7 +169,7 @@
 
     export default {
         name: "Grid",
-        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected','fullscreen','global_search'],
+        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected','fullscreen','global_search','visible_columns','pagination'],
         // props: {
         //   data: {
         //     type: [Array, Object],
