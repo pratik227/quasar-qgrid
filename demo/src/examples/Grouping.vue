@@ -1,51 +1,41 @@
 <template>
-  <q-page>
-    <div class="q-markdown">
-      <basic :tag-parts="getTagParts(require('!!raw-loader!../examples/Basic.vue').default)"></basic>
-      <column-filter :tag-parts="getTagParts(require('!!raw-loader!../examples/ColumnFilter').default)"></column-filter>
-      <header-filter :tag-parts="getTagParts(require('!!raw-loader!../examples/HeaderFilter').default)"></header-filter>
-      <custom-column :tag-parts="getTagParts(require('!!raw-loader!../examples/CustomColumn').default)"></custom-column>
-      <draggable :tag-parts="getTagParts(require('!!raw-loader!../examples/Draggable').default)"></draggable>
-      <slot-demo :tag-parts="getTagParts(require('!!raw-loader!../examples/SlotDemo').default)"></slot-demo>
-      <selection :tag-parts="getTagParts(require('!!raw-loader!../examples/Selection').default)"></selection>
-      <custom-column-filter :tag-parts="getTagParts(require('!!raw-loader!../examples/CustomColumnFilter').default)"></custom-column-filter>
-      <grouping :tag-parts="getTagParts(require('!!raw-loader!../examples/Grouping').default)"></grouping>
-<!--      <sticky-column :tag-parts="getTagParts(require('!!raw-loader!../examples/StickyColumn').default)"></sticky-column>-->
-    </div>
-  </q-page>
+  <q-card :class="!$q.dark.isActive?'my-lg q-pa-md q-ma-sm bg-grey-2':'my-lg q-pa-md q-ma-sm bg-grey-8'">
+    <q-toolbar>
+      <q-ribbon
+        position="left"
+        color="rgba(0,0,0,.58)"
+        background-color="#c0c0c0"
+        leaf-color="#a0a0a0"
+        leaf-position="bottom"
+        decoration="rounded-out"
+      >
+        <q-toolbar-title
+          class="example-title"
+          style="padding: 5px 20px;"
+        ><span class="ellipsis">Grouping</span></q-toolbar-title>
+      </q-ribbon>
+    </q-toolbar>
+    <q-card-section class="q-pb-sm">
+      <code-tabs :tagParts="tagParts"></code-tabs>
+    </q-card-section>
+    <q-card-section>
+
+      <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" selection="multiple"
+              :csv_download="true" file_name="sample" :groupby_filter="true"
+              :selected="selected"
+              @selected-val="GetSelected($event)"></q-grid>
+    </q-card-section>
+  </q-card>
 </template>
 
 <script>
-    import {getTagParts} from '@quasar/quasar-ui-qmarkdown'
-    import Basic from "../examples/Basic";
-    import ColumnFilter from "../examples/ColumnFilter";
-    import HeaderFilter from "../examples/HeaderFilter";
-    import CustomColumn from "../examples/CustomColumn";
-    import StickyColumn from "../examples/StickyColumn";
-    import Draggable from "../examples/Draggable";
-    import SlotDemo from "../examples/SlotDemo";
-    import Selection from "../examples/Selection";
-    import CustomColumnFilter from "../examples/CustomColumnFilter";
-    import Grouping from "../examples/Grouping";
-
+    import CodeTabs from "../components/CodeTabs";
 
     export default {
-        name: "Examples",
-        components: {
-            Grouping,
-            CustomColumnFilter,
-            Selection, SlotDemo, Draggable, StickyColumn, CustomColumn, HeaderFilter, ColumnFilter, Basic},
+        name: "Grouping",
+        components: {CodeTabs},
         data() {
             return {
-                tableTitle: "My Custom Table",
-                selectionMode: "multiple",
-                loading: false,
-                columns_filter: true,
-                draggable: true,
-                header_filter: true,
-                filter: "",
-                selected: [],
-                file_name: 'Download',
                 columns: [
                     {
                         name: 'name',
@@ -53,13 +43,10 @@
                         label: 'Dessert (100g serving)',
                         align: 'left',
                         field: 'name',
-                        format: val => `${val}`,
                         sortable: true,
-                        // classes: 'bg-grey-2 ellipsis',
-                        // style: 'max-width: 100px',
-                        // headerClasses: 'bg-primary text-white'
+                        grouping:true
                     },
-                    {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true},
+                    {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true,grouping:true},
                     {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
                     {name: 'carbs', label: 'Carbs (g)', field: 'carbs'},
                     {name: 'protein', label: 'Protein (g)', field: 'protein'},
@@ -179,16 +166,35 @@
                         sodium: 54,
                         calcium: '12%',
                         iron: '6%'
+                    },
+                    {
+                        name: 'KitKat',
+                        calories: 518,
+                        fat: 26.0,
+                        carbs: 65,
+                        protein: 7,
+                        sodium: 54,
+                        calcium: '12%',
+                        iron: '6%'
                     }
-                ]
-            };
+                ],
+                selected: []
+            }
+        },
+        props: {
+            tagParts: {
+                type: Object,
+                default: () => {
+                }
+            }
         },
         methods: {
-            getTagParts
+            GetSelected(Selected) {
+                this.selected = Selected
+            }
         }
+
     }
 </script>
 
-<style scoped>
 
-</style>

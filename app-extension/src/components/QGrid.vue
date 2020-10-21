@@ -2,7 +2,7 @@
   <span>
       <q-table :id="uuid"
                :data="getFilteredValuesData"
-               :columns="columns"
+               :columns="final_column"
                row-key="name" :class="classes"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" :selected.sync="selected_prop" :filter="filter"
@@ -23,7 +23,6 @@
                     @hover.native.stop
                     v-for="col in props.cols"
                     :key="col.name"
-                    auto-width
             >
               <div class="row inline">
                 <div class="column">
@@ -58,7 +57,8 @@
 
             </q-th>
             <q-th :key="col.name" v-for="col in props.cols" style="padding: 0px 0px 0px 0px;">
-              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense color="teal" class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
+              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense color="teal"
+                       class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
                 <template v-if="filter_data[col.field]" v-slot:append>
                   <q-icon name="cancel" @click.stop="filter_data[col.field] = ''" class="cursor-pointer"/>
                 </template>
@@ -68,7 +68,8 @@
                         multiple emit-value filled v-model="column_options_selected[col.field]"
                         :options="column_options[col.field]" dense>
                 <template v-slot:append>
-                  <q-icon v-if="column_options_selected[col.field].length>0" name="close" @click.stop="$set(column_options_selected,col.field,[])" class="cursor-pointer"/>
+                  <q-icon v-if="column_options_selected[col.field].length>0" name="close"
+                          @click.stop="$set(column_options_selected,col.field,[])" class="cursor-pointer"/>
                 </template>
               </q-select>
             </q-th>
@@ -80,7 +81,8 @@
         <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search">
 
 
-           <q-input filled v-if="global_search" borderless dense debounce="300" v-model="filter" class="q-mr-md" placeholder="Search">
+           <q-input filled v-if="global_search" borderless dense debounce="300" v-model="filter" class="q-mr-md"
+                    placeholder="Search">
             <template v-slot:append>
               <q-icon name="search"/>
             </template>
@@ -98,19 +100,23 @@
                   @click="exportTable('csv')"
           />
 
+          <q-select class="q-mr-sm q-ml-sm" outlined dense
+                    v-model="selected_group_by_filed" v-if="groupby_filter"
+                    :options="gorupby_option" style="width: 150px;"></q-select>
+
 
           <q-btn v-if="fullscreen"
-              flat
-              round
-              class="q-ml-sm"
-              dense
-              :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
-              @click="props.toggleFullscreen"
+                 flat
+                 round
+                 class="q-ml-sm"
+                 dense
+                 :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+                 @click="props.toggleFullscreen"
 
-            >
+          >
               <q-tooltip
-                :disable="$q.platform.is.mobile"
-                v-close-popup
+                      :disable="$q.platform.is.mobile"
+                      v-close-popup
               >{{props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen'}}</q-tooltip>
             </q-btn>
 
@@ -119,16 +125,47 @@
         <template v-slot:body="props">
           <q-tr :props="props" v-if="!hasDefaultSlot">
 
-            <q-td auto-width v-if="selection_prop!='none'">
+            <q-td v-if="selection_prop!='none'">
               <q-checkbox color="primary" v-model="props.selected"/>
             </q-td>
             <q-td
-                    v-for="col in props.cols"
+                    v-for="col,col_index in props.cols"
                     :key="col.name"
                     :props="props"
             >
+              <q-btn size="sm" color="accent" round dense @click="props.expand = !props.expand" class="q-mr-sm"
+                     :icon="props.expand ? 'remove' : 'add'"
+                     v-if="groupby_filter && selected_group_by_filed['value']!='' && col_index==0"/>
+
               {{ props.row[col.field] }}
             </q-td>
+          </q-tr>
+          <q-tr v-if="groupby_filter &&  selected_group_by_filed['value']!=''" v-show="props.expand" :props="props">
+            <q-td :colspan="2">
+            <q-table
+                    :data="sub_grouped_data[props.row.name]"
+                    :columns="columns"
+                    row-key="name"
+                    :pagination="group_pagination"
+                    hide-bottom
+            >
+              <q-tr slot="header" slot-scope="props">
+                <q-th v-for="col in props.cols"
+                      :key="col.name" v-if="col.field!=selected_group_by_filed"
+                      :props="props">
+                  {{ col.label }}
+                </q-th>
+              </q-tr>
+              <template slot="body" slot-scope="props">
+                <q-tr :props="props">
+                  <q-td :key="col.name" v-if="col.field!=selected_group_by_filed" v-for="col in props.cols"
+                        :props="props">
+                    {{ props.row[col.field] }}
+                  </q-td>
+                </q-tr>
+              </template>
+            </q-table>
+          </q-td>
           </q-tr>
           <slot name="body" v-bind:row="props.row" v-if="hasDefaultSlot">
           </slot>
@@ -169,7 +206,7 @@
 
     export default {
         name: "Grid",
-        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected','fullscreen','global_search'],
+        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter'],
         // props: {
         //   data: {
         //     type: [Array, Object],
@@ -244,14 +281,32 @@
                 selection_prop: '',
                 name: '',
                 selected_prop: [],
-                filter:''
+                filter: '',
+                gorupby_option: [],
+                group_pagination: {
+                    rowsPerPage: 0
+                },
+                grouped_column: [
+                    {
+                        name: 'Grouped',
+                        required: true,
+                        label: 'Grouped Column Values',
+                        align: 'left',
+                        field: 'name',
+                        sortable: true
+                    }
+                ],
+                sub_grouped_data: {},
+                sub_grouped_columns: [],
+                selected_group_by_filed: {"label": 'Group By Field', "value": ''},
+                final_column: []
             }
         },
         computed: {
             getFilteredData() {
                 let self = this;
 
-                let table_columns = this.columns.map(function (item) {
+                let table_columns = this.final_column.map(function (item) {
                     return item.field
                 });
 
@@ -288,6 +343,17 @@
                     return true
                 });
 
+                if (this.groupby_filter && this.selected_group_by_filed['value'] != '') {
+                    let grouped_data = this.groupBy(table_Data, this.selected_group_by_filed['value']);
+
+                    table_Data = [];
+
+                    Object.keys(grouped_data).filter(function (item) {
+                        table_Data.push({"name": item});
+                        return item
+                    });
+                    this.sub_grouped_data = grouped_data;
+                }
 
                 return table_Data;
             },
@@ -300,9 +366,9 @@
             this.Sorting();
         },
         watch: {
-          'selected_prop':function () {
-            this.$emit('selected-val',this.selected_prop)
-          }
+            'selected_prop': function () {
+                this.$emit('selected-val', this.selected_prop)
+            }
         },
         created() {
             this.uuid = uid();
@@ -325,6 +391,7 @@
             } else {
                 this.selected_prop = this.selected;
             }
+            this.gorupby_option = [{"label": 'Group By Field', "value": ''}];
 
             let self = this;
             self.column_options = {};
@@ -332,7 +399,10 @@
                 self.column_options[item.field] = [];
                 self.$set(self.column_options_selected, item.field, []);
                 self.filter_flags[item.field] = false;
-
+                if (item.hasOwnProperty('grouping') && item.grouping)
+                {
+                    self.gorupby_option.push({"label": item.label, "value": item.field});
+                }
                 return item
             });
 
@@ -350,6 +420,8 @@
                     [item['value'], item])).values()];
             });
 
+            this.final_column = this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
+
         },
         methods: {
             exportTable(type) {
@@ -364,7 +436,7 @@
                 ).join('\r\n')
 
                 const status = exportFile(
-                    this.file_name+'.' + type,
+                    this.file_name + '.' + type,
                     content,
                     'text/' + type
                 )
@@ -376,6 +448,16 @@
                         icon: 'warning'
                     })
                 }
+            },
+            groupBy(array, key) {
+                const result = {};
+                array.forEach(item => {
+                    if (!result[item[key]]) {
+                        result[item[key]] = []
+                    }
+                    result[item[key]].push(item)
+                });
+                return result
             },
             Sorting() {
 
@@ -401,6 +483,11 @@
                 });
             }
         },
+        watch: {
+            'selected_group_by_filed': function () {
+                this.final_column = this.groupby_filter && this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
+            },
+        }
     }
 </script>
 
