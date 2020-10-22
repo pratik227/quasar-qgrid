@@ -118,6 +118,10 @@
                             "type": "boolean",
                             "desc":"For enabling Global Search filter",
                         },
+                        "groupby_filter": {
+                            "type": "boolean",
+                            "desc":"For enabling Grouping of columns",
+                        },
                         "fullscreen": {
                             "type": "boolean",
                             "desc":"Fullscreen mode",
