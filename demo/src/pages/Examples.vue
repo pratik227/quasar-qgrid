@@ -10,6 +10,7 @@
       <selection :tag-parts="getTagParts(require('!!raw-loader!../examples/Selection').default)"></selection>
       <custom-column-filter :tag-parts="getTagParts(require('!!raw-loader!../examples/CustomColumnFilter').default)"></custom-column-filter>
       <grouping :tag-parts="getTagParts(require('!!raw-loader!../examples/Grouping').default)"></grouping>
+      <server-side :tag-parts="getTagParts(require('!!raw-loader!../examples/ServerSide').default)"></server-side>
 <!--      <sticky-column :tag-parts="getTagParts(require('!!raw-loader!../examples/StickyColumn').default)"></sticky-column>-->
     </div>
   </q-page>
@@ -27,11 +28,13 @@
     import Selection from "../examples/Selection";
     import CustomColumnFilter from "../examples/CustomColumnFilter";
     import Grouping from "../examples/Grouping";
+    import ServerSide from "../examples/ServerSide";
 
 
     export default {
         name: "Examples",
         components: {
+            ServerSide,
             Grouping,
             CustomColumnFilter,
             Selection, SlotDemo, Draggable, StickyColumn, CustomColumn, HeaderFilter, ColumnFilter, Basic},

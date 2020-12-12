@@ -3,9 +3,10 @@
       <q-table :id="uuid"
                :data="getFilteredValuesData"
                :columns="final_column"
-               row-key="name" :class="classes"  :visible-columns="visible_columns" :pagination="pagination"
+               row-key="name" :class="classes" :visible-columns="visible_columns" :pagination.sync="getPagination"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" :selected.sync="selected_prop" :filter="filter"
+               @request="request"
       >
 
         <template v-slot:header="props">
@@ -65,7 +66,7 @@
               </q-input>
 
               <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
-                        multiple emit-value filled v-model="column_options_selected[col.field]"
+                        multiple emit-value filled v-model="column_options_selected[col.field]" @input="emitEvent"
                         :options="column_options[col.field]" dense>
                 <template v-slot:append>
                   <q-icon v-if="column_options_selected[col.field].length>0" name="close"
@@ -206,7 +207,7 @@
 
     export default {
         name: "Grid",
-        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter','visible_columns','pagination'],
+        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination'],
         // props: {
         //   data: {
         //     type: [Array, Object],
@@ -354,22 +355,43 @@
                     });
                     this.sub_grouped_data = grouped_data;
                 }
-
+                // this.$emit('request', {filters: {'text_filter': this.filter_data,'selected_filter':this.column_options_selected},pagination:this.pagination});
                 return table_Data;
             },
             hasDefaultSlot() {
                 return this.$scopedSlots.hasOwnProperty("body");
             },
+            getPagination: {
+                get() {
+                    return this.pagination
+                },
+                set(newValue) {
+                    this.pagination = newValue;
+                }
+            }
 
         },
         mounted() {
             this.Sorting();
+
         },
-        watch: {
-            'selected_prop': function () {
-                this.$emit('selected-val', this.selected_prop)
-            }
-        },
+        // watch: {
+        //     'selected_prop': function () {
+        //         this.$emit('selected-val', this.selected_prop)
+        //     },
+        //     filter_data:{
+        //       handler:function(val, oldVal){
+        //         this.$emit('request', {filters: {'text_filter': this.filter_data,'selected_filter':this.column_options_selected},pagination:this.pagination});
+        //       },
+        //       deep:true
+        //     },
+        //     column_options_selected:{
+        //       handler:function(val, oldVal){
+        //         this.$emit('request', {filters: {'text_filter': this.filter_data,'selected_filter':this.column_options_selected},pagination:this.pagination});
+        //       },
+        //       deep:true
+        //     },
+        // },
         created() {
             this.uuid = uid();
 
@@ -391,39 +413,56 @@
             } else {
                 this.selected_prop = this.selected;
             }
-            this.gorupby_option = [{"label": 'Group By Field', "value": ''}];
+            // this.gorupby_option = [{"label": 'Group By Field', "value": ''}];
+            //
+            // let self = this;
+            // self.column_options = {};
+            // self.columns.filter(function (item) {
+            //     self.column_options[item.field] = [];
+            //     self.$set(self.column_options_selected, item.field, []);
+            //     self.filter_flags[item.field] = false;
+            //     if (item.hasOwnProperty('grouping') && item.grouping) {
+            //         self.gorupby_option.push({"label": item.label, "value": item.field});
+            //     }
+            //     return item
+            // });
 
-            let self = this;
-            self.column_options = {};
-            self.columns.filter(function (item) {
-                self.column_options[item.field] = [];
-                self.$set(self.column_options_selected, item.field, []);
-                self.filter_flags[item.field] = false;
-                if (item.hasOwnProperty('grouping') && item.grouping)
-                {
-                    self.gorupby_option.push({"label": item.label, "value": item.field});
-                }
-                return item
-            });
-
-            self.data.filter(function (item) {
-                self.columns.filter(function (column) {
-                    self.column_options[column.field].push({
-                        label: item[column.field].toString(),
-                        value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
-                    })
-                });
-            });
-
-            self.columns.filter(function (column) {
-                self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
-                    [item['value'], item])).values()];
-            });
-
-            this.final_column = this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
+            // self.data.filter(function (item) {
+            //     self.columns.filter(function (column) {
+            //         self.column_options[column.field].push({
+            //             label: item[column.field].toString(),
+            //             value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
+            //         })
+            //     });
+            // });
+            //
+            // self.columns.filter(function (column) {
+            //     self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
+            //         [item['value'], item])).values()];
+            // });
+            //
+            // this.final_column = this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
 
         },
         methods: {
+            request(props) {
+                let filter = props.filter;
+                props.filter = {
+                    'filter': filter,
+                    'text_filter': this.filter_data,
+                    'selected_filter': this.column_options_selected,
+                }
+                this.$emit('request', props)
+            },
+            emitEvent() {
+                this.$emit('request', {
+                    filters: {
+                        'text_filter': this.filter_data,
+                        'selected_filter': this.column_options_selected,
+                        'filter': this.filter,
+                    }, pagination: this.pagination
+                });
+            },
             exportTable(type) {
                 // naive encoding to csv format
                 const content = [this.columns.map(col => wrapCsvValue(col.label))].concat(
@@ -487,6 +526,76 @@
             'selected_group_by_filed': function () {
                 this.final_column = this.groupby_filter && this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
             },
+            'selected_prop': function () {
+                this.$emit('selected-val', this.selected_prop)
+            },
+            filter_data: {
+                handler: function (val, oldVal) {
+                    this.$emit('request', {
+                        filters: {
+                            'text_filter': this.filter_data,
+                            'selected_filter': this.column_options_selected,
+                            'filter': this.filter,
+                        },
+                        pagination: this.pagination
+                    });
+                },
+            },
+            'filter': function () {
+                this.$emit('request', {
+                    filters: {
+                        'text_filter': this.filter_data,
+                        'selected_filter': this.column_options_selected,
+                        'filter': this.filter,
+                    }, pagination: this.pagination
+                });
+            },
+            'data': {
+                handler: function (val, oldVal) {
+
+                    this.gorupby_option = [{"label": 'Group By Field', "value": ''}];
+
+                    let self = this;
+                    self.column_options = {};
+                    self.columns.filter(function (item) {
+                        self.column_options[item.field] = [];
+                        self.$set(self.column_options_selected, item.field, []);
+                        self.filter_flags[item.field] = false;
+                        if (item.hasOwnProperty('grouping') && item.grouping) {
+                            self.gorupby_option.push({"label": item.label, "value": item.field});
+                        }
+                        return item
+                    });
+                    self.data.filter(function (item) {
+                        self.columns.filter(function (column) {
+                            self.column_options[column.field].push({
+                                label: item[column.field].toString(),
+                                value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
+                            })
+                        });
+                    });
+
+                    self.columns.filter(function (column) {
+                        self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
+                            [item['value'], item])).values()];
+                    });
+
+                    this.final_column = this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
+                },
+                deep: true,
+                immediate: true
+            }
+            // column_options_selected: {
+            //     handler: function (val, oldVal) {
+            //         this.$emit('request', {
+            //             filters: {
+            //                 'text_filter': this.filter_data,
+            //                 'selected_filter': this.column_options_selected
+            //             }, pagination: this.pagination
+            //         });
+            //     },
+            //     deep: true
+            // },
         }
     }
 </script>

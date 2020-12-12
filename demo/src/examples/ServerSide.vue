@@ -1,0 +1,620 @@
+<template>
+  <q-card :class="!$q.dark.isActive?'my-lg q-pa-md q-ma-sm bg-grey-2':'my-lg q-pa-md q-ma-sm bg-grey-8'">
+    <q-toolbar>
+      <q-ribbon
+        position="left"
+        color="rgba(0,0,0,.58)"
+        background-color="#c0c0c0"
+        leaf-color="#a0a0a0"
+        leaf-position="bottom"
+        decoration="rounded-out"
+      >
+        <q-toolbar-title
+          class="example-title"
+          style="padding: 5px 20px;"
+        ><span class="ellipsis">Server Side</span></q-toolbar-title>
+      </q-ribbon>
+    </q-toolbar>
+    <q-card-section class="q-pb-sm">
+      <code-tabs :tagParts="tagParts"></code-tabs>
+    </q-card-section>
+    <q-card-section>
+
+      <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true"
+              :csv_download="true" file_name="sample" :groupby_filter="true"
+              :pagination="pagination" :global_search="true"
+              @request="onRequest"></q-grid>
+    </q-card-section>
+  </q-card>
+</template>
+
+<script>
+    import CodeTabs from "../components/CodeTabs";
+
+    export default {
+        name: "ServerSide",
+        components: {CodeTabs},
+        data() {
+            return {
+                pagination: {
+                    sortBy: 'desc',
+                    descending: false,
+                    page: 1,
+                    rowsPerPage: 3,
+                    rowsNumber: 10
+                },
+                columns: [
+                    {
+                        name: 'desc',
+                        required: true,
+                        label: 'Dessert (100g serving)',
+                        align: 'left',
+                        field: 'name',
+                        sortable: true,
+                        filter_type:'select',
+                        grouping:true
+                    },
+                    {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true},
+                    {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
+                    {name: 'carbs', label: 'Carbs (g)', field: 'carbs', sortable: true},
+                    {name: 'protein', label: 'Protein (g)', field: 'protein', sortable: true},
+                    {name: 'sodium', label: 'Sodium (mg)', field: 'sodium', sortable: true},
+                    {
+                        name: 'calcium',
+                        label: 'Calcium (%)',
+                        field: 'calcium',
+                        sortable: true,
+                        sort: (a, b) => parseInt(a, 10) - parseInt(b, 10)
+                    },
+                    {
+                        name: 'iron',
+                        label: 'Iron (%)',
+                        field: 'iron',
+                        sortable: true,
+                        sort: (a, b) => parseInt(a, 10) - parseInt(b, 10)
+                    }
+                ],
+                data: [],
+                original: [
+                    {
+                        id: 1,
+                        name: 'Frozen Yogurt',
+                        calories: 159,
+                        fat: 6.0,
+                        carbs: 24,
+                        protein: 4.0,
+                        sodium: 87,
+                        calcium: '14%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 2,
+                        name: 'Ice cream sandwich',
+                        calories: 237,
+                        fat: 9.0,
+                        carbs: 37,
+                        protein: 4.3,
+                        sodium: 129,
+                        calcium: '8%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 3,
+                        name: 'Eclair',
+                        calories: 262,
+                        fat: 16.0,
+                        carbs: 23,
+                        protein: 6.0,
+                        sodium: 337,
+                        calcium: '6%',
+                        iron: '7%'
+                    },
+                    {
+                        id: 4,
+                        name: 'Cupcake',
+                        calories: 305,
+                        fat: 3.7,
+                        carbs: 67,
+                        protein: 4.3,
+                        sodium: 413,
+                        calcium: '3%',
+                        iron: '8%'
+                    },
+                    {
+                        id: 5,
+                        name: 'Gingerbread',
+                        calories: 356,
+                        fat: 16.0,
+                        carbs: 49,
+                        protein: 3.9,
+                        sodium: 327,
+                        calcium: '7%',
+                        iron: '16%'
+                    },
+                    {
+                        id: 6,
+                        name: 'Jelly bean',
+                        calories: 375,
+                        fat: 0.0,
+                        carbs: 94,
+                        protein: 0.0,
+                        sodium: 50,
+                        calcium: '0%',
+                        iron: '0%'
+                    },
+                    {
+                        id: 7,
+                        name: 'Lollipop',
+                        calories: 392,
+                        fat: 0.2,
+                        carbs: 98,
+                        protein: 0,
+                        sodium: 38,
+                        calcium: '0%',
+                        iron: '2%'
+                    },
+                    {
+                        id: 8,
+                        name: 'Honeycomb',
+                        calories: 408,
+                        fat: 3.2,
+                        carbs: 87,
+                        protein: 6.5,
+                        sodium: 562,
+                        calcium: '0%',
+                        iron: '45%'
+                    },
+                    {
+                        id: 9,
+                        name: 'Donut',
+                        calories: 452,
+                        fat: 25.0,
+                        carbs: 51,
+                        protein: 4.9,
+                        sodium: 326,
+                        calcium: '2%',
+                        iron: '22%'
+                    },
+                    {
+                        id: 10,
+                        name: 'KitKat',
+                        calories: 518,
+                        fat: 26.0,
+                        carbs: 65,
+                        protein: 7,
+                        sodium: 54,
+                        calcium: '12%',
+                        iron: '6%'
+                    },
+                    {
+                        id: 11,
+                        name: 'Frozen Yogurt-1',
+                        calories: 159,
+                        fat: 6.0,
+                        carbs: 24,
+                        protein: 4.0,
+                        sodium: 87,
+                        calcium: '14%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 12,
+                        name: 'Ice cream sandwich-1',
+                        calories: 237,
+                        fat: 9.0,
+                        carbs: 37,
+                        protein: 4.3,
+                        sodium: 129,
+                        calcium: '8%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 13,
+                        name: 'Eclair-1',
+                        calories: 262,
+                        fat: 16.0,
+                        carbs: 23,
+                        protein: 6.0,
+                        sodium: 337,
+                        calcium: '6%',
+                        iron: '7%'
+                    },
+                    {
+                        id: 14,
+                        name: 'Cupcake-1',
+                        calories: 305,
+                        fat: 3.7,
+                        carbs: 67,
+                        protein: 4.3,
+                        sodium: 413,
+                        calcium: '3%',
+                        iron: '8%'
+                    },
+                    {
+                        id: 15,
+                        name: 'Gingerbread-1',
+                        calories: 356,
+                        fat: 16.0,
+                        carbs: 49,
+                        protein: 3.9,
+                        sodium: 327,
+                        calcium: '7%',
+                        iron: '16%'
+                    },
+                    {
+                        id: 16,
+                        name: 'Jelly bean-1',
+                        calories: 375,
+                        fat: 0.0,
+                        carbs: 94,
+                        protein: 0.0,
+                        sodium: 50,
+                        calcium: '0%',
+                        iron: '0%'
+                    },
+                    {
+                        id: 17,
+                        name: 'Lollipop-1',
+                        calories: 392,
+                        fat: 0.2,
+                        carbs: 98,
+                        protein: 0,
+                        sodium: 38,
+                        calcium: '0%',
+                        iron: '2%'
+                    },
+                    {
+                        id: 18,
+                        name: 'Honeycomb-1',
+                        calories: 408,
+                        fat: 3.2,
+                        carbs: 87,
+                        protein: 6.5,
+                        sodium: 562,
+                        calcium: '0%',
+                        iron: '45%'
+                    },
+                    {
+                        id: 19,
+                        name: 'Donut-1',
+                        calories: 452,
+                        fat: 25.0,
+                        carbs: 51,
+                        protein: 4.9,
+                        sodium: 326,
+                        calcium: '2%',
+                        iron: '22%'
+                    },
+                    {
+                        id: 20,
+                        name: 'KitKat-1',
+                        calories: 518,
+                        fat: 26.0,
+                        carbs: 65,
+                        protein: 7,
+                        sodium: 54,
+                        calcium: '12%',
+                        iron: '6%'
+                    },
+                    {
+                        id: 21,
+                        name: 'Frozen Yogurt-2',
+                        calories: 159,
+                        fat: 6.0,
+                        carbs: 24,
+                        protein: 4.0,
+                        sodium: 87,
+                        calcium: '14%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 22,
+                        name: 'Ice cream sandwich-2',
+                        calories: 237,
+                        fat: 9.0,
+                        carbs: 37,
+                        protein: 4.3,
+                        sodium: 129,
+                        calcium: '8%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 23,
+                        name: 'Eclair-2',
+                        calories: 262,
+                        fat: 16.0,
+                        carbs: 23,
+                        protein: 6.0,
+                        sodium: 337,
+                        calcium: '6%',
+                        iron: '7%'
+                    },
+                    {
+                        id: 24,
+                        name: 'Cupcake-2',
+                        calories: 305,
+                        fat: 3.7,
+                        carbs: 67,
+                        protein: 4.3,
+                        sodium: 413,
+                        calcium: '3%',
+                        iron: '8%'
+                    },
+                    {
+                        id: 25,
+                        name: 'Gingerbread-2',
+                        calories: 356,
+                        fat: 16.0,
+                        carbs: 49,
+                        protein: 3.9,
+                        sodium: 327,
+                        calcium: '7%',
+                        iron: '16%'
+                    },
+                    {
+                        id: 26,
+                        name: 'Jelly bean-2',
+                        calories: 375,
+                        fat: 0.0,
+                        carbs: 94,
+                        protein: 0.0,
+                        sodium: 50,
+                        calcium: '0%',
+                        iron: '0%'
+                    },
+                    {
+                        id: 27,
+                        name: 'Lollipop-2',
+                        calories: 392,
+                        fat: 0.2,
+                        carbs: 98,
+                        protein: 0,
+                        sodium: 38,
+                        calcium: '0%',
+                        iron: '2%'
+                    },
+                    {
+                        id: 28,
+                        name: 'Honeycomb-2',
+                        calories: 408,
+                        fat: 3.2,
+                        carbs: 87,
+                        protein: 6.5,
+                        sodium: 562,
+                        calcium: '0%',
+                        iron: '45%'
+                    },
+                    {
+                        id: 29,
+                        name: 'Donut-2',
+                        calories: 452,
+                        fat: 25.0,
+                        carbs: 51,
+                        protein: 4.9,
+                        sodium: 326,
+                        calcium: '2%',
+                        iron: '22%'
+                    },
+                    {
+                        id: 30,
+                        name: 'KitKat-2',
+                        calories: 518,
+                        fat: 26.0,
+                        carbs: 65,
+                        protein: 7,
+                        sodium: 54,
+                        calcium: '12%',
+                        iron: '6%'
+                    },
+                    {
+                        id: 31,
+                        name: 'Frozen Yogurt-3',
+                        calories: 159,
+                        fat: 6.0,
+                        carbs: 24,
+                        protein: 4.0,
+                        sodium: 87,
+                        calcium: '14%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 32,
+                        name: 'Ice cream sandwich-3',
+                        calories: 237,
+                        fat: 9.0,
+                        carbs: 37,
+                        protein: 4.3,
+                        sodium: 129,
+                        calcium: '8%',
+                        iron: '1%'
+                    },
+                    {
+                        id: 33,
+                        name: 'Eclair-3',
+                        calories: 262,
+                        fat: 16.0,
+                        carbs: 23,
+                        protein: 6.0,
+                        sodium: 337,
+                        calcium: '6%',
+                        iron: '7%'
+                    },
+                    {
+                        id: 34,
+                        name: 'Cupcake-3',
+                        calories: 305,
+                        fat: 3.7,
+                        carbs: 67,
+                        protein: 4.3,
+                        sodium: 413,
+                        calcium: '3%',
+                        iron: '8%'
+                    },
+                    {
+                        id: 35,
+                        name: 'Gingerbread-3',
+                        calories: 356,
+                        fat: 16.0,
+                        carbs: 49,
+                        protein: 3.9,
+                        sodium: 327,
+                        calcium: '7%',
+                        iron: '16%'
+                    },
+                    {
+                        id: 36,
+                        name: 'Jelly bean-3',
+                        calories: 375,
+                        fat: 0.0,
+                        carbs: 94,
+                        protein: 0.0,
+                        sodium: 50,
+                        calcium: '0%',
+                        iron: '0%'
+                    },
+                    {
+                        id: 37,
+                        name: 'Lollipop-3',
+                        calories: 392,
+                        fat: 0.2,
+                        carbs: 98,
+                        protein: 0,
+                        sodium: 38,
+                        calcium: '0%',
+                        iron: '2%'
+                    },
+                    {
+                        id: 38,
+                        name: 'Honeycomb-3',
+                        calories: 408,
+                        fat: 3.2,
+                        carbs: 87,
+                        protein: 6.5,
+                        sodium: 562,
+                        calcium: '0%',
+                        iron: '45%'
+                    },
+                    {
+                        id: 39,
+                        name: 'Donut-3',
+                        calories: 452,
+                        fat: 25.0,
+                        carbs: 51,
+                        protein: 4.9,
+                        sodium: 326,
+                        calcium: '2%',
+                        iron: '22%'
+                    },
+                    {
+                        id: 40,
+                        name: 'KitKat-3',
+                        calories: 518,
+                        fat: 26.0,
+                        carbs: 65,
+                        protein: 7,
+                        sodium: 54,
+                        calcium: '12%',
+                        iron: '6%'
+                    }
+                ]
+            }
+        },
+        props: {
+            tagParts: {
+                type: Object,
+                default: () => {
+                }
+            }
+        },
+        mounted() {
+            // get initial data from server (1st page)
+            this.onRequest({
+                pagination: this.pagination,
+                filter: undefined
+            })
+        },
+        methods: {
+            onRequest(props) {
+                console.log(props);
+                const {page, rowsPerPage, sortBy, descending} = props.pagination;
+                let filter = props.filter;
+                if(filter && Object.keys(filter).length>0){
+                    filter = props['filter'].filter;
+                }
+
+                this.loading = true;
+
+                // emulate server
+                setTimeout(() => {
+                    // update rowsCount with appropriate value
+                    this.pagination.rowsNumber = this.getRowsNumberCount(filter);
+
+                    // get all rows if "All" (0) is selected
+                    const fetchCount = rowsPerPage === 0 ? this.pagination.rowsNumber : rowsPerPage
+
+                    // calculate starting row of data
+                    const startRow = (page - 1) * rowsPerPage;
+
+                    // fetch data from "server"
+                    const returnedData = this.fetchFromServer(startRow, fetchCount, filter, sortBy, descending);
+
+                    // clear out existing data and add new
+                    this.data.splice(0, this.data.length, ...returnedData);
+
+                    // don't forget to update local pagination object
+                    this.pagination.page = page;
+                    this.pagination.rowsPerPage = rowsPerPage;
+                    this.pagination.sortBy = sortBy;
+                    this.pagination.descending = descending;
+
+                    // ...and turn of loading indicator
+                    this.loading = false
+                }, 1500)
+            },
+
+            // emulate ajax call
+            // SELECT * FROM ... WHERE...LIMIT...
+            fetchFromServer(startRow, count, filter, sortBy, descending) {
+                console.log(startRow)
+                console.log(count)
+                console.log(filter)
+                const data = filter
+                    ? this.original.filter(row => row.name.includes(filter))
+                    : this.original.slice()
+
+                // handle sortBy
+                if (sortBy) {
+                    const sortFn = sortBy === 'desc'
+                        ? (descending
+                                ? (a, b) => (a.name > b.name ? -1 : a.name < b.name ? 1 : 0)
+                                : (a, b) => (a.name > b.name ? 1 : a.name < b.name ? -1 : 0)
+                        )
+                        : (descending
+                                ? (a, b) => (parseFloat(b[sortBy]) - parseFloat(a[sortBy]))
+                                : (a, b) => (parseFloat(a[sortBy]) - parseFloat(b[sortBy]))
+                        )
+                    data.sort(sortFn)
+                }
+
+                return data.slice(startRow, startRow + count)
+            },
+
+            // emulate 'SELECT count(*) FROM ...WHERE...'
+            getRowsNumberCount(filter) {
+                if (!filter) {
+                    return this.original.length
+                }
+                let count = 0
+                this.original.forEach((treat) => {
+                    if (treat.name.includes(filter)) {
+                        ++count
+                    }
+                })
+                return count
+            }
+        }
+
+    }
+</script>
+
+
