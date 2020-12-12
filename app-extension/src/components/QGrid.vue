@@ -365,11 +365,6 @@
         mounted() {
             this.Sorting();
         },
-        watch: {
-            'selected_prop': function () {
-                this.$emit('selected-val', this.selected_prop)
-            }
-        },
         created() {
             this.uuid = uid();
 
@@ -487,6 +482,9 @@
             'selected_group_by_filed': function () {
                 this.final_column = this.groupby_filter && this.selected_group_by_filed['value'] != '' ? this.grouped_column : this.columns;
             },
+            'selected_prop': function () {
+                this.$emit('selected-val', this.selected_prop)
+            }
         }
     }
 </script>

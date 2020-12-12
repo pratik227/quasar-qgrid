@@ -1,5 +1,4 @@
 # QGrid
-> Please note, this is currently a work-in-progress (WIP).
 
 QGrid is a [Quasar App Extension](https://quasar.dev/app-extensions/introduction).  It allows you to filter data for each column, Drag and Drop Rows and also allows you to filter data using header filters. 
 ## Install
