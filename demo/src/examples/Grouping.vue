@@ -15,6 +15,15 @@
         ><span class="ellipsis">Grouping</span></q-toolbar-title>
       </q-ribbon>
     </q-toolbar>
+    <q-card-section>
+        <q-markdown
+      :no-container="false"
+    >
+:::
+ **Note** - For showing columns in grouping selection you need to pass ` grouping:true ` in column object
+:::
+        </q-markdown>
+    </q-card-section>
     <q-card-section class="q-pb-sm">
       <code-tabs :tagParts="tagParts"></code-tabs>
     </q-card-section>
