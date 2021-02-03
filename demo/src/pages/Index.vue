@@ -97,6 +97,11 @@
                             "desc":"The column definitions (Array of Objects)",
                             "examples": [":columns=\"tableColumns\""],
                         },
+                        "visible_columns": {
+                            "type": "Array",
+                            "desc":"Array of Strings defining column names ('name' property of each column from 'columns' prop definitions);",
+                            "examples": [":visible_columns=\"myCols\"","[ 'desc', 'carbs', 'protein' ]"],
+                        },
                         "file_name": {
                             "type": "String",
                             "desc":"Name of the CSV File to export",
