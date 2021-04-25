@@ -316,6 +316,8 @@
                     for (i = 0; i < table_columns.length; i++) {
                         if (self.filter_data[table_columns[i]] == '')
                             continue;
+                        if (item[table_columns[i]]==null)
+                           return true
 
                         if (table_columns[i] in self.filter_data && item[table_columns[i]].toString().toLowerCase().indexOf(self.filter_data[table_columns[i]].toLowerCase()) == -1) {
                             return false;
@@ -403,10 +405,12 @@
 
             self.data.filter(function (item) {
                 self.columns.filter(function (column) {
-                    self.column_options[column.field].push({
+                    if(item[column.field] != null) {
+                      self.column_options[column.field].push({
                         label: item[column.field].toString(),
                         value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
-                    })
+                      })
+                    }
                 });
             });
 
