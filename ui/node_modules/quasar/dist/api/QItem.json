@@ -1,0 +1,119 @@
+{
+  "type": "component",
+  "meta": {
+    "docsUrl": "https://v2.quasar.dev/vue-components/list-and-list-items"
+  },
+  "props": {
+    "to": {
+      "type": [
+        "String",
+        "Object"
+      ],
+      "desc": "Equivalent to Vue Router <router-link> 'to' property",
+      "examples": [
+        "/home/dashboard",
+        ":to=\"{ name: 'my-route-name' }\""
+      ],
+      "category": "behavior"
+    },
+    "exact": {
+      "type": "Boolean",
+      "desc": "Equivalent to Vue Router <router-link> 'exact' property",
+      "category": "behavior"
+    },
+    "replace": {
+      "type": "Boolean",
+      "desc": "Equivalent to Vue Router <router-link> 'replace' property",
+      "category": "behavior"
+    },
+    "active-class": {
+      "type": "String",
+      "desc": "Equivalent to Vue Router <router-link> 'active-class' property",
+      "examples": [
+        "my-active-class"
+      ],
+      "category": "behavior"
+    },
+    "exact-active-class": {
+      "type": "String",
+      "desc": "Equivalent to Vue Router <router-link> 'active-class' property",
+      "examples": [
+        "my-exact-active-class"
+      ],
+      "category": "behavior"
+    },
+    "disable": {
+      "type": "Boolean",
+      "desc": "Put component in disabled mode",
+      "category": "state"
+    },
+    "active": {
+      "type": "Boolean",
+      "desc": "Put item into 'active' state",
+      "category": "state"
+    },
+    "dark": {
+      "type": "Boolean",
+      "desc": "Notify the component that the background is a dark color",
+      "category": "style"
+    },
+    "clickable": {
+      "type": "Boolean",
+      "desc": "Is QItem clickable? If it's the case, then it will add hover effects and emit 'click' events",
+      "category": "state"
+    },
+    "dense": {
+      "type": "Boolean",
+      "desc": "Dense mode; occupies less space",
+      "category": "style"
+    },
+    "inset-level": {
+      "type": "Number",
+      "desc": "Apply an inset; Useful when avatar/left side is missing but you want to align content with other items that do have a left side, or when you're building a menu",
+      "examples": [
+        ":inset-level=\"1\""
+      ],
+      "category": "content"
+    },
+    "tabindex": {
+      "type": [
+        "Number",
+        "String"
+      ],
+      "desc": "Tabindex HTML attribute value",
+      "examples": [
+        "0",
+        "100"
+      ],
+      "category": "general"
+    },
+    "tag": {
+      "type": "String",
+      "desc": "HTML tag to render; Suggestion: use 'label' when encapsulating a QCheckbox/QRadio/QToggle so that when user clicks/taps on the whole item it will trigger a model change for the mentioned components",
+      "examples": [
+        "div",
+        "span",
+        "a",
+        "label",
+        "div"
+      ],
+      "category": "content",
+      "default": "div"
+    },
+    "manual-focus": {
+      "type": "Boolean",
+      "desc": "Put item into a manual focus state; Enables 'focused' prop which will determine if item is focused or not, rather than relying on native hover/focus states",
+      "category": "state"
+    },
+    "focused": {
+      "type": "Boolean",
+      "desc": "Determines focus state, ONLY if 'manual-focus' is enabled / set to true",
+      "category": "state"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "This is where QItem's content goes"
+    }
+  }
+}

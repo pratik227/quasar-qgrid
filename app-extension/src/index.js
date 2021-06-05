@@ -6,24 +6,24 @@
  * API: https://github.com/quasarframework/quasar/blob/master/app/lib/app-extension/IndexAPI.js
  */
 
-function extendWithComponent (conf) {
-  // make sure boot file is registered
-  conf.boot.push('~quasar-app-extension-qgrid/src/boot/index.js')
+function extendConf (conf) {
+  // register our boot file
+  conf.boot.push('~quasar-app-extension-qgrid/src/boot/register.js')
 
-  // make sure boot file transpiles
-  conf.build.transpileDependencies.push(/quasar-app-extension-qgrid[\\/]src/);
-  console.log(` App Extension (qgrid) Info: 'Adding qgrid boot reference to your quasar.conf.js'`);
-
+  // make sure app extension files & ui package gets transpiled
+  conf.build.transpileDependencies.push(/quasar-app-extension-qgrid[\\/]src/)
 }
 
 module.exports = function (api) {
-  // extend quasar.conf
-  api.registerDescribeApi('QGrid', './components/QGrid.json');
+  // Quasar compatibility check; you may need
+  // hard dependencies, as in a minimum version of the "quasar"
+  // package or a minimum version of "@quasar/app" CLI
+  api.compatibleWith('quasar', '^2.0.0-beta.12')
+  api.compatibleWith('@quasar/app', '^3.0.0-beta.12')
 
-  api.compatibleWith('quasar', '^1.5.11');
-  api.compatibleWith('@quasar/app', '^1.4.3 || ^2.0.0');
+  // Uncomment the line below if you provide a JSON API for your component
+  // api.registerDescribeApi('QGrid', '~quasar-ui-qgrid/src/components/QGrid.json')
 
-  api.extendQuasarConf(extendWithComponent)
-};
-
-
+  // We extend /quasar.conf.js
+  api.extendQuasarConf(extendConf)
+}

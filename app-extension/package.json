@@ -1,25 +1,22 @@
 {
   "name": "quasar-app-extension-qgrid",
-  "version": "0.0.7",
-  "description": "",
+  "version": "0.0.1",
+  "description": "A Quasar App Extension",
   "author": "pratikpatelpp802@gmail.com",
   "license": "MIT",
   "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"No test specified\" && exit 0"
-  },
   "repository": {
     "type": "git",
     "url": ""
   },
   "bugs": "",
   "homepage": "",
+  "dependencies": {
+    "quasar-ui-qgrid": "latest"
+  },
   "engines": {
     "node": ">= 8.9.0",
     "npm": ">= 5.6.0",
     "yarn": ">= 1.6.0"
-  },
-  "dependencies": {
-    "sortablejs": "^1.4.2"
   }
 }

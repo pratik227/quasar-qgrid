@@ -1,0 +1,19 @@
+{
+  "meta": {
+    "docsUrl": "https://v2.quasar.dev/vue-components/video"
+  },
+
+  "mixins": [ "composables/private/use-ratio" ],
+
+  "props": {
+    "src": {
+      "type": "String",
+      "desc": "The source url to display in an iframe",
+      "required": true,
+      "examples": [
+        "src=\"https://www.youtube.com/embed/k3_tw44QsZQ\""
+      ],
+      "category": "model"
+    }
+  }
+}

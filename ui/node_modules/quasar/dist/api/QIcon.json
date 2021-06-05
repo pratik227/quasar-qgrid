@@ -1,0 +1,64 @@
+{
+  "type": "component",
+  "meta": {
+    "docsUrl": "https://v2.quasar.dev/vue-components/icon"
+  },
+  "props": {
+    "size": {
+      "type": "String",
+      "desc": "Size in CSS units, including unit name or standard size name (xs|sm|md|lg|xl)",
+      "examples": [
+        "16px",
+        "2rem",
+        "xs",
+        "md"
+      ],
+      "category": "style"
+    },
+    "tag": {
+      "type": "String",
+      "desc": "HTML tag to render, unless no icon is supplied or it's an svg icon",
+      "examples": [
+        "div",
+        "span",
+        "div",
+        "i"
+      ],
+      "category": "content",
+      "default": "i"
+    },
+    "name": {
+      "type": "String",
+      "desc": "Name of the icon, following Quasar convention",
+      "examples": [
+        "map",
+        "ion-add"
+      ],
+      "category": "model"
+    },
+    "color": {
+      "type": "String",
+      "desc": "Color name for component from the Quasar Color Palette",
+      "examples": [
+        "primary",
+        "teal-10"
+      ],
+      "category": "style"
+    },
+    "left": {
+      "type": "Boolean",
+      "desc": "Useful if icon is on the left side of something: applies a standard margin on the right side of Icon",
+      "category": "content"
+    },
+    "right": {
+      "type": "Boolean",
+      "desc": "Useful if icon is on the right side of something: applies a standard margin on the left side of Icon",
+      "category": "content"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Suggestions: QTooltip or QMenu"
+    }
+  }
+}

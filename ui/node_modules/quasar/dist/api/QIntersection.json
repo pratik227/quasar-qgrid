@@ -1,0 +1,91 @@
+{
+  "type": "component",
+  "meta": {
+    "docsUrl": "https://v2.quasar.dev/vue-components/intersection"
+  },
+  "props": {
+    "tag": {
+      "type": "String",
+      "desc": "HTML tag to use",
+      "examples": [
+        "div",
+        "span",
+        "div",
+        "span",
+        "blockquote"
+      ],
+      "category": "content",
+      "default": "div"
+    },
+    "once": {
+      "type": "Boolean",
+      "desc": "Get triggered only once",
+      "category": "behavior"
+    },
+    "ssr-prerender": {
+      "type": "Boolean",
+      "desc": "Pre-render content on server side if using SSR (use it to pre-render above the fold content)",
+      "category": "behavior"
+    },
+    "root": {
+      "type": "Element",
+      "desc": "[Intersection API root prop] Lets you define an alternative to the viewport as your root (through its DOM element); It is important to keep in mind that root needs to be an ancestor of the observed element",
+      "examples": [
+        "$refs.myTable.$el",
+        "getElementById(\"myTable\")"
+      ],
+      "category": "behavior"
+    },
+    "margin": {
+      "type": "String",
+      "desc": "[Intersection API rootMargin prop] Allows you to specify the margins for the root, effectively allowing you to either grow or shrink the area used for intersections",
+      "examples": [
+        "-20px 0px",
+        "10px 20px 30px 40px"
+      ],
+      "category": "behavior"
+    },
+    "threshold": {
+      "type": [
+        "Array",
+        "Number"
+      ],
+      "desc": "[Intersection API threshold prop] Threshold(s) at which to trigger, specified as a ratio, or list of ratios, of (visible area / total area) of the observed element",
+      "examples": [
+        "[ 0, 0.25, 0.5, 0.75, 1 ]",
+        ":threshold=\"1\""
+      ],
+      "category": "behavior"
+    },
+    "transition": {
+      "type": "String",
+      "desc": "One of Quasar's embedded transitions",
+      "examples": [
+        "fade",
+        "slide-down"
+      ],
+      "category": "behavior"
+    },
+    "disable": {
+      "type": "Boolean",
+      "desc": "Disable visibility observable (content will remain as it was, visible or hidden)",
+      "category": "behavior"
+    }
+  },
+  "slots": {
+    "default": {
+      "desc": "Default slot in the devland unslotted content of the component"
+    }
+  },
+  "events": {
+    "visibility": {
+      "desc": "Fires when visibility changes",
+      "params": {
+        "isVisible": {
+          "type": "Boolean",
+          "desc": "Visibility status (true/false)"
+        }
+      }
+    }
+  }
+}
