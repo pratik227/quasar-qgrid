@@ -93,6 +93,10 @@
     "columns_filter": {
       "type": "boolean",
       "desc": "For enabling column filter"
+    },
+    "loading": {
+      "type": "boolean",
+      "desc": "Set loading state"
     }
   },
   "Events": {
