@@ -40,7 +40,7 @@
 
                       <div class="q-pa-sm q-mt-md">
                         <q-select map-options multiple emit-value filled v-model="column_options_selected[col.field]"
-                                  :options="column_options[col.field]" style="width: 150px !important;"/>
+                                  :options="getColumnOptions(col.field)" style="width: 150px !important;"/>
                       </div>
                       <q-btn color="primary" class="float-right  q-mr-sm q-mb-sm text-capitalize" size="sm"
                              v-close-popup @click="$set(column_options_selected,col.field,[])" label="Clear"/>
@@ -66,7 +66,7 @@
 
               <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
                         multiple emit-value filled v-model="column_options_selected[col.field]"
-                        :options="column_options[col.field]" dense>
+                        :options="getColumnOptions(col.field)" dense>
                 <template v-slot:append>
                   <q-icon v-if="column_options_selected[col.field].length>0" name="close"
                           @click.stop="$set(column_options_selected,col.field,[])" class="cursor-pointer"/>
@@ -396,6 +396,18 @@
             this.setColumnsDefinition()
         },
         methods: {
+
+            getColumnOptions(column) {
+              let column_option_simple = [...new Set(this.data.map(item => item[column]))];
+
+              let column_option = []
+
+              for (let col of column_option_simple) {
+                column_option.push({'label': col.toString(), 'value': col.toString().toLowerCase().replace(/_/g, '_')})
+              }
+
+              return column_option
+            },
             exportTable(type) {
                 // naive encoding to csv format
                 const content = [this.columns.map(col => wrapCsvValue(col.label))].concat(
