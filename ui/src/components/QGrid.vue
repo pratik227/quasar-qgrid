@@ -175,8 +175,7 @@
 </template>
 
 <script>
-    import { defineComponent, onMounted } from 'vue';
-    import { ref } from 'vue';
+    import { defineComponent, ref } from 'vue';
     import Sortable from 'sortablejs';
 
     import {

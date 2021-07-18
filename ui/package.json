@@ -21,6 +21,8 @@
     "url": ""
   },
   "dependencies": {
+    "@vue/compiler-sfc": "^3.1.4",
+    "rollup-plugin-vue@next": "^6.0.0",
     "sortablejs": "^1.10.2"
   },
   "bugs": "",

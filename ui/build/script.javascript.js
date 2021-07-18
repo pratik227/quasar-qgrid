@@ -1,3 +1,4 @@
+const vuePlugin = require('rollup-plugin-vue')
 const path = require('path')
 const fs = require('fs')
 const fse = require('fs-extra')
@@ -24,6 +25,7 @@ const rollupPlugins = [
     extensions: ['.js'],
     preferBuiltins: false
   }),
+  vuePlugin(),
   json(),
   buble({
     objectAssign: 'Object.assign'
