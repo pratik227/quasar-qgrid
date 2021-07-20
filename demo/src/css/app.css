@@ -1,0 +1,32 @@
+/* app global css */
+
+.markdown-nav-bar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 80px;
+  padding: 6px;
+  background: #0d47a1;
+  color: #bbdefb;
+  border-radius: 0 0 6px 6px;
+}
+
+.markdown-nav-bar .title {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  justify-content: center;
+  font-size: 2.4em;
+}
+
+.markdown-nav-bar .inner {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+}
+
+
+.markdown-copyright {
+  font-family: Consolas, Monaco, Andale Mono, Ubuntu Mono, monospace
+}
