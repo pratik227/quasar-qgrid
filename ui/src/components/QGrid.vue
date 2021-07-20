@@ -376,9 +376,11 @@
             getColumnOptions(column) {
               let column_option_simple = [...new Set(this.data.map(item => item[column]))];
               let column_option = []
-              for (let col of column_option_simple) {
+
+              column_option_simple.filter(function (col) {
                 column_option.push({'label': col.toString(), 'value': col.toString().toLowerCase().replace(/_/g, '_')})
-              }
+                return col
+              })
               return column_option
             },
             exportTable(type) {
