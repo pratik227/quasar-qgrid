@@ -146,7 +146,7 @@
 
     <q-footer elevated class="glass" style="background-color: #77a2e1">
       <q-toolbar>
-        <div class="full-width text-center">This documentation site for QGrid is a work in progress. If you see something missing or inaccurate, please create a PR on the <markdown-link to="https://github.com/pratik227/quasar-qhierarchy" style="color: white;">GitHub repo</markdown-link>.</div>
+        <div class="full-width text-center">This documentation site for QGrid is a work in progress. If you see something missing or inaccurate, please create a PR on the <markdown-link to="https://github.com/pratik227/quasar-qgrid/tree/next" style="color: white;">GitHub repo</markdown-link>.</div>
       </q-toolbar>
     </q-footer>
 
