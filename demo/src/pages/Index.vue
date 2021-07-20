@@ -358,11 +358,11 @@ let mds_data = "# QGrid\n" +
   "\n" +
   "# Docs\n" +
   "\n" +
-  "can be found [here](https://quasar-qgrid.netlify.com).\n" +
+  "can be found [here](https://next-quasar-qgrid.netlify.app/).\n" +
   "\n" +
   "# Examples\n" +
   "\n" +
-  "can be found [here](https://quasar-qgrid.netlify.com/examples).\n" +
+  "can be found [here](https://next-quasar-qgrid.netlify.app/).\n" +
   "\n" +
   "# Demo (source) Project.\n" +
   "\n" +
