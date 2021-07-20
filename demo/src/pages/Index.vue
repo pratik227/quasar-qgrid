@@ -366,7 +366,7 @@ let mds_data = "# QGrid\n" +
   "\n" +
   "# Demo (source) Project.\n" +
   "\n" +
-  "can be found [here](https://github.com/pratik227/quasar-qgrid/tree/master/demo).\n" +
+  "can be found [here](https://github.com/pratik227/quasar-qgrid/tree/next/demo).\n" +
   "\n" +
   "\n" +
   "# Support\n" +
