@@ -1,5 +1,5 @@
 /*!
- * quasar-ui-qgrid v1.0.0-alpha.1
+ * quasar-ui-qgrid v1.0.0-alpha.3
  * (c) 2021 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
@@ -2998,7 +2998,7 @@
       }
       var script = vue.defineComponent({
           name: "QGrid",
-          props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter','visible_columns','pagination'],
+          props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter','visible_columns','pagination','loading'],
 
           setup: function setup() {
 
@@ -3108,7 +3108,38 @@
                   this.selected_prop = this.selected;
               }
               this.gorupby_option = [{"label": 'Group By Field', "value": ''}];
-              var self = this;
+              this.setColumnsDefinition();
+              // let self = this;
+              // self.column_options = {};
+              // self.columns.filter(function (item) {
+              //     self.column_options[item.field] = [];
+              //     self.column_options_selected[item.field] = []
+              //     self.filter_flags[item.field] = false;
+              //     if (item.hasOwnProperty('grouping') && item.grouping)
+              //     {
+              //         self.gorupby_option.push({"label": item.label, "value": item.field});
+              //     }
+              //     return item
+              // });
+              // self.data.filter(function (item) {
+              //     self.columns.filter(function (column) {
+              //         if(item[column.field] != null) {
+              //           self.column_options[column.field].push({
+              //             label: item[column.field].toString(),
+              //             value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
+              //           })
+              //         }
+              //     });
+              // });
+              // self.columns.filter(function (column) {
+              //     self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
+              //         [item['value'], item])).values()];
+              // });
+              // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
+          },
+          methods: {
+             setColumnsDefinition: function setColumnsDefinition() {
+               var self = this;
               self.column_options = {};
               self.columns.filter(function (item) {
                   self.column_options[item.field] = [];
@@ -3134,8 +3165,17 @@
                   self.column_options[column.field] = [].concat( new Map(self.column_options[column.field].map(function (item) { return [item['value'], item]; })).values() );
               });
               this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
-          },
-          methods: {
+             },
+              getColumnOptions: function getColumnOptions(column) {
+                var column_option_simple = [].concat( new Set(this.data.map(function (item) { return item[column]; })) );
+                var column_option = [];
+
+                column_option_simple.filter(function (col) {
+                  column_option.push({'label': col.toString(), 'value': col.toString().toLowerCase().replace(/_/g, '_')});
+                  return col
+                });
+                return column_option
+              },
               exportTable: function exportTable(type) {
                   var this$1$1 = this;
 
@@ -3201,13 +3241,16 @@
               },
               'selected_prop': function () {
                   this.$emit('selected-val', this.selected_prop.values());
+              },
+              'columns': function () {
+                this.setColumnsDefinition();
               }
           }
       });
 
-  var _withId = /*#__PURE__*/vue.withScopeId("data-v-7dfedcbe");
+  var _withId = /*#__PURE__*/vue.withScopeId("data-v-4f676b8e");
 
-  vue.pushScopeId("data-v-7dfedcbe");
+  vue.pushScopeId("data-v-4f676b8e");
   var _hoisted_1 = { class: "row inline" };
   var _hoisted_2 = { class: "column" };
   var _hoisted_3 = { class: "column" };
@@ -3236,6 +3279,7 @@
     return (vue.openBlock(), vue.createBlock("span", null, [
       vue.createVNode(_component_q_table, {
         id: _ctx.uuid,
+        loading: _ctx.loading,
         rows: _ctx.getFilteredValuesData,
         columns: _ctx.final_column,
         "row-key": "name",
@@ -3326,7 +3370,7 @@
                                         filled: "",
                                         modelValue: _ctx.column_options_selected[col.field],
                                         "onUpdate:modelValue": function ($event) { return (_ctx.column_options_selected[col.field] = $event); },
-                                        options: _ctx.column_options[col.field],
+                                        options: _ctx.getColumnOptions(col.field),
                                         style: {"width":"150px !important"}
                                       }, null, 8, ["modelValue", "onUpdate:modelValue", "options"])
                                     ]),
@@ -3407,7 +3451,7 @@
                               filled: "",
                               modelValue: _ctx.column_options_selected[col.field],
                               "onUpdate:modelValue": function ($event) { return (_ctx.column_options_selected[col.field] = $event); },
-                              options: _ctx.column_options[col.field],
+                              options: _ctx.getColumnOptions(col.field),
                               dense: ""
                             }, {
                               append: _withId(function () { return [
@@ -3635,16 +3679,24 @@
                   : vue.createCommentVNode("", true)
               ]; })
             }
+          : undefined,
+        (_ctx.$slots['loading'])
+          ? {
+              name: "loading",
+              fn: _withId(function () { return [
+                vue.renderSlot(_ctx.$slots, "loading")
+              ]; })
+            }
           : undefined
-      ]), 1032, ["id", "rows", "columns", "class", "visible-columns", "pagination", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter"])
+      ]), 1032, ["id", "loading", "rows", "columns", "class", "visible-columns", "pagination", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter"])
     ]))
   });
 
   script.render = render;
-  script.__scopeId = "data-v-7dfedcbe";
+  script.__scopeId = "data-v-4f676b8e";
 
   var name = "quasar-ui-qgrid";
-  var version$1 = "1.0.0-alpha.1";
+  var version$1 = "1.0.0-alpha.3";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid";
   var license = "MIT";
@@ -3666,7 +3718,7 @@
   };
   var dependencies = {
   	"@vue/compiler-sfc": "^3.1.4",
-  	"rollup-plugin-vue@next": "^6.0.0",
+  	"rollup-plugin-vue": "^6.0.0",
   	sortablejs: "^1.10.2"
   };
   var bugs = "";

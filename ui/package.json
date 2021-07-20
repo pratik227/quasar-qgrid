@@ -1,6 +1,6 @@
 {
   "name": "quasar-ui-qgrid",
-  "version": "1.0.0-alpha.2",
+  "version": "1.0.0-alpha.3",
   "author": "pratikpatelpp802@gmail.com",
   "description": "QGrid",
   "license": "MIT",
@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@vue/compiler-sfc": "^3.1.4",
-    "rollup-plugin-vue@next": "^6.0.0",
+    "rollup-plugin-vue": "^6.0.0",
     "sortablejs": "^1.10.2"
   },
   "bugs": "",
