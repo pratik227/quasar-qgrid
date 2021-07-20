@@ -1,6 +1,6 @@
 <template>
   <span>
-      <q-table :id="uuid"
+      <q-table :id="uuid" :loading="loading"
                :rows="getFilteredValuesData"
                :columns="final_column"
                row-key="name" :class="classes"  :visible-columns="visible_columns" :pagination="pagination"
@@ -40,7 +40,7 @@
 
                       <div class="q-pa-sm q-mt-md">
                         <q-select map-options multiple emit-value filled v-model="column_options_selected[col.field]"
-                                  :options="column_options[col.field]" style="width: 150px !important;"/>
+                                  :options="getColumnOptions(col.field)" style="width: 150px !important;"/>
                       </div>
                       <q-btn color="primary" class="float-right  q-mr-sm q-mb-sm text-capitalize" size="sm"
                              v-close-popup @click="column_options_selected[col.field]=[]" label="Clear"/>
@@ -66,7 +66,7 @@
 
               <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
                         multiple emit-value filled v-model="column_options_selected[col.field]"
-                        :options="column_options[col.field]" dense>
+                        :options="getColumnOptions(col.field)" dense>
                 <template v-slot:append>
                   <q-icon v-if="column_options_selected[col.field].length>0" name="close"
                           @click.stop="column_options_selected[col.field]=[]" class="cursor-pointer"/>
@@ -170,6 +170,10 @@
           <slot name="body" v-bind:row="props.row" v-if="hasDefaultSlot">
           </slot>
         </template>
+
+        <template v-slot:loading v-if="$slots['loading']">
+            <slot name="loading"></slot>
+        </template>
       </q-table>
   </span>
 </template>
@@ -200,7 +204,7 @@
     }
     export default defineComponent({
         name: "QGrid",
-        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter','visible_columns','pagination'],
+        props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter','visible_columns','pagination','loading'],
 
         setup() {
 
@@ -310,7 +314,38 @@
                 this.selected_prop = this.selected;
             }
             this.gorupby_option = [{"label": 'Group By Field', "value": ''}];
-            let self = this;
+            this.setColumnsDefinition()
+            // let self = this;
+            // self.column_options = {};
+            // self.columns.filter(function (item) {
+            //     self.column_options[item.field] = [];
+            //     self.column_options_selected[item.field] = []
+            //     self.filter_flags[item.field] = false;
+            //     if (item.hasOwnProperty('grouping') && item.grouping)
+            //     {
+            //         self.gorupby_option.push({"label": item.label, "value": item.field});
+            //     }
+            //     return item
+            // });
+            // self.data.filter(function (item) {
+            //     self.columns.filter(function (column) {
+            //         if(item[column.field] != null) {
+            //           self.column_options[column.field].push({
+            //             label: item[column.field].toString(),
+            //             value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
+            //           })
+            //         }
+            //     });
+            // });
+            // self.columns.filter(function (column) {
+            //     self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
+            //         [item['value'], item])).values()];
+            // });
+            // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
+        },
+        methods: {
+           setColumnsDefinition() {
+             let self = this;
             self.column_options = {};
             self.columns.filter(function (item) {
                 self.column_options[item.field] = [];
@@ -337,8 +372,15 @@
                     [item['value'], item])).values()];
             });
             this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
-        },
-        methods: {
+           },
+            getColumnOptions(column) {
+              let column_option_simple = [...new Set(this.data.map(item => item[column]))];
+              let column_option = []
+              for (let col of column_option_simple) {
+                column_option.push({'label': col.toString(), 'value': col.toString().toLowerCase().replace(/_/g, '_')})
+              }
+              return column_option
+            },
             exportTable(type) {
                 // naive encoding to csv format
                 const content = [this.columns.map(col => wrapCsvValue(col.label))].concat(
@@ -402,6 +444,9 @@
             },
             'selected_prop': function () {
                 this.$emit('selected-val', this.selected_prop.values())
+            },
+            'columns': function () {
+              this.setColumnsDefinition()
             }
         }
     })
