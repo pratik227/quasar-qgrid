@@ -20,7 +20,7 @@ quasar ext remove qgrid
 # Defining the columns
 
 
-    
+
         [
                     {
                         name: 'name',
@@ -52,7 +52,7 @@ quasar ext remove qgrid
                     }
                 ]
 
-     
+
 # Defining Data
 
      [
@@ -94,15 +94,15 @@ can be found [here](https://github.com/pratik227/quasar-qgrid).
 
 # Docs
 
-can be found [here](https://quasar-qgrid.netlify.com).
+can be found [here](https://next-quasar-qgrid.netlify.app/).
 
 # Examples
 
-can be found [here](https://quasar-qgrid.netlify.com/examples).
+can be found [here](https://next-quasar-qgrid.netlify.app/).
 
 # Demo (source) Project.
 
-can be found [here](https://github.com/pratik227/quasar-qgrid/tree/master/demo).
+can be found [here](https://github.com/pratik227/quasar-qgrid/tree/ui/dev).
 
 
 # Support

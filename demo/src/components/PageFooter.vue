@@ -4,7 +4,7 @@
       <a href="https://github.com/pratik227" target="_blank" rel="noopener">
         <q-avatar size="28px"><img src="https://avatars.githubusercontent.com/u/34883558?v=4"></q-avatar>
       </a>
-      <q-btn type="a" rounded dense href="https://github.com/pratik227/quasar-qhierarchy" target="__blank" size="md"
+      <q-btn type="a" rounded dense href="https://github.com/pratik227/quasar-qgrid" target="__blank" size="md"
              icon="fab fa-github" flat color="primary"></q-btn>
       <q-btn type="a" rounded dense href="https://twitter.com/pratikPatel_227" target="__blank" icon="fab fa-twitter"
              flat color="primary"></q-btn>
