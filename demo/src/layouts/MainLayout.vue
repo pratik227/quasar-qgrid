@@ -117,7 +117,7 @@
         >
           <q-card class="bg-transparent">
             <q-item class="text-primary q-ml-md" type="a"
-                    @click="openLink('https://github.com/pratik227/quasar-qhierarchy')" dense clickable>
+                    @click="openLink('https://github.com/pratik227/quasar-qgrid')" dense clickable>
               <q-item-section>
                 Github
               </q-item-section>
