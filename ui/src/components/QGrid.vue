@@ -9,7 +9,8 @@
       >
 
         <template v-slot:header="props">
-          <q-tr :props="props">
+
+          <q-tr :props="props" v-show="!hasHeaderSlot">
             <q-th auto-width v-if="selection_prop!='none'">
               <q-checkbox
                       v-if="selection_prop=='multiple'"
@@ -51,6 +52,8 @@
               </div>
             </q-th>
           </q-tr>
+          <slot name="header" v-bind:cols="props.cols" v-if="hasHeaderSlot">
+          </slot>
           <q-tr :props="props" class="ignore-elements" v-if="columns_filter">
 
             <q-th auto-width v-if="selection_prop!='none'">
@@ -74,7 +77,6 @@
               </q-select>
             </q-th>
           </q-tr>
-
         </template>
 
 
@@ -293,6 +295,9 @@
             },
             hasDefaultSlot() {
                 return this.$slots.hasOwnProperty("body");
+            },
+            hasHeaderSlot() {
+                return this.$slots.hasOwnProperty("header");
             },
         },
         created() {

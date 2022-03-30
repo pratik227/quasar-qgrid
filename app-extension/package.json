@@ -1,6 +1,6 @@
 {
   "name": "quasar-app-extension-qgrid",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0",
   "description": "A Quasar App Extension",
   "author": "pratikpatelpp802@gmail.com",
   "license": "MIT",
@@ -12,7 +12,7 @@
   "bugs": "",
   "homepage": "",
   "dependencies": {
-    "quasar-ui-qgrid": "^1.0.0-alpha.3"
+    "quasar-ui-qgrid": "latest"
   },
   "engines": {
     "node": ">= 8.9.0",

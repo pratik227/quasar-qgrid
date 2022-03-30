@@ -1,6 +1,6 @@
 /*!
- * quasar-ui-qgrid v1.0.0-alpha.3
- * (c) 2021 pratikpatelpp802@gmail.com
+ * quasar-ui-qgrid v1.0.0
+ * (c) 2022 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
 
@@ -3088,6 +3088,9 @@
               hasDefaultSlot: function hasDefaultSlot() {
                   return this.$slots.hasOwnProperty("body");
               },
+              hasHeaderSlot: function hasHeaderSlot() {
+                  return this.$slots.hasOwnProperty("header");
+              },
           },
           created: function created() {
               this.uuid = quasar.uid();
@@ -3248,9 +3251,9 @@
           }
       });
 
-  var _withId = /*#__PURE__*/vue.withScopeId("data-v-4f676b8e");
+  var _withId = /*#__PURE__*/vue.withScopeId("data-v-4a512831");
 
-  vue.pushScopeId("data-v-4f676b8e");
+  vue.pushScopeId("data-v-4a512831");
   var _hoisted_1 = { class: "row inline" };
   var _hoisted_2 = { class: "column" };
   var _hoisted_3 = { class: "column" };
@@ -3298,7 +3301,7 @@
         filter: _ctx.filter
       }, vue.createSlots({
         header: _withId(function (props) { return [
-          vue.createVNode(_component_q_tr, { props: props }, {
+          vue.withDirectives(vue.createVNode(_component_q_tr, { props: props }, {
             default: _withId(function () { return [
               (_ctx.selection_prop!='none')
                 ? (vue.openBlock(), vue.createBlock(_component_q_th, {
@@ -3398,10 +3401,18 @@
               }), 128))
             ]; }),
             _: 2
-          }, 1032, ["props"]),
+          }, 1032, ["props"]), [
+            [vue.vShow, !_ctx.hasHeaderSlot]
+          ]),
+          (_ctx.hasHeaderSlot)
+            ? vue.renderSlot(_ctx.$slots, "header", {
+                key: 0,
+                cols: props.cols
+              })
+            : vue.createCommentVNode("", true),
           (_ctx.columns_filter)
             ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
-                key: 0,
+                key: 1,
                 props: props,
                 class: "ignore-elements"
               }, {
@@ -3693,10 +3704,10 @@
   });
 
   script.render = render;
-  script.__scopeId = "data-v-4f676b8e";
+  script.__scopeId = "data-v-4a512831";
 
   var name = "quasar-ui-qgrid";
-  var version$1 = "1.0.0-alpha.3";
+  var version$1 = "1.0.0";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid";
   var license = "MIT";
