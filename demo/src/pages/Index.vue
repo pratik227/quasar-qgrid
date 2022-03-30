@@ -196,6 +196,10 @@ const json = {
     "body": {
       "extends": "default",
       "desc": "Slot to define how a body row looks like; Suggestion: tr + td"
+    },
+    "header": {
+      "extends": "default",
+      "desc": "Slot to define how a header row looks like; Suggestion: tr + th"
     }
   },
   "General": {

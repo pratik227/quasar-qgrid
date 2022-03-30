@@ -84,6 +84,11 @@
                 QGrid Slot Demo
               </q-item-section>
             </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-header-slot-demo'?'bg-grey-3':''" to="/example-qgrid-header-slot-demo" dense clickable>
+              <q-item-section>
+                QGrid Header Slot Demo
+              </q-item-section>
+            </q-item>
             <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-select-column-filter'?'bg-grey-3':''" to="/example-qgrid-select-column-filter" dense clickable>
               <q-item-section>
                 QGrid Select Column Filter
