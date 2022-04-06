@@ -114,7 +114,13 @@ in the `ui/dev/src/pages` you can add Vue files to test your component/directive
 If you have a component that has assets, like language or icon-sets, you will need to provide these for UMD. In the `ui/build/script.javascript.js` file, you will find a couple of commented out commands that call `addAssets`. Uncomment what you need and add your assets to have them be built and put into the `ui/dist` folder.
 
 # Donate
-If you appreciate the work that went into this, please consider [donating to Quasar](https://donate.quasar.dev).
+If this helped you in any way, you can contribute to this project for long term survival by supporting me:
+
+### [💜 Support my open-source work on GitHub](https://github.com/sponsors/pratik227)
+
+Be sure to check out my sponsor page.
+
+Thank you so much!!!
 
 # License
 MIT (c) pratikpatelpp802@gmail.com

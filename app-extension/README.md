@@ -27,7 +27,14 @@ quasar ext remove qgrid
 > Add other information that's not as important to know
 
 # Donate
-If you appreciate the work that went into this App Extension, please consider [donating to Quasar](https://donate.quasar.dev).
+
+If this helped you in any way, you can contribute to this project for long term survival by supporting me:
+
+### [💜 Support my open-source work on GitHub](https://github.com/sponsors/pratik227)
+
+Be sure to check out my sponsor page.
+
+Thank you so much!!!
 
 # License
 MIT (c) pratikpatelpp802@gmail.com
