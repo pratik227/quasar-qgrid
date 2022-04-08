@@ -14,6 +14,17 @@
             Please note that the codepen links, in the documentation examples, do not work at this time.
           </q-banner>
         </q-card-section>
+        <q-card-section>
+          <div class="text-h6">Note</div>
+          <q-banner inline-actions class="text-white bg-info rounded-borders">
+            Added new Select All and Date Range Functionality.
+            <br/>
+            For Date Range filter I'm using moment package. So if you want then you need to pass this 2 fields in columns
+            <br/>
+            filter_type: 'date',<br/>
+            format:'DD/MM/YYYY'
+          </q-banner>
+        </q-card-section>
       </q-card>
 
       <q-markdown

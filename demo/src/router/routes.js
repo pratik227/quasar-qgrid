@@ -14,6 +14,7 @@ const routes = [
       { path: '/example-qgrid-header-slot-demo', component: () => import('pages/HeaderSlotDemoExample') },
       { path: '/example-qgrid-select-column-filter', component: () => import('pages/SelectColumnFilterExample') },
       { path: '/example-qgrid-grouping', component: () => import('pages/GroupingExample') },
+      { path: '/example-qgrid-date-range', component: () => import('pages/DateRangeExample') },
       // { path: '/example-qhierarchy-slot-demo', component: () => import('pages/SlotDemoExample') },
       // { path: '/example-qhierarchy-default-expand-all', component: () => import('pages/ExpandAllExample') },
       { path: '/sponsor', component: () => import('pages/Sponsor') }
