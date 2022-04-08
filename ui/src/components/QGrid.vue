@@ -65,7 +65,7 @@
                         <q-checkbox v-model="column_options_selected[col.field]" :val="scope.opt.value" color="teal"/>
                       </q-item-section>
                       <q-item-section>
-                        <q-item-label class="text-black"  v-html="scope.opt.label"></q-item-label>
+                        <q-item-label class="text-black" v-html="scope.opt.label"></q-item-label>
                       </q-item-section>
                     </q-item>
                   </template>
@@ -130,6 +130,22 @@
                   </template>
 
               </q-select>
+
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense color="teal"
+                       class="q-pl-xs q-pr-xs" filled :model-value="filter_data[col.field].from+(filter_data[col.field].from?'-':'')+filter_data[col.field].to">
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy ref="qDateProxy" cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="filter_data[col.field]" range>
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" class="text-capitalize" color="primary" flat></q-btn>
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                  <q-icon name="cancel" v-if="filter_data[col.field].from!=''"  @click.stop="filter_data[col.field] = {'from': '', 'to': ''}" class="cursor-pointer"/>
+                </template>
+              </q-input>
             </q-th>
           </q-tr>
         </template>
@@ -238,6 +254,10 @@
 <script>
 import {defineComponent, ref} from 'vue';
 import Sortable from 'sortablejs';
+import Moment from 'moment';
+import {extendMoment} from 'moment-range';
+
+const moment = extendMoment(Moment);
 
 import {
   uid
@@ -317,8 +337,20 @@ export default defineComponent({
             continue;
           if (item[table_columns[i]] == null)
             return true
-          if (table_columns[i] in self.filter_data && item[table_columns[i]].toString().toLowerCase().indexOf(self.filter_data[table_columns[i]].toLowerCase()) == -1) {
-            return false;
+
+          if (!self.final_column[i].hasOwnProperty('filter_type') || self.final_column[i].filter_type == 'text') {
+            if (table_columns[i] in self.filter_data && item[table_columns[i]].toString().toLowerCase().indexOf(self.filter_data[table_columns[i]].toLowerCase()) == -1) {
+              return false;
+            }
+          }
+          if (self.final_column[i].hasOwnProperty('filter_type') && self.final_column[i].filter_type == 'date') {
+            let compareDate = moment(item[table_columns[i]], self.final_column[i].format)
+            let startDate = moment(self.filter_data[table_columns[i]].from, 'YYYY/MM/DD')
+            let endDate = moment(self.filter_data[table_columns[i]].to, 'YYYY/MM/DD')
+            const range = moment.range(startDate, endDate);
+            if (table_columns[i] in self.filter_data && self.filter_data[table_columns[i]].to && self.filter_data[table_columns[i]].from && !(range.contains(compareDate))) {
+              return false;
+            }
           }
         }
         return true
@@ -429,6 +461,9 @@ export default defineComponent({
         });
       });
       self.columns.filter(function (column) {
+        if (column.hasOwnProperty('filter_type') && column.filter_type == 'date') {
+          self.filter_data[column.field] = {'from': '', 'to': ''}
+        }
         self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
             [item['value'], item])).values()];
       });

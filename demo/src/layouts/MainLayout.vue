@@ -99,6 +99,11 @@
                 QGrid Grouping Example
               </q-item-section>
             </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-date-range'?'bg-grey-3':''" to="/example-qgrid-date-range" dense clickable>
+              <q-item-section>
+                QGrid Date Range Example
+              </q-item-section>
+            </q-item>
           </q-card>
         </q-expansion-item>
         <q-expansion-item dense style="font-size: 12px;"
