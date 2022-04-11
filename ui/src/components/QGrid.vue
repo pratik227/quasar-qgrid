@@ -1,6 +1,5 @@
 <template>
   <span>
-
       <q-table :id="uuid" :loading="loading"
                :rows="getFilteredValuesData"
                :columns="final_column"
@@ -515,6 +514,8 @@ export default defineComponent({
     Sorting() {
       let dom = document.getElementById(this.uuid);
       const element = dom.querySelector("table tbody");
+      const element2 = dom.querySelector("table thead tr:nth-of-type(1)");
+      console.log(element2)
       let self = this;
       const sortable = Sortable.create(element, {
         // filter:'.ignore-elements',
@@ -525,6 +526,23 @@ export default defineComponent({
           let tmp = self.data[(event.oldIndex)];
           self.data[(event.oldIndex)] = self.data[(event.newIndex)];
           self.data[(event.newIndex)] = tmp;
+          // }
+        },
+        onMove: function (/**Event*/evt, /**Event*/originalEvent) {
+          if (evt.related.className == 'ignore-elements q-tr') {
+            return false
+          }
+        },
+      });
+      const sortable2 = Sortable.create(element2, {
+        // filter:'.ignore-elements',
+        // preventOnFilter: true,
+        disabled: !this.draggable,
+        onEnd(event) {
+          // if (event.newIndex != 0) {
+          let tmp = self.final_column[(event.oldIndex)];
+          self.final_column[(event.oldIndex)] = self.final_column[(event.newIndex)];
+          self.final_column[(event.newIndex)] = tmp;
           // }
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
