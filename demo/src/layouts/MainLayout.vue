@@ -104,6 +104,16 @@
                 QGrid Date Range Example
               </q-item-section>
             </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-draggable-columns'?'bg-grey-3':''" to="/example-qgrid-draggable-columns" dense clickable>
+              <q-item-section>
+                QGrid Draggable Columns
+              </q-item-section>
+            </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-draggable-columns-slot'?'bg-grey-3':''" to="/example-qgrid-draggable-columns-slot" dense clickable>
+              <q-item-section>
+                QGrid Draggable Columns with Slot
+              </q-item-section>
+            </q-item>
           </q-card>
         </q-expansion-item>
         <q-expansion-item dense style="font-size: 12px;"

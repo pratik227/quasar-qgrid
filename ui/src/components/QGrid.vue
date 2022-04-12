@@ -253,10 +253,7 @@
 <script>
 import {defineComponent, ref} from 'vue';
 import Sortable from 'sortablejs';
-import Moment from 'moment';
-import {extendMoment} from 'moment-range';
-
-const moment = extendMoment(Moment);
+import * as moment from 'moment'
 
 import {
   uid
@@ -282,7 +279,7 @@ function wrapCsvValue(val, formatFn) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading'],
 
   setup() {
 
@@ -346,8 +343,8 @@ export default defineComponent({
             let compareDate = moment(item[table_columns[i]], self.final_column[i].format)
             let startDate = moment(self.filter_data[table_columns[i]].from, 'YYYY/MM/DD')
             let endDate = moment(self.filter_data[table_columns[i]].to, 'YYYY/MM/DD')
-            const range = moment.range(startDate, endDate);
-            if (table_columns[i] in self.filter_data && self.filter_data[table_columns[i]].to && self.filter_data[table_columns[i]].from && !(range.contains(compareDate))) {
+            // const range = moment.range(startDate, endDate);
+            if (table_columns[i] in self.filter_data && self.filter_data[table_columns[i]].to && self.filter_data[table_columns[i]].from && !(startDate <= compareDate && compareDate <= endDate)) {
               return false;
             }
           }
@@ -515,7 +512,6 @@ export default defineComponent({
       let dom = document.getElementById(this.uuid);
       const element = dom.querySelector("table tbody");
       const element2 = dom.querySelector("table thead tr:nth-of-type(1)");
-      console.log(element2)
       let self = this;
       const sortable = Sortable.create(element, {
         // filter:'.ignore-elements',
@@ -537,13 +533,12 @@ export default defineComponent({
       const sortable2 = Sortable.create(element2, {
         // filter:'.ignore-elements',
         // preventOnFilter: true,
-        disabled: !this.draggable,
+        disabled: !this.draggable_columns,
         onEnd(event) {
           // if (event.newIndex != 0) {
           let tmp = self.final_column[(event.oldIndex)];
           self.final_column[(event.oldIndex)] = self.final_column[(event.newIndex)];
           self.final_column[(event.newIndex)] = tmp;
-          // }
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
           if (evt.related.className == 'ignore-elements q-tr') {
@@ -555,7 +550,7 @@ export default defineComponent({
   },
   watch: {
     'selected_group_by_filed': function () {
-      console.log(this.selected_group_by_filed.value)
+      // console.log(this.selected_group_by_filed.value)
       this.final_column = this.groupby_filter && this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
     },
     'selected_prop': function () {
