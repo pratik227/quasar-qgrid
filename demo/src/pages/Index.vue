@@ -254,6 +254,14 @@ const json = {
       "type": "boolean",
       "desc": "For enabling Grouping of columns",
     },
+    "draggable": {
+      "type": "boolean",
+      "desc": "For draggable rows",
+    },
+    "draggable_columns": {
+      "type": "boolean",
+      "desc": "For draggable columns",
+    },
     "fullscreen": {
       "type": "boolean",
       "desc": "Fullscreen mode",
