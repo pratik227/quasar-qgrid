@@ -1,5 +1,5 @@
 <template>
-  <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" :draggable_columns="true" :fullscreen="true"
+  <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" @dragged_row="DraggedRow($event)" :draggable_columns="true" :fullscreen="true"
             :csv_download="true" :global_search="true">
     </q-grid>
 </template>
@@ -164,6 +164,11 @@ export default defineComponent({
     return {
       columns,
       data
+    }
+  },
+  methods:{
+    DraggedRow(data){
+      console.log(data)
     }
   }
 })

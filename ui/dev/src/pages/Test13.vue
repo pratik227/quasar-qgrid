@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" :draggable_columns="true" :fullscreen="true"
-            :csv_download="true" :global_search="true">
+            :csv_download="true" :global_search="true" @dragged_column="DraggedColumn($event)" @dragged_row="DraggedRow($event)">
     </q-grid>
   </q-page>
 </template>
@@ -175,6 +175,14 @@ export default defineComponent({
       GetSelected(Selected) {
         console.log(Selected)
       }
+    }
+  },
+  methods:{
+    DraggedColumn(data){
+      console.log(data)
+    },
+    DraggedRow(data){
+      console.log(data)
     }
   }
 })
