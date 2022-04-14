@@ -1,6 +1,6 @@
 <template>
   <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable_columns="true" :fullscreen="true"
-            :csv_download="true" :global_search="true">
+            :csv_download="true" :global_search="true" @dragged_column="DraggedColumn($event)">
       <template v-slot:body="props">
         <q-tr :props="props">
           <q-td
@@ -174,6 +174,11 @@ export default defineComponent({
     return {
       columns,
       data
+    }
+  },
+  methods:{
+    DraggedColumn(data){
+      console.log(data)
     }
   }
 })

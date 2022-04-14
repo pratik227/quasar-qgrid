@@ -522,6 +522,7 @@ export default defineComponent({
           let tmp = self.data[(event.oldIndex)];
           self.data[(event.oldIndex)] = self.data[(event.newIndex)];
           self.data[(event.newIndex)] = tmp;
+          self.$emit('dragged_row',{'dragged_row':self.data[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex})
           // }
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
@@ -539,6 +540,7 @@ export default defineComponent({
           let tmp = self.final_column[(event.oldIndex)];
           self.final_column[(event.oldIndex)] = self.final_column[(event.newIndex)];
           self.final_column[(event.newIndex)] = tmp;
+          self.$emit('dragged_column',{'dragged_column':self.final_column[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex})
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
           if (evt.related.className == 'ignore-elements q-tr') {
@@ -559,7 +561,8 @@ export default defineComponent({
     'columns': function () {
       this.setColumnsDefinition()
     }
-  }
+  },
+  emits:['selected-val','dragged_column']
 })
 </script>
 

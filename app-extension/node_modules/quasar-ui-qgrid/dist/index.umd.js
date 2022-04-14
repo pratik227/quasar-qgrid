@@ -8937,6 +8937,7 @@
             var tmp = self.final_column[(event.oldIndex)];
             self.final_column[(event.oldIndex)] = self.final_column[(event.newIndex)];
             self.final_column[(event.newIndex)] = tmp;
+            self.$emit('dragged_column',{'dragged_column':self.final_column[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex});
           },
           onMove: function (/**Event*/evt, /**Event*/originalEvent) {
             if (evt.related.className == 'ignore-elements q-tr') {
@@ -8957,7 +8958,8 @@
       'columns': function () {
         this.setColumnsDefinition();
       }
-    }
+    },
+    emits:['selected-val','dragged_column']
   });
 
   var _hoisted_1 = { class: "row inline" };

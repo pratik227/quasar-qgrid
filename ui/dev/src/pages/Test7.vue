@@ -15,7 +15,7 @@
 
 <script>
 
-import {defineComponent} from 'vue';
+import {defineComponent,ref} from 'vue';
 
 const columns = [
   {
@@ -155,6 +155,7 @@ export default defineComponent({
     return {
       data,
       columns,
+      selected:ref([]),
       GetSelected(Selected) {
         console.log(Selected)
       }
