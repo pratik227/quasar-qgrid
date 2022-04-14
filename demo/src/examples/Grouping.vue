@@ -148,6 +148,7 @@ export default defineComponent({
     return {
       columns,
       data,
+      selected:ref([]),
       GetSelected(Selected) {
         console.log(Selected)
       }

@@ -565,7 +565,7 @@ export default defineComponent({
       this.final_column = this.groupby_filter && this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
     },
     'selected_prop': function () {
-      this.$emit('selected-val', this.selected_prop.values())
+      this.$emit('selected-val', this.selected_prop)
     },
     'columns': function () {
       this.setColumnsDefinition()
