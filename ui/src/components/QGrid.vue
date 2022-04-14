@@ -11,7 +11,7 @@
         <template v-slot:header="props">
 
           <q-tr :props="props" v-show="!hasHeaderSlot">
-            <q-th auto-width v-if="selection_prop!='none'">
+            <q-th auto-width class="ignore-elements" v-if="selection_prop!='none'">
               <q-checkbox
                   v-if="selection_prop=='multiple'"
                   v-model="props.selected"
@@ -537,13 +537,22 @@ export default defineComponent({
         disabled: !this.draggable_columns,
         onEnd(event) {
           // if (event.newIndex != 0) {
-          let tmp = self.final_column[(event.oldIndex)];
-          self.final_column[(event.oldIndex)] = self.final_column[(event.newIndex)];
-          self.final_column[(event.newIndex)] = tmp;
-          self.$emit('dragged_column',{'dragged_column':self.final_column[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex})
+          let old_index,new_index;
+          if(self.selection){
+            old_index= event.oldIndex-1
+            new_index= event.newIndex-1
+          }
+          else{
+            old_index= event.oldIndex
+            new_index= event.newIndex
+          }
+          let tmp = self.final_column[old_index];
+          self.final_column[old_index] = self.final_column[new_index];
+          self.final_column[new_index] = tmp;
+          self.$emit('dragged_column',{'dragged_column':self.final_column[old_index],'old_index':old_index,'new_index': new_index})
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
-          if (evt.related.className == 'ignore-elements q-tr') {
+          if (evt.related.className == 'q-table--col-auto-width ignore-elements') {
             return false
           }
         },
