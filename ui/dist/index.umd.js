@@ -1,5 +1,5 @@
 /*!
- * quasar-ui-qgrid v1.0.3
+ * quasar-ui-qgrid v1.0.8
  * (c) 2022 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
@@ -8920,6 +8920,7 @@
             var tmp = self.data[(event.oldIndex)];
             self.data[(event.oldIndex)] = self.data[(event.newIndex)];
             self.data[(event.newIndex)] = tmp;
+            self.$emit('dragged_row',{'dragged_row':self.data[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex});
             // }
           },
           onMove: function (/**Event*/evt, /**Event*/originalEvent) {
@@ -8934,13 +8935,22 @@
           disabled: !this.draggable_columns,
           onEnd: function onEnd(event) {
             // if (event.newIndex != 0) {
-            var tmp = self.final_column[(event.oldIndex)];
-            self.final_column[(event.oldIndex)] = self.final_column[(event.newIndex)];
-            self.final_column[(event.newIndex)] = tmp;
-            self.$emit('dragged_column',{'dragged_column':self.final_column[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex});
+            var old_index,new_index;
+            if(self.selection){
+              old_index= event.oldIndex-1;
+              new_index= event.newIndex-1;
+            }
+            else {
+              old_index= event.oldIndex;
+              new_index= event.newIndex;
+            }
+            var tmp = self.final_column[old_index];
+            self.final_column[old_index] = self.final_column[new_index];
+            self.final_column[new_index] = tmp;
+            self.$emit('dragged_column',{'dragged_column':self.final_column[old_index],'old_index':old_index,'new_index': new_index});
           },
           onMove: function (/**Event*/evt, /**Event*/originalEvent) {
-            if (evt.related.className == 'ignore-elements q-tr') {
+            if (evt.related.className == 'q-table--col-auto-width ignore-elements') {
               return false
             }
           },
@@ -8953,7 +8963,7 @@
         this.final_column = this.groupby_filter && this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
       },
       'selected_prop': function () {
-        this.$emit('selected-val', this.selected_prop.values());
+        this.$emit('selected-val', this.selected_prop);
       },
       'columns': function () {
         this.setColumnsDefinition();
@@ -9019,7 +9029,8 @@
               (_ctx.selection_prop!='none')
                 ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                     key: 0,
-                    "auto-width": ""
+                    "auto-width": "",
+                    class: "ignore-elements"
                   }, {
                     default: vue.withCtx(function () { return [
                       (_ctx.selection_prop=='multiple')
@@ -9580,7 +9591,7 @@
   script.render = render;
 
   var name = "quasar-ui-qgrid";
-  var version$1 = "1.0.3";
+  var version$1 = "1.0.8";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid";
   var license = "MIT";
@@ -9617,7 +9628,7 @@
   	chalk: "^4.1.0",
   	"fs-extra": "^8.1.0",
   	open: "^7.3.0",
-  	quasar: "^2.0.0-beta.12",
+  	quasar: "^2.6.6",
   	rimraf: "^3.0.0",
   	rollup: "^2.45.0",
   	"uglify-js": "^3.13.3",

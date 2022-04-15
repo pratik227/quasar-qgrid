@@ -253,7 +253,7 @@
 <script>
 import {defineComponent, ref} from 'vue';
 import Sortable from 'sortablejs';
-import * as moment from 'moment'
+import moment from 'moment'
 
 import {
   uid
