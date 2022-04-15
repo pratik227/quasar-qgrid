@@ -59,7 +59,7 @@
   dependencies:
     "magic-string" "^0.25.0"
 
-"@types/estree@*", "@types/estree@0.0.39":
+"@types/estree@0.0.39":
   "integrity" "sha512-EYNwp3bU+98cpU4lAWYYL7Zz+2gryWH1qbdDTidVd6hkiR6weksdbMadyXKXNPEkQFhXM+hVO9ZygomHXp+AIw=="
   "resolved" "https://registry.npmjs.org/@types/estree/-/estree-0.0.39.tgz"
   "version" "0.0.39"
@@ -68,13 +68,6 @@
   "integrity" "sha512-hBOx4SUlEPKwRi6PrXuTGw1z6lz0fjsibcWCM378YxsSu/6+C30L6CR49zIBKHiwNWCYIcOLjg4OHKZaFeLAug=="
   "resolved" "https://registry.npmjs.org/@types/node/-/node-16.0.1.tgz"
   "version" "16.0.1"
-
-"@types/resolve@0.0.8":
-  "integrity" "sha512-auApPaJf3NPfe18hSoJkp8EbZzer2ISk7o8mCC3M9he/a04+gbMF97NkpD2S8riMGvm4BMRI59/SZQSaLTKpsQ=="
-  "resolved" "https://registry.npmjs.org/@types/resolve/-/resolve-0.0.8.tgz"
-  "version" "0.0.8"
-  dependencies:
-    "@types/node" "*"
 
 "@types/resolve@1.17.1":
   "integrity" "sha512-yy7HuzQhj0dhGpD8RLXSZWEkLsV9ibvxvi6EiJ3bkqLAO1RGo0WbkWQiwpRlSFymTJRz0d3k5LM3kkx8ArDbLw=="
@@ -413,13 +406,6 @@
   "resolved" "https://registry.npmjs.org/is-module/-/is-module-1.0.0.tgz"
   "version" "1.0.0"
 
-"is-reference@^1.1.2":
-  "integrity" "sha512-U82MsXXiFIrjCK4otLT+o2NA2Cd2g5MLoOVXUZjIOhLurrRxpEXzI8O0KZHr3IjLvlAH1kTPYSuqer5T9ZVBKQ=="
-  "resolved" "https://registry.npmjs.org/is-reference/-/is-reference-1.2.1.tgz"
-  "version" "1.2.1"
-  dependencies:
-    "@types/estree" "*"
-
 "is-wsl@^2.1.1":
   "integrity" "sha512-fKzAra0rGJUUBwGBgNkHZuToZcn+TtXHpeCgmkMJMMYx1sQDYaCSyjJBSCa2nH1DGm7s3n1oBnohoVTBaN7Lww=="
   "resolved" "https://registry.npmjs.org/is-wsl/-/is-wsl-2.2.0.tgz"
@@ -439,7 +425,7 @@
   optionalDependencies:
     "graceful-fs" "^4.1.6"
 
-"magic-string@^0.25.0", "magic-string@^0.25.2", "magic-string@^0.25.7":
+"magic-string@^0.25.0", "magic-string@^0.25.7":
   "integrity" "sha512-4CrMT5DOHTDk4HYDlzmwu4FVCcIYI8gauveasrdCu2IKIFOJ3f0v/8MDGJCDL9oD2ppz/Av1b0Nj345H9M+XIA=="
   "resolved" "https://registry.npmjs.org/magic-string/-/magic-string-0.25.7.tgz"
   "version" "0.25.7"
@@ -529,10 +515,10 @@
     "picocolors" "^1.0.0"
     "source-map-js" "^1.0.2"
 
-"quasar@^2.0.0-beta.12":
-  "integrity" "sha512-0h+HMytYpWkmsRldFzJlPlfSoUjxKoCZB8dpK4UTsFdOfN3OLOEhHxxqfViC1MRqU4NnnO4/6PcP9khJiy9esQ=="
-  "resolved" "https://registry.npmjs.org/quasar/-/quasar-2.0.0-beta.19.tgz"
-  "version" "2.0.0-beta.19"
+"quasar@^2.6.6":
+  "integrity" "sha512-rXoGZROOXVutQX14l/ys0te/NrgQ754krI0Vz52pBXdznyS+dTL6AgGpr3JMwffoxpxhQyedrL2jOAMpq+Jsgw=="
+  "resolved" "https://registry.npmjs.org/quasar/-/quasar-2.6.6.tgz"
+  "version" "2.6.6"
 
 "regenerate-unicode-properties@^8.0.2":
   "integrity" "sha512-F9DjY1vKLo/tPePDycuH3dn9H1OTPIkVD9Kz4LODu+F2C75mgjAJ7x/gwy6ZcSNRAAkhNlJSOHRe8k3p+K9WhA=="
@@ -570,7 +556,7 @@
   dependencies:
     "jsesc" "~0.5.0"
 
-"resolve@^1.11.0", "resolve@^1.11.1", "resolve@^1.19.0":
+"resolve@^1.19.0":
   "integrity" "sha512-wENBPt4ySzg4ybFQW2TT1zMQucPK95HSh/nq2CFTZVOGut2+pQvSsgtda4d26YrYcr067wjbmzOG8byDPBX63A=="
   "resolved" "https://registry.npmjs.org/resolve/-/resolve-1.20.0.tgz"
   "version" "1.20.0"
@@ -585,28 +571,6 @@
   dependencies:
     "glob" "^7.1.3"
 
-"rollup-plugin-commonjs@^10.1.0":
-  "integrity" "sha512-jlXbjZSQg8EIeAAvepNwhJj++qJWNJw1Cl0YnOqKtP5Djx+fFGkp3WRh+W0ASCaFG5w1jhmzDxgu3SJuVxPF4Q=="
-  "resolved" "https://registry.npmjs.org/rollup-plugin-commonjs/-/rollup-plugin-commonjs-10.1.0.tgz"
-  "version" "10.1.0"
-  dependencies:
-    "estree-walker" "^0.6.1"
-    "is-reference" "^1.1.2"
-    "magic-string" "^0.25.2"
-    "resolve" "^1.11.0"
-    "rollup-pluginutils" "^2.8.1"
-
-"rollup-plugin-node-resolve@^5.2.0":
-  "integrity" "sha512-jUlyaDXts7TW2CqQ4GaO5VJ4PwwaV8VUGA7+km3n6k6xtOEacf61u0VXwN80phY/evMcaS+9eIeJ9MOyDxt5Zw=="
-  "resolved" "https://registry.npmjs.org/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-5.2.0.tgz"
-  "version" "5.2.0"
-  dependencies:
-    "@types/resolve" "0.0.8"
-    "builtin-modules" "^3.1.0"
-    "is-module" "^1.0.0"
-    "resolve" "^1.11.1"
-    "rollup-pluginutils" "^2.8.1"
-
 "rollup-plugin-vue@^6.0.0":
   "integrity" "sha512-oVvUd84d5u73M2HYM3XsMDLtZRIA/tw2U0dmHlXU2UWP5JARYHzh/U9vcxaN/x/9MrepY7VH3pHFeOhrWpxs/Q=="
   "resolved" "https://registry.npmjs.org/rollup-plugin-vue/-/rollup-plugin-vue-6.0.0.tgz"
@@ -616,14 +580,14 @@
     "hash-sum" "^2.0.0"
     "rollup-pluginutils" "^2.8.2"
 
-"rollup-pluginutils@^2.8.1", "rollup-pluginutils@^2.8.2":
+"rollup-pluginutils@^2.8.2":
   "integrity" "sha512-EEp9NhnUkwY8aif6bxgovPHMoMoNr2FulJziTndpt5H9RdwC47GSGuII9XxpSdzVGM0GWrNPHV6ie1LTNJPaLQ=="
   "resolved" "https://registry.npmjs.org/rollup-pluginutils/-/rollup-pluginutils-2.8.2.tgz"
   "version" "2.8.2"
   dependencies:
     "estree-walker" "^0.6.1"
 
-"rollup@^1.20.0 || ^2.0.0", "rollup@^1.20.0||^2.0.0", "rollup@^2.45.0", "rollup@>=1.11.0", "rollup@>=1.12.0":
+"rollup@^1.20.0 || ^2.0.0", "rollup@^1.20.0||^2.0.0", "rollup@^2.45.0":
   "integrity" "sha512-Ztz4NurU2LbS3Jn5rlhnYv35z6pkjBUmYKr94fOBIKINKRO6kug9NTFHArT7jqwMP2kqEZ39jJuEtkk91NBltQ=="
   "resolved" "https://registry.npmjs.org/rollup/-/rollup-2.50.5.tgz"
   "version" "2.50.5"
