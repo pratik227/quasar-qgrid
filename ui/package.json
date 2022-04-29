@@ -1,6 +1,6 @@
 {
   "name": "quasar-ui-qgrid",
-  "version": "1.0.7",
+  "version": "1.0.9",
   "author": "pratikpatelpp802@gmail.com",
   "description": "QGrid",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "chalk": "^4.1.0",
     "fs-extra": "^8.1.0",
     "open": "^7.3.0",
-    "quasar": "^2.0.0-beta.12",
+    "quasar": "^2.6.6",
     "rimraf": "^3.0.0",
     "rollup": "^2.45.0",
     "uglify-js": "^3.13.3",
