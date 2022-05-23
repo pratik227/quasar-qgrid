@@ -185,9 +185,9 @@ export default defineComponent({
     DraggedRow(data){
       console.log(data)
     },
-    onRowClick (row) {
-          console.log('clicked on', row)
-        }
+    onRowClick(row) {
+      console.log('clicked on', row)
+    }
   }
 })
 </script>
