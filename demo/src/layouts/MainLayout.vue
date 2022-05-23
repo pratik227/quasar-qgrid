@@ -49,7 +49,7 @@
           </q-card>
         </q-expansion-item>
         <q-expansion-item dense style="font-size: 12px;"
-                          label="Developing"
+                          label="Examples"
                           header-class="text-primary" :expanded-icon="biCaretUp" :expand-icon="biCaretDown"
                           expand-icon-class="text-primary')"
         >
