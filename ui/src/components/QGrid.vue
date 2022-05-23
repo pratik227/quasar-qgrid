@@ -3,7 +3,7 @@
       <q-table :id="uuid" :loading="loading"
                :rows="getFilteredValuesData"
                :columns="final_column"
-               row-key="name" :class="classes" :visible-columns="visible_columns" :pagination="pagination"
+               :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns" :pagination="pagination"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="filter"
       >
@@ -217,7 +217,7 @@
             <q-table
                 :rows="sub_grouped_data[props.row.name]"
                 :columns="columns"
-                row-key="name"
+                :row-key="row_key?row_key:'name'"
                 :pagination="group_pagination"
                 hide-bottom
             >
@@ -279,7 +279,7 @@ function wrapCsvValue(val, formatFn) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading','row_key'],
   setup() {
 
     // onMounted(()=>{
