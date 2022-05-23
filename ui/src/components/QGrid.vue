@@ -195,7 +195,7 @@
         </template>
 
         <template v-slot:body="props">
-          <q-tr :props="props" v-if="!hasDefaultSlot">
+          <q-tr :props="props" v-if="!hasDefaultSlot" @click="rowClick(props.row)">
 
             <q-td v-if="selection_prop!='none'">
               <q-checkbox color="primary" v-model="props.selected"/>
@@ -280,7 +280,6 @@ function wrapCsvValue(val, formatFn) {
 export default defineComponent({
   name: "QGrid",
   props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading'],
-
   setup() {
 
     // onMounted(()=>{
@@ -434,6 +433,9 @@ export default defineComponent({
     // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
   },
   methods: {
+    rowClick(row){
+      this.$emit('row-click', row)
+    },
     setColumnsDefinition() {
       let self = this;
       self.column_options = {};
@@ -571,7 +573,7 @@ export default defineComponent({
       this.setColumnsDefinition()
     }
   },
-  emits:['selected-val','dragged_column']
+  emits:['selected-val','dragged_column', 'row-click']
 })
 </script>
 
