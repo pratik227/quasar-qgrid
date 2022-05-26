@@ -6,6 +6,7 @@
                :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns" :pagination="pagination"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="filter"
+               @request="requestM"
       >
 
         <template v-slot:header="props">
@@ -433,6 +434,9 @@ export default defineComponent({
     // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
   },
   methods: {
+    requestM(data){
+      this.$emit('request', data)
+    },
     rowClick(row){
       this.$emit('row-click', row)
     },
@@ -573,7 +577,7 @@ export default defineComponent({
       this.setColumnsDefinition()
     }
   },
-  emits:['selected-val','dragged_column', 'row-click']
+  emits:['selected-val','dragged_column', 'row-click', 'request']
 })
 </script>
 
