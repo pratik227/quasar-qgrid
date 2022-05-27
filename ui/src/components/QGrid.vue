@@ -3,10 +3,11 @@
       <q-table :id="uuid" :loading="loading"
                :rows="getFilteredValuesData"
                :columns="final_column"
-               :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns" :pagination="pagination"
+               :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="filter"
-               @request="requestM"
+               v-model:pagination="pagination_this"
+               @request="onRequest"
       >
 
         <template v-slot:header="props">
@@ -252,7 +253,7 @@
 </template>
 
 <script>
-import {defineComponent, ref} from 'vue';
+import {defineComponent, ref, computed} from 'vue';
 import Sortable from 'sortablejs';
 import moment from 'moment'
 
@@ -281,14 +282,20 @@ function wrapCsvValue(val, formatFn) {
 export default defineComponent({
   name: "QGrid",
   props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading','row_key'],
-  setup() {
+  setup(props) {
 
     // onMounted(()=>{
     //   this.Sorting();
     // })
 
+    const pagination_this = computed({
+      get: () => props.pagination,
+      set: () => {},
+    });
+
     return {
       filter_data: ref({}),
+      pagination_this,
       uuid: ref(''),
       column_options: ref({}),
       column_options_selected: ref({}),
@@ -434,8 +441,8 @@ export default defineComponent({
     // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
   },
   methods: {
-    requestM(data){
-      this.$emit('request', data)
+    onRequest(data) {
+      this.$emit("OnRequest", data);
     },
     rowClick(row){
       this.$emit('row-click', row)
