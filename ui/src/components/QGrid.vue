@@ -584,7 +584,7 @@ export default defineComponent({
       this.setColumnsDefinition()
     }
   },
-  emits:['selected-val','dragged_column', 'row-click', 'request']
+  emits:['selected-val','dragged_column', 'row-click', 'OnRequest']
 })
 </script>
 
