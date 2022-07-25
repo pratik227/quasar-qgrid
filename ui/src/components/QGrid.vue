@@ -32,7 +32,7 @@
                   <p>{{ col.label }}</p>
                 </div>
                 <div class="column">
-                  <q-btn flat dense size="sm" icon="fa fa-filter" class="q-ml-xs" @click.stop="" v-if="header_filter">
+                  <q-btn flat dense size="sm" icon="fa fa-filter" class="q-ml-xs" @click.stop="" v-if="header_filter && col.hasOwnProperty('show_filter') && col['show_filter']">
                     <q-icon name="fas fa-asterisk" color="red" style="font-size: 7px;"
                             v-if="column_options_selected[col.field].length>0"></q-icon>
                     <q-menu>

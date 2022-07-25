@@ -21,13 +21,15 @@ const columns = [
     label: 'Dessert (100g serving)',
     align: 'left',
     field: 'name',
-    sortable: true
+    sortable: true,
+    show_filter:true,
   },
   {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true},
   {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
   {name: 'carbs', label: 'Carbs (g)', field: 'carbs'},
   {name: 'protein', label: 'Protein (g)', field: 'protein'},
-  {name: 'sodium', label: 'Sodium (mg)', field: 'sodium'},
+  {name: 'sodium', label: 'Sodium (mg)', field: 'sodium',
+    show_filter:true},
   {
     name: 'calcium',
     label: 'Calcium (%)',
