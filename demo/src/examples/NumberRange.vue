@@ -1,23 +1,13 @@
 <template>
-  <q-page padding>
-    <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" :draggable_columns="true" :fullscreen="true"
-            :csv_download="true" :global_search="true" @dragged_column="DraggedColumn($event)" @dragged_row="DraggedRow($event)"
-            @row-click="onRowClick($event)">
-    </q-grid>
-  </q-page>
+  <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" :fullscreen="true"
+          :csv_download="true" :global_search="true">
+  </q-grid>
 </template>
 
-<style lang="sass" scoped>
-.directive-target
-  width: 50px
-  height: 50px
-</style>
-
 <script>
+import {defineComponent, ref} from 'vue'
 
-import {defineComponent, ref} from 'vue';
-
-const columns = ref([
+const columns = [
   {
     name: 'name',
     required: true,
@@ -30,8 +20,10 @@ const columns = ref([
   {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
   {name: 'carbs', label: 'Carbs (g)', field: 'carbs'},
   {name: 'protein', label: 'Protein (g)', field: 'protein'},
-  {name: 'sodium', label: 'Sodium (mg)', field: 'sodium',
-    filter_type: 'number_range'},
+  {
+    name: 'sodium', label: 'Sodium (mg)', field: 'sodium',
+    filter_type: 'number_range'
+  },
   {
     name: 'calcium',
     label: 'Calcium (%)',
@@ -53,9 +45,9 @@ const columns = ref([
     field: 'created_at',
     sortable: true,
     filter_type: 'date',
-    format:'DD/MM/YYYY'
+    format: 'DD/MM/YYYY'
   }
-])
+]
 const data = [
   {
     name: 'Frozen Yogurt',
@@ -66,7 +58,7 @@ const data = [
     sodium: 87,
     calcium: '14%',
     iron: '1%',
-    created_at:'13/4/2022'
+    created_at: '13/4/2022'
   },
   {
     name: 'Ice cream sandwich',
@@ -77,7 +69,7 @@ const data = [
     sodium: 129,
     calcium: '8%',
     iron: '1%',
-    created_at:'23/4/2022'
+    created_at: '23/4/2022'
   },
   {
     name: 'Eclair',
@@ -88,7 +80,7 @@ const data = [
     sodium: 337,
     calcium: '6%',
     iron: '7%',
-    created_at:'03/4/2022'
+    created_at: '03/4/2022'
   },
   {
     name: 'Cupcake',
@@ -99,7 +91,7 @@ const data = [
     sodium: 413,
     calcium: '3%',
     iron: '8%',
-    created_at:'15/4/2022'
+    created_at: '15/4/2022'
   },
   {
     name: 'Gingerbread',
@@ -110,7 +102,7 @@ const data = [
     sodium: 327,
     calcium: '7%',
     iron: '16%',
-    created_at:'05/4/2022'
+    created_at: '05/4/2022'
   },
   {
     name: 'Jelly bean',
@@ -121,7 +113,7 @@ const data = [
     sodium: 50,
     calcium: '0%',
     iron: '0%',
-    created_at:'29/4/2022'
+    created_at: '29/4/2022'
   },
   {
     name: 'Lollipop',
@@ -132,7 +124,7 @@ const data = [
     sodium: 38,
     calcium: '0%',
     iron: '2%',
-    created_at:'09/4/2022'
+    created_at: '09/4/2022'
   },
   {
     name: 'Honeycomb',
@@ -143,7 +135,7 @@ const data = [
     sodium: 562,
     calcium: '0%',
     iron: '45%',
-    created_at:'19/4/2022'
+    created_at: '19/4/2022'
   },
   {
     name: 'Donut',
@@ -154,7 +146,7 @@ const data = [
     sodium: 326,
     calcium: '2%',
     iron: '22%',
-    created_at:'09/4/2022'
+    created_at: '09/4/2022'
   },
   {
     name: 'KitKat',
@@ -165,29 +157,15 @@ const data = [
     sodium: 54,
     calcium: '12%',
     iron: '6%',
-    created_at:'23/4/2022'
+    created_at: '23/4/2022'
   }
 ]
 export default defineComponent({
-  name: 'Test8',
+  name: "Basic",
   setup() {
     return {
-      data,
       columns,
-      GetSelected(Selected) {
-        console.log(Selected)
-      }
-    }
-  },
-  methods:{
-    DraggedColumn(data){
-      console.log(data)
-    },
-    DraggedRow(data){
-      console.log(data)
-    },
-    onRowClick(row) {
-      console.log('clicked on', row)
+      data
     }
   }
 })
