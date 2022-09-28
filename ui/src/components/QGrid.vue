@@ -626,6 +626,13 @@ export default defineComponent({
     },
     'columns': function () {
       this.setColumnsDefinition()
+    },
+    'selected': function () {
+      if (this.selected === undefined) {
+        this.selected_prop = [];
+      } else {
+        this.selected_prop = this.selected;
+      }
     }
   },
   emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest']

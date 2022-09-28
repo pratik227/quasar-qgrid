@@ -1,5 +1,7 @@
 <template>
   <q-page padding>
+    <q-btn @click="selected=[]" label="Clear Selection"></q-btn>
+
     <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" selection="multiple"
             :csv_download="true" file_name="sample" :groupby_filter="true"
             :selected="selected"
@@ -16,6 +18,7 @@
         </q-tr>
       </template>
     </q-grid>
+    {{selected}}
   </q-page>
 </template>
 
@@ -27,7 +30,7 @@
 
 <script>
 
-import {defineComponent} from 'vue';
+import {defineComponent, ref} from 'vue';
 
 const columns = [
   {
@@ -167,8 +170,11 @@ export default defineComponent({
     return {
       data,
       columns,
+      selected: ref([]),
       GetSelected(Selected) {
+        this.selected = Selected
         console.log(Selected)
+        console.log(this.selected)
       }
     }
   }

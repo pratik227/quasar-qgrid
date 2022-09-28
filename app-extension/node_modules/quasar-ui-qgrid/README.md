@@ -30,7 +30,7 @@ Vue.use(Plugin)
 
 ```html
 <script>
-import { Component as QGrid } from 'quasar-ui-qgrid'
+import QGrid from 'quasar-ui-qgrid/src/components/QGrid.vue'
 
 export default {
   components: {
