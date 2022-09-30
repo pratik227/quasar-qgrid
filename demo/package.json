@@ -19,7 +19,7 @@
     "vue3-markdown-it": "^1.0.8"
   },
   "devDependencies": {
-    "@quasar/app": "^3.0.0",
+    "@quasar/app": "^3.3.3",
     "@quasar/quasar-app-extension-qmarkdown": "^2.0.0-alpha.4",
     "gray-matter": "^4.0.3",
     "markdown-it": "^12.3.2",
