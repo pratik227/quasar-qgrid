@@ -32,7 +32,8 @@
                   <p>{{ col.label }}</p>
                 </div>
                 <div class="column">
-                  <q-btn flat dense size="sm" icon="fa fa-filter" class="q-ml-xs" @click.stop="" v-if="header_filter && col.hasOwnProperty('show_filter') && col['show_filter']">
+                  <q-btn flat dense size="sm" icon="fa fa-filter" class="q-ml-xs" @click.stop=""
+                         v-if="header_filter && col.hasOwnProperty('show_filter') && col['show_filter']">
                     <q-icon name="fas fa-asterisk" color="red" style="font-size: 7px;"
                             v-if="column_options_selected[col.field].length>0"></q-icon>
                     <q-menu>
@@ -133,7 +134,8 @@
               </q-select>
 
               <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled :model-value="filter_data[col.field].from+(filter_data[col.field].from?'-':'')+filter_data[col.field].to">
+                       class="q-pl-xs q-pr-xs" filled
+                       :model-value="filter_data[col.field].from+(filter_data[col.field].from?'-':'')+filter_data[col.field].to">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
                     <q-popup-proxy ref="qDateProxy" cover transition-show="scale" transition-hide="scale">
@@ -144,7 +146,33 @@
                       </q-date>
                     </q-popup-proxy>
                   </q-icon>
-                  <q-icon name="cancel" v-if="filter_data[col.field].from!=''"  @click.stop="filter_data[col.field] = {'from': '', 'to': ''}" class="cursor-pointer"/>
+                  <q-icon name="cancel" v-if="filter_data[col.field].from!=''"
+                          @click.stop="filter_data[col.field] = {'from': '', 'to': ''}" class="cursor-pointer"/>
+                </template>
+              </q-input>
+
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='number_range'" dense color="teal"
+                       class="q-pl-xs q-pr-xs" filled
+                       :model-value="filter_data[col.field].from+(typeof filter_data[col.field].from!='string'?'-':'')+filter_data[col.field].to">
+                <template v-slot:append>
+                  <q-icon name="tag" class="cursor-pointer">
+                    <q-popup-proxy ref="qDateProxy" cover class="row q-pa-sm"
+                                   transition-show="scale"
+                                   transition-hide="scale">
+                        <q-input label="From"
+                                 type="number"
+                                 color="teal" v-model.number="filter_data[col.field].from"
+                                 class="q-pl-xs q-pr-xs" filled>
+                        </q-input>
+                        <q-input label="To"
+                                 type="number"
+                                 color="teal" v-model.number="filter_data[col.field].to"
+                                 class="q-pl-xs  q-pr-xs" filled>
+                        </q-input>
+                    </q-popup-proxy>
+                  </q-icon>
+                  <q-icon name="cancel" v-if="typeof filter_data[col.field].from!='string'"
+                          @click.stop="filter_data[col.field] = {'from': '', 'to': ''}" class="cursor-pointer"/>
                 </template>
               </q-input>
             </q-th>
@@ -281,7 +309,7 @@ function wrapCsvValue(val, formatFn) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading','row_key'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key'],
   setup(props) {
 
     // onMounted(()=>{
@@ -290,7 +318,8 @@ export default defineComponent({
 
     const pagination_this = computed({
       get: () => props.pagination,
-      set: () => {},
+      set: () => {
+      },
     });
 
     return {
@@ -352,6 +381,11 @@ export default defineComponent({
             let endDate = moment(self.filter_data[table_columns[i]].to, 'YYYY/MM/DD')
             // const range = moment.range(startDate, endDate);
             if (table_columns[i] in self.filter_data && self.filter_data[table_columns[i]].to && self.filter_data[table_columns[i]].from && !(startDate <= compareDate && compareDate <= endDate)) {
+              return false;
+            }
+          }
+          if (self.final_column[i].hasOwnProperty('filter_type') && self.final_column[i].filter_type == 'number_range') {
+            if (table_columns[i] in self.filter_data && typeof self.filter_data[table_columns[i]].from!='string' && typeof self.filter_data[table_columns[i]].to!='string' && !(parseFloat(item[table_columns[i]]) >= self.filter_data[table_columns[i]].from && parseFloat(item[table_columns[i]]) <= self.filter_data[table_columns[i]].to)) {
               return false;
             }
           }
@@ -444,7 +478,7 @@ export default defineComponent({
     onRequest(data) {
       this.$emit("OnRequest", data);
     },
-    rowClick(row){
+    rowClick(row) {
       this.$emit('row-click', row)
     },
     setColumnsDefinition() {
@@ -471,6 +505,9 @@ export default defineComponent({
       });
       self.columns.filter(function (column) {
         if (column.hasOwnProperty('filter_type') && column.filter_type == 'date') {
+          self.filter_data[column.field] = {'from': '', 'to': ''}
+        }
+        if (column.hasOwnProperty('filter_type') && column.filter_type == 'number_range') {
           self.filter_data[column.field] = {'from': '', 'to': ''}
         }
         self.column_options[column.field] = [...new Map(self.column_options[column.field].map(item =>
@@ -535,7 +572,11 @@ export default defineComponent({
           let tmp = self.data[(event.oldIndex)];
           self.data[(event.oldIndex)] = self.data[(event.newIndex)];
           self.data[(event.newIndex)] = tmp;
-          self.$emit('dragged_row',{'dragged_row':self.data[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex})
+          self.$emit('dragged_row', {
+            'dragged_row': self.data[(event.oldIndex)],
+            'old_index': event.oldIndex,
+            'new_index': event.newIndex
+          })
           // }
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
@@ -550,19 +591,22 @@ export default defineComponent({
         disabled: !this.draggable_columns,
         onEnd(event) {
           // if (event.newIndex != 0) {
-          let old_index,new_index;
-          if(self.selection){
-            old_index= event.oldIndex-1
-            new_index= event.newIndex-1
-          }
-          else{
-            old_index= event.oldIndex
-            new_index= event.newIndex
+          let old_index, new_index;
+          if (self.selection) {
+            old_index = event.oldIndex - 1
+            new_index = event.newIndex - 1
+          } else {
+            old_index = event.oldIndex
+            new_index = event.newIndex
           }
           let tmp = self.final_column[old_index];
           self.final_column[old_index] = self.final_column[new_index];
           self.final_column[new_index] = tmp;
-          self.$emit('dragged_column',{'dragged_column':self.final_column[old_index],'old_index':old_index,'new_index': new_index})
+          self.$emit('dragged_column', {
+            'dragged_column': self.final_column[old_index],
+            'old_index': old_index,
+            'new_index': new_index
+          })
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
           if (evt.related.className == 'q-table--col-auto-width ignore-elements') {
@@ -582,9 +626,16 @@ export default defineComponent({
     },
     'columns': function () {
       this.setColumnsDefinition()
+    },
+    'selected': function () {
+      if (this.selected === undefined) {
+        this.selected_prop = [];
+      } else {
+        this.selected_prop = this.selected;
+      }
     }
   },
-  emits:['selected-val','dragged_column', 'row-click', 'OnRequest']
+  emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest']
 })
 </script>
 
