@@ -11,6 +11,7 @@ const routes = [
       { path: '/example-qgrid-custom-column', component: () => import('pages/CustomColumnExample') },
       { path: '/example-qgrid-draggable-rows', component: () => import('pages/DraggableRowsExample') },
       { path: '/example-qgrid-slot-demo', component: () => import('pages/SlotDemoExample') },
+      { path: '/example-qgrid--selection-slot-demo', component: () => import('pages/SelectionSlotDemoExample.vue') },
       { path: '/example-qgrid-header-slot-demo', component: () => import('pages/HeaderSlotDemoExample') },
       { path: '/example-qgrid-select-column-filter', component: () => import('pages/SelectColumnFilterExample') },
       { path: '/example-qgrid-grouping', component: () => import('pages/GroupingExample') },

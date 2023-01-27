@@ -119,6 +119,11 @@
                 QGrid Draggable Columns with Slot
               </q-item-section>
             </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid--selection-slot-demo'?'bg-grey-3':''" to="/example-qgrid--selection-slot-demo" dense clickable>
+              <q-item-section>
+                QGrid Slot Demo with Selection
+              </q-item-section>
+            </q-item>
           </q-card>
         </q-expansion-item>
         <q-expansion-item dense style="font-size: 12px;"
