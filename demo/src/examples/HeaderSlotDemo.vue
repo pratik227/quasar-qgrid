@@ -3,6 +3,7 @@
       <template v-slot:header="props">
         <q-tr :props="props">
           <q-th
+            :key="col.name"
             v-for="col in props.cols"
             class="text-italic text-purple"
           >
