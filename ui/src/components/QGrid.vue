@@ -5,7 +5,7 @@
                :columns="final_column"
                :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
-               :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="filter"
+               :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="global_filter || filter"
                v-model:pagination="pagination_this"
                @request="onRequest"
       >
@@ -309,7 +309,7 @@ function wrapCsvValue(val, formatFn) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter'],
   setup(props) {
 
     // onMounted(()=>{
