@@ -1,8 +1,15 @@
 <template>
   <q-page padding>
+    <q-input filled borderless dense debounce="300" v-model="global_filter" class="q-mr-md"
+             placeholder="Search">
+      <template v-slot:append>
+        <q-icon name="search"/>
+      </template>
+    </q-input>
+
     <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" selection="multiple"
-            :csv_download="true" file_name="sample" :groupby_filter="true"
-            :selected="selected"
+            :csv_download="true" file_name="sample"
+            :selected="selected" :global_filter="global_filter"
             @selected-val="GetSelected($event)"></q-grid>
   </q-page>
 </template>
@@ -15,7 +22,7 @@
 
 <script>
 
-import {defineComponent} from 'vue';
+import {defineComponent, ref} from 'vue';
 
 const columns = [
   {
@@ -155,6 +162,7 @@ export default defineComponent({
     return {
       data,
       columns,
+      global_filter: ref(""),
       GetSelected(Selected) {
         console.log(Selected)
       }
