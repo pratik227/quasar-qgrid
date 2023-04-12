@@ -694,6 +694,7 @@ export default defineComponent({
         });
         this.sub_grouped_data = grouped_data;
       }
+      this.$emit("FilteredData", table_Data);
       return table_Data;
     },
     hasDefaultSlot() {
@@ -912,7 +913,7 @@ export default defineComponent({
       }
     }
   },
-  emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest']
+  emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest', 'FilteredData']
 })
 </script>
 
