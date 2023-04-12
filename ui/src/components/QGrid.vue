@@ -1,12 +1,289 @@
 <template>
   <span>
-      <q-table :id="uuid" :loading="loading"
+      <q-table v-if="ssr_pagination" :id="uuid" :loading="loading"
                :rows="getFilteredValuesData"
                :columns="final_column"
                :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns"
                :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
                :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="global_filter || filter"
                v-model:pagination="pagination_this"
+               @request="onRequest"
+      >
+
+        <template v-slot:header="props">
+
+          <q-tr :props="props" v-show="!hasHeaderSlot">
+            <q-th auto-width class="ignore-elements" v-if="selection_prop!='none'">
+              <q-checkbox
+                  v-if="selection_prop=='multiple'"
+                  v-model="props.selected"
+                  indeterminate-value="some"
+              />
+            </q-th>
+            <!-- {{props}} -->
+            <q-th
+                :props="props"
+                @hover.native.stop
+                v-for="col in props.cols"
+                :key="col.name"
+            >
+              <div class="row inline">
+                <div class="column">
+                  <p>{{ col.label }}</p>
+                </div>
+                <div class="column">
+                  <q-btn flat dense size="sm" icon="fa fa-filter" class="q-ml-xs" @click.stop=""
+                         v-if="header_filter && col.hasOwnProperty('show_filter') && col['show_filter']">
+                    <q-icon name="fas fa-asterisk" color="red" style="font-size: 7px;"
+                            v-if="column_options_selected[col.field].length>0"></q-icon>
+                    <q-menu>
+                      <q-space/>
+
+                      <q-btn dense class="float-right q-ma-sm bg-red text-white" round size="sm" v-close-popup flat
+                             icon="close"/>
+
+                      <div class="q-pa-sm q-mt-md">
+                        <q-select map-options multiple emit-value filled v-model="column_options_selected[col.field]"
+                                  :options="getColumnOptions(col.field)" style="width: 150px !important;">
+                          <template v-slot:before-options>
+                              <q-item class="sticky-top">
+                                <q-item-section avatar>
+                                   <q-checkbox
+                                       @update:model-value="getColumnOptions(col.field).length == column_options_selected[col.field].length?column_options_selected[col.field]=[]:column_options_selected[col.field] = getColumnOptions(col.field).map(item=> item.value)"
+                                       :model-value="getColumnOptions(col.field).length == column_options_selected[col.field].length?true:(column_options_selected[col.field].length==0?false:null)"
+                                       color="teal"/>
+                                </q-item-section>
+                                <q-item-section>
+                                  <q-item-label v-html="'Select All'"></q-item-label>
+                                </q-item-section>
+                              </q-item>
+                          </template>
+                          <template v-slot:option="scope">
+                    <q-item
+                        v-bind="scope.itemProps"
+                        v-on="scope.itemEvents"
+                    >
+                      <q-item-section avatar>
+                        <q-checkbox v-model="column_options_selected[col.field]" :val="scope.opt.value" color="teal"/>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label class="text-black" v-html="scope.opt.label"></q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+                        </q-select>
+                      </div>
+                      <q-btn color="primary" class="float-right  q-mr-sm q-mb-sm text-capitalize" size="sm"
+                             v-close-popup @click="column_options_selected[col.field]=[]" label="Clear"/>
+                    </q-menu>
+                  </q-btn>
+                </div>
+
+              </div>
+            </q-th>
+          </q-tr>
+          <slot name="header" v-bind:cols="props.cols" v-if="hasHeaderSlot">
+          </slot>
+          <q-tr :props="props" class="ignore-elements" v-if="columns_filter">
+
+            <q-th auto-width v-if="selection_prop!='none'">
+
+            </q-th>
+            <q-th :key="col.name" v-for="col in props.cols" style="padding: 0px 0px 0px 0px;">
+              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense color="teal"
+                       class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
+                <template v-if="filter_data[col.field]" v-slot:append>
+                  <q-icon name="cancel" @click.stop="filter_data[col.field] = ''" class="cursor-pointer"/>
+                </template>
+              </q-input>
+
+              <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
+                        multiple emit-value filled v-model="column_options_selected[col.field]"
+                        :options="getColumnOptions(col.field)" dense>
+                <template v-slot:append>
+                  <q-icon v-if="column_options_selected[col.field].length>0" name="close"
+                          @click.stop="column_options_selected[col.field]=[]" class="cursor-pointer"/>
+                </template>
+                <template v-slot:before-options>
+                              <q-item class="sticky-top">
+                                <q-item-section avatar>
+                                   <q-checkbox
+                                       @update:model-value="getColumnOptions(col.field).length == column_options_selected[col.field].length?column_options_selected[col.field]=[]:column_options_selected[col.field] = getColumnOptions(col.field).map(item=> item.value)"
+                                       :model-value="getColumnOptions(col.field).length == column_options_selected[col.field].length?true:(column_options_selected[col.field].length==0?false:null)"
+                                       color="teal"/>
+                                </q-item-section>
+                                <q-item-section>
+                                  <q-item-label v-html="'Select All'"></q-item-label>
+                                </q-item-section>
+                              </q-item>
+                          </template>
+                          <template v-slot:option="scope">
+                    <q-item
+                        v-bind="scope.itemProps"
+                        v-on="scope.itemEvents"
+                    >
+                      <q-item-section avatar>
+                        <q-checkbox v-model="column_options_selected[col.field]" :val="scope.opt.value" color="teal"/>
+                      </q-item-section>
+                      <q-item-section>
+                        <q-item-label v-html="scope.opt.label"></q-item-label>
+                      </q-item-section>
+                    </q-item>
+                  </template>
+
+              </q-select>
+
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense color="teal"
+                       class="q-pl-xs q-pr-xs" filled
+                       :model-value="filter_data[col.field].from+(filter_data[col.field].from?'-':'')+filter_data[col.field].to">
+                <template v-slot:append>
+                  <q-icon name="event" class="cursor-pointer">
+                    <q-popup-proxy ref="qDateProxy" cover transition-show="scale" transition-hide="scale">
+                      <q-date v-model="filter_data[col.field]" range>
+                        <div class="row items-center justify-end">
+                          <q-btn v-close-popup label="Close" class="text-capitalize" color="primary" flat></q-btn>
+                        </div>
+                      </q-date>
+                    </q-popup-proxy>
+                  </q-icon>
+                  <q-icon name="cancel" v-if="filter_data[col.field].from!=''"
+                          @click.stop="filter_data[col.field] = {'from': '', 'to': ''}" class="cursor-pointer"/>
+                </template>
+              </q-input>
+
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='number_range'" dense color="teal"
+                       class="q-pl-xs q-pr-xs" filled
+                       :model-value="filter_data[col.field].from+(typeof filter_data[col.field].from!='string'?'-':'')+filter_data[col.field].to">
+                <template v-slot:append>
+                  <q-icon name="tag" class="cursor-pointer">
+                    <q-popup-proxy ref="qDateProxy" cover class="row q-pa-sm"
+                                   transition-show="scale"
+                                   transition-hide="scale">
+                        <q-input label="From"
+                                 type="number"
+                                 color="teal" v-model.number="filter_data[col.field].from"
+                                 class="q-pl-xs q-pr-xs" filled>
+                        </q-input>
+                        <q-input label="To"
+                                 type="number"
+                                 color="teal" v-model.number="filter_data[col.field].to"
+                                 class="q-pl-xs  q-pr-xs" filled>
+                        </q-input>
+                    </q-popup-proxy>
+                  </q-icon>
+                  <q-icon name="cancel" v-if="typeof filter_data[col.field].from!='string'"
+                          @click.stop="filter_data[col.field] = {'from': '', 'to': ''}" class="cursor-pointer"/>
+                </template>
+              </q-input>
+            </q-th>
+          </q-tr>
+        </template>
+
+
+        <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search">
+
+
+           <q-input filled v-if="global_search" borderless dense debounce="300" v-model="filter" class="q-mr-md"
+                    placeholder="Search">
+            <template v-slot:append>
+              <q-icon name="search"/>
+            </template>
+          </q-input>
+
+          <q-btn
+              class="bg-grey-2 q-mr-sm" icon="fas fa-file-excel"
+              no-caps v-if="excel_download"
+              @click="exportTable('xlsx')"
+          />
+
+          <q-btn
+              class="bg-primary text-white " icon="fas fa-file-csv"
+              no-caps v-if="csv_download"
+              @click="exportTable('csv')"
+          />
+
+          <q-select class="q-mr-sm q-ml-sm" outlined dense
+                    v-model="selected_group_by_filed" v-if="groupby_filter"
+                    :options="gorupby_option" style="width: 150px;"></q-select>
+
+
+          <q-btn v-if="fullscreen"
+                 flat
+                 round
+                 class="q-ml-sm"
+                 dense
+                 :icon="props.inFullscreen ? 'fullscreen_exit' : 'fullscreen'"
+                 @click="props.toggleFullscreen"
+
+          >
+              <q-tooltip
+                  :disable="$q.platform.is.mobile"
+                  v-close-popup
+              >{{ props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen' }}</q-tooltip>
+            </q-btn>
+
+        </template>
+
+        <template v-slot:body="props">
+          <q-tr :props="props" v-if="!hasDefaultSlot" @click="rowClick(props.row)">
+
+            <q-td v-if="selection_prop!='none'">
+              <q-checkbox color="primary" v-model="props.selected"/>
+            </q-td>
+            <q-td
+                v-for="col,col_index in props.cols"
+                :key="col.name"
+                :props="props"
+            >
+              <q-btn size="sm" color="accent" round dense @click="props.expand = !props.expand" class="q-mr-sm"
+                     :icon="props.expand ? 'remove' : 'add'"
+                     v-if="groupby_filter && selected_group_by_filed.value!='' && col_index==0"/>
+
+              {{ props.row[col.field] }}
+            </q-td>
+          </q-tr>
+          <q-tr v-if="groupby_filter &&  selected_group_by_filed.value!=''" v-show="props.expand" :props="props">
+            <q-td :colspan="2">
+            <q-table
+                :rows="sub_grouped_data[props.row.name]"
+                :columns="columns"
+                :row-key="row_key?row_key:'name'"
+                :pagination="group_pagination"
+                hide-bottom
+            >
+              <q-tr slot="header" slot-scope="props">
+                <q-th v-for="col in props.cols"
+                      :key="col.name" v-if="col.field!=selected_group_by_filed"
+                      :props="props">
+                  {{ col.label }}
+                </q-th>
+              </q-tr>
+              <template slot="body" slot-scope="props">
+                <q-tr :props="props">
+                  <q-td :key="col.name" v-if="col.field!=selected_group_by_filed" v-for="col in props.cols"
+                        :props="props">
+                    {{ props.row[col.field] }}
+                  </q-td>
+                </q-tr>
+              </template>
+            </q-table>
+          </q-td>
+          </q-tr>
+          <slot name="body" v-bind:row="props.row" v-if="hasDefaultSlot">
+          </slot>
+        </template>
+
+        <template v-slot:loading v-if="$slots['loading']">
+            <slot name="loading"></slot>
+        </template>
+      </q-table>
+      <q-table v-else :id="uuid" :loading="loading"
+               :rows="getFilteredValuesData"
+               :columns="final_column"
+               :row-key="row_key?row_key:'name'" :class="classes" :visible-columns="visible_columns"
+               :separator="separator" :dense="dense" :dark="dark" :flat="flat" :bordered="bordered"
+               :square="square" :selection="selection_prop" v-model:selected="selected_prop" :filter="global_filter || filter"
+               :pagination="pagination_this"
                @request="onRequest"
       >
 
@@ -309,7 +586,7 @@ function wrapCsvValue(val, formatFn) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination'],
   setup(props) {
 
     // onMounted(()=>{
@@ -379,7 +656,7 @@ export default defineComponent({
             let compareDate = moment(item[table_columns[i]], self.final_column[i].format)
             let startDate = moment(self.filter_data[table_columns[i]].from, 'YYYY/MM/DD')
             let endDate = moment(self.filter_data[table_columns[i]].to, 'YYYY/MM/DD')
-            // const range = moment.range(startDate, endDate);
+            // const.js range = moment.range(startDate, endDate);
             if (table_columns[i] in self.filter_data && self.filter_data[table_columns[i]].to && self.filter_data[table_columns[i]].from && !(startDate <= compareDate && compareDate <= endDate)) {
               return false;
             }
