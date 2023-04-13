@@ -1,16 +1,6 @@
 <template>
   <q-page padding>
-    <q-input filled borderless dense debounce="300" v-model="global_filter" class="q-mr-md"
-             placeholder="Search">
-      <template v-slot:append>
-        <q-icon name="search"/>
-      </template>
-    </q-input>
-
-    <q-grid :data="data" :columns="columns" :columns_filter="true" :draggable="true" selection="multiple"
-            :csv_download="true" file_name="sample"
-            :selected="selected" :global_filter="global_filter"
-            @selected-val="GetSelected($event)"></q-grid>
+    <q-grid :data="data" :columns="columns" :columns_filter="true"  :pagination="pagination" :ssr_pagination="false"></q-grid>
   </q-page>
 </template>
 
@@ -165,7 +155,14 @@ export default defineComponent({
       global_filter: ref(""),
       GetSelected(Selected) {
         console.log(Selected)
-      }
+      },
+      pagination: ref({
+        sortBy: 'desc',
+        descending: false,
+        page: 2,
+        rowsPerPage: 5
+        // rowsNumber: xx if getting data from a server
+      })
     }
   }
 })

@@ -1,6 +1,6 @@
 /*!
- * quasar-ui-qgrid v1.0.8
- * (c) 2022 pratikpatelpp802@gmail.com
+ * quasar-ui-qgrid v1.0.18
+ * (c) 2023 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
 
@@ -8676,16 +8676,22 @@
 
   var script = vue.defineComponent({
     name: "QGrid",
-    props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable','draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading'],
-
-    setup: function setup() {
+    props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination'],
+    setup: function setup(props) {
 
       // onMounted(()=>{
       //   this.Sorting();
       // })
 
+      var pagination_this = vue.computed({
+        get: function () { return props.pagination; },
+        set: function () {
+        },
+      });
+
       return {
         filter_data: vue.ref({}),
+        pagination_this: pagination_this,
         uuid: vue.ref(''),
         column_options: vue.ref({}),
         column_options_selected: vue.ref({}),
@@ -8740,8 +8746,13 @@
               var compareDate = moment(item[table_columns[i]], self.final_column[i].format);
               var startDate = moment(self.filter_data[table_columns[i]].from, 'YYYY/MM/DD');
               var endDate = moment(self.filter_data[table_columns[i]].to, 'YYYY/MM/DD');
-              // const range = moment.range(startDate, endDate);
+              // const.js range = moment.range(startDate, endDate);
               if (table_columns[i] in self.filter_data && self.filter_data[table_columns[i]].to && self.filter_data[table_columns[i]].from && !(startDate <= compareDate && compareDate <= endDate)) {
+                return false;
+              }
+            }
+            if (self.final_column[i].hasOwnProperty('filter_type') && self.final_column[i].filter_type == 'number_range') {
+              if (table_columns[i] in self.filter_data && typeof self.filter_data[table_columns[i]].from!='string' && typeof self.filter_data[table_columns[i]].to!='string' && !(parseFloat(item[table_columns[i]]) >= self.filter_data[table_columns[i]].from && parseFloat(item[table_columns[i]]) <= self.filter_data[table_columns[i]].to)) {
                 return false;
               }
             }
@@ -8831,6 +8842,12 @@
       // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
     },
     methods: {
+      onRequest: function onRequest(data) {
+        this.$emit("OnRequest", data);
+      },
+      rowClick: function rowClick(row) {
+        this.$emit('row-click', row);
+      },
       setColumnsDefinition: function setColumnsDefinition() {
         var self = this;
         self.column_options = {};
@@ -8855,6 +8872,9 @@
         });
         self.columns.filter(function (column) {
           if (column.hasOwnProperty('filter_type') && column.filter_type == 'date') {
+            self.filter_data[column.field] = {'from': '', 'to': ''};
+          }
+          if (column.hasOwnProperty('filter_type') && column.filter_type == 'number_range') {
             self.filter_data[column.field] = {'from': '', 'to': ''};
           }
           self.column_options[column.field] = [].concat( new Map(self.column_options[column.field].map(function (item) { return [item['value'], item]; })).values() );
@@ -8920,7 +8940,11 @@
             var tmp = self.data[(event.oldIndex)];
             self.data[(event.oldIndex)] = self.data[(event.newIndex)];
             self.data[(event.newIndex)] = tmp;
-            self.$emit('dragged_row',{'dragged_row':self.data[(event.oldIndex)],'old_index':event.oldIndex,'new_index': event.newIndex});
+            self.$emit('dragged_row', {
+              'dragged_row': self.data[(event.oldIndex)],
+              'old_index': event.oldIndex,
+              'new_index': event.newIndex
+            });
             // }
           },
           onMove: function (/**Event*/evt, /**Event*/originalEvent) {
@@ -8935,19 +8959,22 @@
           disabled: !this.draggable_columns,
           onEnd: function onEnd(event) {
             // if (event.newIndex != 0) {
-            var old_index,new_index;
-            if(self.selection){
-              old_index= event.oldIndex-1;
-              new_index= event.newIndex-1;
-            }
-            else {
-              old_index= event.oldIndex;
-              new_index= event.newIndex;
+            var old_index, new_index;
+            if (self.selection) {
+              old_index = event.oldIndex - 1;
+              new_index = event.newIndex - 1;
+            } else {
+              old_index = event.oldIndex;
+              new_index = event.newIndex;
             }
             var tmp = self.final_column[old_index];
             self.final_column[old_index] = self.final_column[new_index];
             self.final_column[new_index] = tmp;
-            self.$emit('dragged_column',{'dragged_column':self.final_column[old_index],'old_index':old_index,'new_index': new_index});
+            self.$emit('dragged_column', {
+              'dragged_column': self.final_column[old_index],
+              'old_index': old_index,
+              'new_index': new_index
+            });
           },
           onMove: function (/**Event*/evt, /**Event*/originalEvent) {
             if (evt.related.className == 'q-table--col-auto-width ignore-elements') {
@@ -8967,9 +8994,16 @@
       },
       'columns': function () {
         this.setColumnsDefinition();
+      },
+      'selected': function () {
+        if (this.selected === undefined) {
+          this.selected_prop = [];
+        } else {
+          this.selected_prop = this.selected;
+        }
       }
     },
-    emits:['selected-val','dragged_column']
+    emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest']
   });
 
   var _hoisted_1 = { class: "row inline" };
@@ -8978,6 +9012,15 @@
   var _hoisted_4 = { class: "q-pa-sm q-mt-md" };
   var _hoisted_5 = { class: "row items-center justify-end" };
   var _hoisted_6 = {
+    slot: "body",
+    "slot-scope": "props"
+  };
+  var _hoisted_7 = { class: "row inline" };
+  var _hoisted_8 = { class: "column" };
+  var _hoisted_9 = { class: "column" };
+  var _hoisted_10 = { class: "q-pa-sm q-mt-md" };
+  var _hoisted_11 = { class: "row items-center justify-end" };
+  var _hoisted_12 = {
     slot: "body",
     "slot-scope": "props"
   };
@@ -9003,595 +9046,1309 @@
     var _directive_close_popup = vue.resolveDirective("close-popup");
 
     return (vue.openBlock(), vue.createElementBlock("span", null, [
-      vue.createVNode(_component_q_table, {
-        id: _ctx.uuid,
-        loading: _ctx.loading,
-        rows: _ctx.getFilteredValuesData,
-        columns: _ctx.final_column,
-        "row-key": "name",
-        class: vue.normalizeClass(_ctx.classes),
-        "visible-columns": _ctx.visible_columns,
-        pagination: _ctx.pagination,
-        separator: _ctx.separator,
-        dense: _ctx.dense,
-        dark: _ctx.dark,
-        flat: _ctx.flat,
-        bordered: _ctx.bordered,
-        square: _ctx.square,
-        selection: _ctx.selection_prop,
-        selected: _ctx.selected_prop,
-        "onUpdate:selected": _cache[6] || (_cache[6] = function ($event) { return ((_ctx.selected_prop) = $event); }),
-        filter: _ctx.filter
-      }, vue.createSlots({
-        header: vue.withCtx(function (props) { return [
-          vue.withDirectives(vue.createVNode(_component_q_tr, { props: props }, {
-            default: vue.withCtx(function () { return [
-              (_ctx.selection_prop!='none')
-                ? (vue.openBlock(), vue.createBlock(_component_q_th, {
-                    key: 0,
-                    "auto-width": "",
-                    class: "ignore-elements"
-                  }, {
-                    default: vue.withCtx(function () { return [
-                      (_ctx.selection_prop=='multiple')
-                        ? (vue.openBlock(), vue.createBlock(_component_q_checkbox, {
-                            key: 0,
-                            modelValue: props.selected,
-                            "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); },
-                            "indeterminate-value": "some"
-                          }, null, 8, ["modelValue", "onUpdate:modelValue"]))
-                        : vue.createCommentVNode("", true)
-                    ]; }),
-                    _: 2
-                  }, 1024))
-                : vue.createCommentVNode("", true),
-              (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
-                return (vue.openBlock(), vue.createBlock(_component_q_th, {
-                  props: props,
-                  onHover: _cache[1] || (_cache[1] = vue.withModifiers(function () {}, ["stop"])),
-                  key: col.name
-                }, {
-                  default: vue.withCtx(function () { return [
-                    vue.createElementVNode("div", _hoisted_1, [
-                      vue.createElementVNode("div", _hoisted_2, [
-                        vue.createElementVNode("p", null, vue.toDisplayString(col.label), 1)
-                      ]),
-                      vue.createElementVNode("div", _hoisted_3, [
-                        (_ctx.header_filter)
-                          ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
-                              key: 0,
-                              flat: "",
-                              dense: "",
-                              size: "sm",
-                              icon: "fa fa-filter",
-                              class: "q-ml-xs",
-                              onClick: _cache[0] || (_cache[0] = vue.withModifiers(function () {}, ["stop"]))
-                            }, {
-                              default: vue.withCtx(function () { return [
-                                (_ctx.column_options_selected[col.field].length>0)
-                                  ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
-                                      key: 0,
-                                      name: "fas fa-asterisk",
-                                      color: "red",
-                                      style: {"font-size":"7px"}
-                                    }))
-                                  : vue.createCommentVNode("", true),
-                                vue.createVNode(_component_q_menu, null, {
-                                  default: vue.withCtx(function () { return [
-                                    vue.createVNode(_component_q_space),
-                                    vue.withDirectives(vue.createVNode(_component_q_btn, {
-                                      dense: "",
-                                      class: "float-right q-ma-sm bg-red text-white",
-                                      round: "",
-                                      size: "sm",
-                                      flat: "",
-                                      icon: "close"
-                                    }, null, 512), [
-                                      [_directive_close_popup]
-                                    ]),
-                                    vue.createElementVNode("div", _hoisted_4, [
-                                      vue.createVNode(_component_q_select, {
-                                        "map-options": "",
-                                        multiple: "",
-                                        "emit-value": "",
-                                        filled: "",
-                                        modelValue: _ctx.column_options_selected[col.field],
-                                        "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
-                                        options: _ctx.getColumnOptions(col.field),
-                                        style: {"width":"150px !important"}
-                                      }, {
-                                        "before-options": vue.withCtx(function () { return [
-                                          vue.createVNode(_component_q_item, { class: "sticky-top" }, {
-                                            default: vue.withCtx(function () { return [
-                                              vue.createVNode(_component_q_item_section, { avatar: "" }, {
-                                                default: vue.withCtx(function () { return [
-                                                  vue.createVNode(_component_q_checkbox, {
-                                                    "onUpdate:modelValue": function ($event) { return (_ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?_ctx.column_options_selected[col.field]=[]:_ctx.column_options_selected[col.field] = _ctx.getColumnOptions(col.field).map(function (item){ return item.value; })); },
-                                                    "model-value": _ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?true:(_ctx.column_options_selected[col.field].length==0?false:null),
-                                                    color: "teal"
-                                                  }, null, 8, ["onUpdate:modelValue", "model-value"])
-                                                ]; }),
-                                                _: 2
-                                              }, 1024),
-                                              vue.createVNode(_component_q_item_section, null, {
-                                                default: vue.withCtx(function () { return [
-                                                  vue.createVNode(_component_q_item_label, { innerHTML: 'Select All' })
-                                                ]; }),
-                                                _: 1
-                                              })
-                                            ]; }),
-                                            _: 2
-                                          }, 1024)
-                                        ]; }),
-                                        option: vue.withCtx(function (scope) { return [
-                                          vue.createVNode(_component_q_item, vue.mergeProps(scope.itemProps, vue.toHandlers(scope.itemEvents)), {
-                                            default: vue.withCtx(function () { return [
-                                              vue.createVNode(_component_q_item_section, { avatar: "" }, {
-                                                default: vue.withCtx(function () { return [
-                                                  vue.createVNode(_component_q_checkbox, {
-                                                    modelValue: _ctx.column_options_selected[col.field],
-                                                    "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
-                                                    val: scope.opt.value,
-                                                    color: "teal"
-                                                  }, null, 8, ["modelValue", "onUpdate:modelValue", "val"])
-                                                ]; }),
-                                                _: 2
-                                              }, 1024),
-                                              vue.createVNode(_component_q_item_section, null, {
-                                                default: vue.withCtx(function () { return [
-                                                  vue.createVNode(_component_q_item_label, {
-                                                    class: "text-black",
-                                                    innerHTML: scope.opt.label
-                                                  }, null, 8, ["innerHTML"])
-                                                ]; }),
-                                                _: 2
-                                              }, 1024)
-                                            ]; }),
-                                            _: 2
-                                          }, 1040)
-                                        ]; }),
-                                        _: 2
-                                      }, 1032, ["modelValue", "onUpdate:modelValue", "options"])
-                                    ]),
-                                    vue.withDirectives(vue.createVNode(_component_q_btn, {
-                                      color: "primary",
-                                      class: "float-right q-mr-sm q-mb-sm text-capitalize",
-                                      size: "sm",
-                                      onClick: function ($event) { return (_ctx.column_options_selected[col.field]=[]); },
-                                      label: "Clear"
-                                    }, null, 8, ["onClick"]), [
-                                      [_directive_close_popup]
-                                    ])
-                                  ]; }),
-                                  _: 2
-                                }, 1024)
-                              ]; }),
-                              _: 2
-                            }, 1024))
-                          : vue.createCommentVNode("", true)
-                      ])
-                    ])
-                  ]; }),
-                  _: 2
-                }, 1032, ["props"]))
-              }), 128))
-            ]; }),
-            _: 2
-          }, 1032, ["props"]), [
-            [vue.vShow, !_ctx.hasHeaderSlot]
-          ]),
-          (_ctx.hasHeaderSlot)
-            ? vue.renderSlot(_ctx.$slots, "header", {
-                key: 0,
-                cols: props.cols
-              })
-            : vue.createCommentVNode("", true),
-          (_ctx.columns_filter)
-            ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
-                key: 1,
-                props: props,
-                class: "ignore-elements"
-              }, {
+      (_ctx.ssr_pagination)
+        ? (vue.openBlock(), vue.createBlock(_component_q_table, {
+            key: 0,
+            id: _ctx.uuid,
+            loading: _ctx.loading,
+            rows: _ctx.getFilteredValuesData,
+            columns: _ctx.final_column,
+            "row-key": _ctx.row_key?_ctx.row_key:'name',
+            class: vue.normalizeClass(_ctx.classes),
+            "visible-columns": _ctx.visible_columns,
+            separator: _ctx.separator,
+            dense: _ctx.dense,
+            dark: _ctx.dark,
+            flat: _ctx.flat,
+            bordered: _ctx.bordered,
+            square: _ctx.square,
+            selection: _ctx.selection_prop,
+            selected: _ctx.selected_prop,
+            "onUpdate:selected": _cache[6] || (_cache[6] = function ($event) { return ((_ctx.selected_prop) = $event); }),
+            filter: _ctx.global_filter || _ctx.filter,
+            pagination: _ctx.pagination_this,
+            "onUpdate:pagination": _cache[7] || (_cache[7] = function ($event) { return ((_ctx.pagination_this) = $event); }),
+            onRequest: _ctx.onRequest
+          }, vue.createSlots({
+            header: vue.withCtx(function (props) { return [
+              vue.withDirectives(vue.createVNode(_component_q_tr, { props: props }, {
                 default: vue.withCtx(function () { return [
                   (_ctx.selection_prop!='none')
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 0,
-                        "auto-width": ""
-                      }))
+                        "auto-width": "",
+                        class: "ignore-elements"
+                      }, {
+                        default: vue.withCtx(function () { return [
+                          (_ctx.selection_prop=='multiple')
+                            ? (vue.openBlock(), vue.createBlock(_component_q_checkbox, {
+                                key: 0,
+                                modelValue: props.selected,
+                                "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); },
+                                "indeterminate-value": "some"
+                              }, null, 8, ["modelValue", "onUpdate:modelValue"]))
+                            : vue.createCommentVNode("", true)
+                        ]; }),
+                        _: 2
+                      }, 1024))
                     : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
                     return (vue.openBlock(), vue.createBlock(_component_q_th, {
-                      key: col.name,
-                      style: {"padding":"0px 0px 0px 0px"}
+                      props: props,
+                      onHover: _cache[1] || (_cache[1] = vue.withModifiers(function () {}, ["stop"])),
+                      key: col.name
                     }, {
                       default: vue.withCtx(function () { return [
-                        (!col.hasOwnProperty('filter_type') || col.filter_type=='text')
-                          ? (vue.openBlock(), vue.createBlock(_component_q_input, {
-                              key: 0,
-                              dense: "",
-                              color: "teal",
-                              class: "q-pl-xs q-pr-xs",
-                              filled: "",
-                              modelValue: _ctx.filter_data[col.field],
-                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); }
-                            }, vue.createSlots({ _: 2 }, [
-                              (_ctx.filter_data[col.field])
-                                ? {
-                                    name: "append",
-                                    fn: vue.withCtx(function () { return [
-                                      vue.createVNode(_component_q_icon, {
-                                        name: "cancel",
-                                        onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = ''); }, ["stop"]),
-                                        class: "cursor-pointer"
-                                      }, null, 8, ["onClick"])
-                                    ]; })
-                                  }
-                                : undefined
-                            ]), 1032, ["modelValue", "onUpdate:modelValue"]))
-                          : vue.createCommentVNode("", true),
-                        (col.hasOwnProperty('filter_type') && col.filter_type=='select')
-                          ? (vue.openBlock(), vue.createBlock(_component_q_select, {
-                              key: 1,
-                              "map-options": "",
-                              multiple: "",
-                              "emit-value": "",
-                              filled: "",
-                              modelValue: _ctx.column_options_selected[col.field],
-                              "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
-                              options: _ctx.getColumnOptions(col.field),
-                              dense: ""
-                            }, {
-                              append: vue.withCtx(function () { return [
-                                (_ctx.column_options_selected[col.field].length>0)
-                                  ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
-                                      key: 0,
-                                      name: "close",
-                                      onClick: vue.withModifiers(function ($event) { return (_ctx.column_options_selected[col.field]=[]); }, ["stop"]),
-                                      class: "cursor-pointer"
-                                    }, null, 8, ["onClick"]))
-                                  : vue.createCommentVNode("", true)
-                              ]; }),
-                              "before-options": vue.withCtx(function () { return [
-                                vue.createVNode(_component_q_item, { class: "sticky-top" }, {
+                        vue.createElementVNode("div", _hoisted_1, [
+                          vue.createElementVNode("div", _hoisted_2, [
+                            vue.createElementVNode("p", null, vue.toDisplayString(col.label), 1)
+                          ]),
+                          vue.createElementVNode("div", _hoisted_3, [
+                            (_ctx.header_filter && col.hasOwnProperty('show_filter') && col['show_filter'])
+                              ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                                  key: 0,
+                                  flat: "",
+                                  dense: "",
+                                  size: "sm",
+                                  icon: "fa fa-filter",
+                                  class: "q-ml-xs",
+                                  onClick: _cache[0] || (_cache[0] = vue.withModifiers(function () {}, ["stop"]))
+                                }, {
                                   default: vue.withCtx(function () { return [
-                                    vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                    (_ctx.column_options_selected[col.field].length>0)
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "fas fa-asterisk",
+                                          color: "red",
+                                          style: {"font-size":"7px"}
+                                        }))
+                                      : vue.createCommentVNode("", true),
+                                    vue.createVNode(_component_q_menu, null, {
                                       default: vue.withCtx(function () { return [
-                                        vue.createVNode(_component_q_checkbox, {
-                                          "onUpdate:modelValue": function ($event) { return (_ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?_ctx.column_options_selected[col.field]=[]:_ctx.column_options_selected[col.field] = _ctx.getColumnOptions(col.field).map(function (item){ return item.value; })); },
-                                          "model-value": _ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?true:(_ctx.column_options_selected[col.field].length==0?false:null),
-                                          color: "teal"
-                                        }, null, 8, ["onUpdate:modelValue", "model-value"])
-                                      ]; }),
-                                      _: 2
-                                    }, 1024),
-                                    vue.createVNode(_component_q_item_section, null, {
-                                      default: vue.withCtx(function () { return [
-                                        vue.createVNode(_component_q_item_label, { innerHTML: 'Select All' })
-                                      ]; }),
-                                      _: 1
-                                    })
-                                  ]; }),
-                                  _: 2
-                                }, 1024)
-                              ]; }),
-                              option: vue.withCtx(function (scope) { return [
-                                vue.createVNode(_component_q_item, vue.mergeProps(scope.itemProps, vue.toHandlers(scope.itemEvents)), {
-                                  default: vue.withCtx(function () { return [
-                                    vue.createVNode(_component_q_item_section, { avatar: "" }, {
-                                      default: vue.withCtx(function () { return [
-                                        vue.createVNode(_component_q_checkbox, {
-                                          modelValue: _ctx.column_options_selected[col.field],
-                                          "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
-                                          val: scope.opt.value,
-                                          color: "teal"
-                                        }, null, 8, ["modelValue", "onUpdate:modelValue", "val"])
-                                      ]; }),
-                                      _: 2
-                                    }, 1024),
-                                    vue.createVNode(_component_q_item_section, null, {
-                                      default: vue.withCtx(function () { return [
-                                        vue.createVNode(_component_q_item_label, {
-                                          innerHTML: scope.opt.label
-                                        }, null, 8, ["innerHTML"])
+                                        vue.createVNode(_component_q_space),
+                                        vue.withDirectives(vue.createVNode(_component_q_btn, {
+                                          dense: "",
+                                          class: "float-right q-ma-sm bg-red text-white",
+                                          round: "",
+                                          size: "sm",
+                                          flat: "",
+                                          icon: "close"
+                                        }, null, 512), [
+                                          [_directive_close_popup]
+                                        ]),
+                                        vue.createElementVNode("div", _hoisted_4, [
+                                          vue.createVNode(_component_q_select, {
+                                            "map-options": "",
+                                            multiple: "",
+                                            "emit-value": "",
+                                            filled: "",
+                                            modelValue: _ctx.column_options_selected[col.field],
+                                            "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                            options: _ctx.getColumnOptions(col.field),
+                                            style: {"width":"150px !important"}
+                                          }, {
+                                            "before-options": vue.withCtx(function () { return [
+                                              vue.createVNode(_component_q_item, { class: "sticky-top" }, {
+                                                default: vue.withCtx(function () { return [
+                                                  vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_checkbox, {
+                                                        "onUpdate:modelValue": function ($event) { return (_ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?_ctx.column_options_selected[col.field]=[]:_ctx.column_options_selected[col.field] = _ctx.getColumnOptions(col.field).map(function (item){ return item.value; })); },
+                                                        "model-value": _ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?true:(_ctx.column_options_selected[col.field].length==0?false:null),
+                                                        color: "teal"
+                                                      }, null, 8, ["onUpdate:modelValue", "model-value"])
+                                                    ]; }),
+                                                    _: 2
+                                                  }, 1024),
+                                                  vue.createVNode(_component_q_item_section, null, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_item_label, { innerHTML: 'Select All' })
+                                                    ]; }),
+                                                    _: 1
+                                                  })
+                                                ]; }),
+                                                _: 2
+                                              }, 1024)
+                                            ]; }),
+                                            option: vue.withCtx(function (scope) { return [
+                                              vue.createVNode(_component_q_item, vue.mergeProps(scope.itemProps, vue.toHandlers(scope.itemEvents)), {
+                                                default: vue.withCtx(function () { return [
+                                                  vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_checkbox, {
+                                                        modelValue: _ctx.column_options_selected[col.field],
+                                                        "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                                        val: scope.opt.value,
+                                                        color: "teal"
+                                                      }, null, 8, ["modelValue", "onUpdate:modelValue", "val"])
+                                                    ]; }),
+                                                    _: 2
+                                                  }, 1024),
+                                                  vue.createVNode(_component_q_item_section, null, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_item_label, {
+                                                        class: "text-black",
+                                                        innerHTML: scope.opt.label
+                                                      }, null, 8, ["innerHTML"])
+                                                    ]; }),
+                                                    _: 2
+                                                  }, 1024)
+                                                ]; }),
+                                                _: 2
+                                              }, 1040)
+                                            ]; }),
+                                            _: 2
+                                          }, 1032, ["modelValue", "onUpdate:modelValue", "options"])
+                                        ]),
+                                        vue.withDirectives(vue.createVNode(_component_q_btn, {
+                                          color: "primary",
+                                          class: "float-right q-mr-sm q-mb-sm text-capitalize",
+                                          size: "sm",
+                                          onClick: function ($event) { return (_ctx.column_options_selected[col.field]=[]); },
+                                          label: "Clear"
+                                        }, null, 8, ["onClick"]), [
+                                          [_directive_close_popup]
+                                        ])
                                       ]; }),
                                       _: 2
                                     }, 1024)
                                   ]; }),
                                   _: 2
-                                }, 1040)
-                              ]; }),
-                              _: 2
-                            }, 1032, ["modelValue", "onUpdate:modelValue", "options"]))
-                          : vue.createCommentVNode("", true),
-                        (col.hasOwnProperty('filter_type') && col.filter_type=='date')
-                          ? (vue.openBlock(), vue.createBlock(_component_q_input, {
-                              key: 2,
-                              dense: "",
-                              color: "teal",
-                              class: "q-pl-xs q-pr-xs",
-                              filled: "",
-                              "model-value": _ctx.filter_data[col.field].from+(_ctx.filter_data[col.field].from?'-':'')+_ctx.filter_data[col.field].to
-                            }, {
-                              append: vue.withCtx(function () { return [
-                                vue.createVNode(_component_q_icon, {
-                                  name: "event",
-                                  class: "cursor-pointer"
-                                }, {
-                                  default: vue.withCtx(function () { return [
-                                    vue.createVNode(_component_q_popup_proxy, {
-                                      ref_for: true,
-                                      ref: "qDateProxy",
-                                      cover: "",
-                                      "transition-show": "scale",
-                                      "transition-hide": "scale"
-                                    }, {
-                                      default: vue.withCtx(function () { return [
-                                        vue.createVNode(_component_q_date, {
-                                          modelValue: _ctx.filter_data[col.field],
-                                          "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); },
-                                          range: ""
-                                        }, {
-                                          default: vue.withCtx(function () { return [
-                                            vue.createElementVNode("div", _hoisted_5, [
-                                              vue.withDirectives(vue.createVNode(_component_q_btn, {
-                                                label: "Close",
-                                                class: "text-capitalize",
-                                                color: "primary",
-                                                flat: ""
-                                              }, null, 512), [
-                                                [_directive_close_popup]
-                                              ])
-                                            ])
-                                          ]; }),
-                                          _: 2
-                                        }, 1032, ["modelValue", "onUpdate:modelValue"])
-                                      ]; }),
-                                      _: 2
-                                    }, 1536)
-                                  ]; }),
-                                  _: 2
-                                }, 1024),
-                                (_ctx.filter_data[col.field].from!='')
-                                  ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
-                                      key: 0,
-                                      name: "cancel",
-                                      onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = {'from': '', 'to': ''}); }, ["stop"]),
-                                      class: "cursor-pointer"
-                                    }, null, 8, ["onClick"]))
-                                  : vue.createCommentVNode("", true)
-                              ]; }),
-                              _: 2
-                            }, 1032, ["model-value"]))
-                          : vue.createCommentVNode("", true)
-                      ]; }),
-                      _: 2
-                    }, 1024))
-                  }), 128))
-                ]; }),
-                _: 2
-              }, 1032, ["props"]))
-            : vue.createCommentVNode("", true)
-        ]; }),
-        body: vue.withCtx(function (props) { return [
-          (!_ctx.hasDefaultSlot)
-            ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
-                key: 0,
-                props: props
-              }, {
-                default: vue.withCtx(function () { return [
-                  (_ctx.selection_prop!='none')
-                    ? (vue.openBlock(), vue.createBlock(_component_q_td, { key: 0 }, {
-                        default: vue.withCtx(function () { return [
-                          vue.createVNode(_component_q_checkbox, {
-                            color: "primary",
-                            modelValue: props.selected,
-                            "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); }
-                          }, null, 8, ["modelValue", "onUpdate:modelValue"])
-                        ]; }),
-                        _: 2
-                      }, 1024))
-                    : vue.createCommentVNode("", true),
-                  (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, col_index) {
-                    return (vue.openBlock(), vue.createBlock(_component_q_td, {
-                      key: col.name,
-                      props: props
-                    }, {
-                      default: vue.withCtx(function () { return [
-                        (_ctx.groupby_filter && _ctx.selected_group_by_filed.value!='' && col_index==0)
-                          ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
-                              key: 0,
-                              size: "sm",
-                              color: "accent",
-                              round: "",
-                              dense: "",
-                              onClick: function ($event) { return (props.expand = !props.expand); },
-                              class: "q-mr-sm",
-                              icon: props.expand ? 'remove' : 'add'
-                            }, null, 8, ["onClick", "icon"]))
-                          : vue.createCommentVNode("", true),
-                        vue.createTextVNode(" " + vue.toDisplayString(props.row[col.field]), 1)
+                                }, 1024))
+                              : vue.createCommentVNode("", true)
+                          ])
+                        ])
                       ]; }),
                       _: 2
                     }, 1032, ["props"]))
                   }), 128))
                 ]; }),
                 _: 2
-              }, 1032, ["props"]))
-            : vue.createCommentVNode("", true),
-          (_ctx.groupby_filter &&  _ctx.selected_group_by_filed.value!='')
-            ? vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tr, {
-                key: 1,
-                props: props
-              }, {
-                default: vue.withCtx(function () { return [
-                  vue.createVNode(_component_q_td, { colspan: 2 }, {
+              }, 1032, ["props"]), [
+                [vue.vShow, !_ctx.hasHeaderSlot]
+              ]),
+              (_ctx.hasHeaderSlot)
+                ? vue.renderSlot(_ctx.$slots, "header", {
+                    key: 0,
+                    cols: props.cols
+                  })
+                : vue.createCommentVNode("", true),
+              (_ctx.columns_filter)
+                ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 1,
+                    props: props,
+                    class: "ignore-elements"
+                  }, {
                     default: vue.withCtx(function () { return [
-                      vue.createVNode(_component_q_table, {
-                        rows: _ctx.sub_grouped_data[props.row.name],
-                        columns: _ctx.columns,
-                        "row-key": "name",
-                        pagination: _ctx.group_pagination,
-                        "hide-bottom": ""
-                      }, {
-                        default: vue.withCtx(function () { return [
-                          vue.createVNode(_component_q_tr, {
-                            slot: "header",
-                            "slot-scope": "props"
-                          }, {
-                            default: vue.withCtx(function () { return [
-                              (_ctx.col.field!=_ctx.selected_group_by_filed)
-                                ? (vue.openBlock(true), vue.createElementBlock(vue.Fragment, { key: 0 }, vue.renderList(props.cols, function (col) {
-                                    return (vue.openBlock(), vue.createBlock(_component_q_th, {
-                                      key: col.name,
-                                      props: props
-                                    }, {
-                                      default: vue.withCtx(function () { return [
-                                        vue.createTextVNode(vue.toDisplayString(col.label), 1)
-                                      ]; }),
-                                      _: 2
-                                    }, 1032, ["props"]))
-                                  }), 128))
-                                : vue.createCommentVNode("", true)
-                            ]; }),
-                            _: 2
-                          }, 1024),
-                          vue.createElementVNode("template", _hoisted_6, [
-                            vue.createVNode(_component_q_tr, { props: props }, {
-                              default: vue.withCtx(function () { return [
-                                (_ctx.col.field!=_ctx.selected_group_by_filed)
-                                  ? (vue.openBlock(true), vue.createElementBlock(vue.Fragment, { key: 0 }, vue.renderList(props.cols, function (col) {
-                                      return (vue.openBlock(), vue.createBlock(_component_q_td, {
-                                        key: col.name,
-                                        props: props
-                                      }, {
-                                        default: vue.withCtx(function () { return [
-                                          vue.createTextVNode(vue.toDisplayString(props.row[col.field]), 1)
-                                        ]; }),
-                                        _: 2
-                                      }, 1032, ["props"]))
-                                    }), 128))
-                                  : vue.createCommentVNode("", true)
-                              ]; }),
-                              _: 2
-                            }, 1032, ["props"])
-                          ])
-                        ]; }),
-                        _: 2
-                      }, 1032, ["rows", "columns", "pagination"])
-                    ]; }),
-                    _: 2
-                  }, 1024)
-                ]; }),
-                _: 2
-              }, 1032, ["props"])), [
-                [vue.vShow, props.expand]
-              ])
-            : vue.createCommentVNode("", true),
-          (_ctx.hasDefaultSlot)
-            ? vue.renderSlot(_ctx.$slots, "body", {
-                key: 2,
-                row: props.row
-              })
-            : vue.createCommentVNode("", true)
-        ]; }),
-        _: 2
-      }, [
-        (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search)
-          ? {
-              name: "top-right",
-              fn: vue.withCtx(function (props) { return [
-                (_ctx.global_search)
-                  ? (vue.openBlock(), vue.createBlock(_component_q_input, {
-                      key: 0,
-                      filled: "",
-                      borderless: "",
-                      dense: "",
-                      debounce: "300",
-                      modelValue: _ctx.filter,
-                      "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) { return ((_ctx.filter) = $event); }),
-                      class: "q-mr-md",
-                      placeholder: "Search"
-                    }, {
-                      append: vue.withCtx(function () { return [
-                        vue.createVNode(_component_q_icon, { name: "search" })
-                      ]; }),
-                      _: 1
-                    }, 8, ["modelValue"]))
-                  : vue.createCommentVNode("", true),
-                (_ctx.excel_download)
-                  ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
-                      key: 1,
-                      class: "bg-grey-2 q-mr-sm",
-                      icon: "fas fa-file-excel",
-                      "no-caps": "",
-                      onClick: _cache[3] || (_cache[3] = function ($event) { return (_ctx.exportTable('xlsx')); })
-                    }))
-                  : vue.createCommentVNode("", true),
-                (_ctx.csv_download)
-                  ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
-                      key: 2,
-                      class: "bg-primary text-white",
-                      icon: "fas fa-file-csv",
-                      "no-caps": "",
-                      onClick: _cache[4] || (_cache[4] = function ($event) { return (_ctx.exportTable('csv')); })
-                    }))
-                  : vue.createCommentVNode("", true),
-                (_ctx.groupby_filter)
-                  ? (vue.openBlock(), vue.createBlock(_component_q_select, {
-                      key: 3,
-                      class: "q-mr-sm q-ml-sm",
-                      outlined: "",
-                      dense: "",
-                      modelValue: _ctx.selected_group_by_filed,
-                      "onUpdate:modelValue": _cache[5] || (_cache[5] = function ($event) { return ((_ctx.selected_group_by_filed) = $event); }),
-                      options: _ctx.gorupby_option,
-                      style: {"width":"150px"}
-                    }, null, 8, ["modelValue", "options"]))
-                  : vue.createCommentVNode("", true),
-                (_ctx.fullscreen)
-                  ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
-                      key: 4,
-                      flat: "",
-                      round: "",
-                      class: "q-ml-sm",
-                      dense: "",
-                      icon: props.inFullscreen ? 'fullscreen_exit' : 'fullscreen',
-                      onClick: props.toggleFullscreen
-                    }, {
-                      default: vue.withCtx(function () { return [
-                        vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tooltip, {
-                          disable: _ctx.$q.platform.is.mobile
+                      (_ctx.selection_prop!='none')
+                        ? (vue.openBlock(), vue.createBlock(_component_q_th, {
+                            key: 0,
+                            "auto-width": ""
+                          }))
+                        : vue.createCommentVNode("", true),
+                      (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
+                        return (vue.openBlock(), vue.createBlock(_component_q_th, {
+                          key: col.name,
+                          style: {"padding":"0px 0px 0px 0px"}
                         }, {
                           default: vue.withCtx(function () { return [
-                            vue.createTextVNode(vue.toDisplayString(props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen'), 1)
+                            (!col.hasOwnProperty('filter_type') || col.filter_type=='text')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                                  key: 0,
+                                  dense: "",
+                                  color: "teal",
+                                  class: "q-pl-xs q-pr-xs",
+                                  filled: "",
+                                  modelValue: _ctx.filter_data[col.field],
+                                  "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); }
+                                }, vue.createSlots({ _: 2 }, [
+                                  (_ctx.filter_data[col.field])
+                                    ? {
+                                        name: "append",
+                                        fn: vue.withCtx(function () { return [
+                                          vue.createVNode(_component_q_icon, {
+                                            name: "cancel",
+                                            onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = ''); }, ["stop"]),
+                                            class: "cursor-pointer"
+                                          }, null, 8, ["onClick"])
+                                        ]; })
+                                      }
+                                    : undefined
+                                ]), 1032, ["modelValue", "onUpdate:modelValue"]))
+                              : vue.createCommentVNode("", true),
+                            (col.hasOwnProperty('filter_type') && col.filter_type=='select')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_select, {
+                                  key: 1,
+                                  "map-options": "",
+                                  multiple: "",
+                                  "emit-value": "",
+                                  filled: "",
+                                  modelValue: _ctx.column_options_selected[col.field],
+                                  "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                  options: _ctx.getColumnOptions(col.field),
+                                  dense: ""
+                                }, {
+                                  append: vue.withCtx(function () { return [
+                                    (_ctx.column_options_selected[col.field].length>0)
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "close",
+                                          onClick: vue.withModifiers(function ($event) { return (_ctx.column_options_selected[col.field]=[]); }, ["stop"]),
+                                          class: "cursor-pointer"
+                                        }, null, 8, ["onClick"]))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  "before-options": vue.withCtx(function () { return [
+                                    vue.createVNode(_component_q_item, { class: "sticky-top" }, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_checkbox, {
+                                              "onUpdate:modelValue": function ($event) { return (_ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?_ctx.column_options_selected[col.field]=[]:_ctx.column_options_selected[col.field] = _ctx.getColumnOptions(col.field).map(function (item){ return item.value; })); },
+                                              "model-value": _ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?true:(_ctx.column_options_selected[col.field].length==0?false:null),
+                                              color: "teal"
+                                            }, null, 8, ["onUpdate:modelValue", "model-value"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1024),
+                                        vue.createVNode(_component_q_item_section, null, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_item_label, { innerHTML: 'Select All' })
+                                          ]; }),
+                                          _: 1
+                                        })
+                                      ]; }),
+                                      _: 2
+                                    }, 1024)
+                                  ]; }),
+                                  option: vue.withCtx(function (scope) { return [
+                                    vue.createVNode(_component_q_item, vue.mergeProps(scope.itemProps, vue.toHandlers(scope.itemEvents)), {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_checkbox, {
+                                              modelValue: _ctx.column_options_selected[col.field],
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                              val: scope.opt.value,
+                                              color: "teal"
+                                            }, null, 8, ["modelValue", "onUpdate:modelValue", "val"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1024),
+                                        vue.createVNode(_component_q_item_section, null, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_item_label, {
+                                              innerHTML: scope.opt.label
+                                            }, null, 8, ["innerHTML"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1024)
+                                      ]; }),
+                                      _: 2
+                                    }, 1040)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["modelValue", "onUpdate:modelValue", "options"]))
+                              : vue.createCommentVNode("", true),
+                            (col.hasOwnProperty('filter_type') && col.filter_type=='date')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                                  key: 2,
+                                  dense: "",
+                                  color: "teal",
+                                  class: "q-pl-xs q-pr-xs",
+                                  filled: "",
+                                  "model-value": _ctx.filter_data[col.field].from+(_ctx.filter_data[col.field].from?'-':'')+_ctx.filter_data[col.field].to
+                                }, {
+                                  append: vue.withCtx(function () { return [
+                                    vue.createVNode(_component_q_icon, {
+                                      name: "event",
+                                      class: "cursor-pointer"
+                                    }, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_popup_proxy, {
+                                          ref_for: true,
+                                          ref: "qDateProxy",
+                                          cover: "",
+                                          "transition-show": "scale",
+                                          "transition-hide": "scale"
+                                        }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_date, {
+                                              modelValue: _ctx.filter_data[col.field],
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); },
+                                              range: ""
+                                            }, {
+                                              default: vue.withCtx(function () { return [
+                                                vue.createElementVNode("div", _hoisted_5, [
+                                                  vue.withDirectives(vue.createVNode(_component_q_btn, {
+                                                    label: "Close",
+                                                    class: "text-capitalize",
+                                                    color: "primary",
+                                                    flat: ""
+                                                  }, null, 512), [
+                                                    [_directive_close_popup]
+                                                  ])
+                                                ])
+                                              ]; }),
+                                              _: 2
+                                            }, 1032, ["modelValue", "onUpdate:modelValue"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1536)
+                                      ]; }),
+                                      _: 2
+                                    }, 1024),
+                                    (_ctx.filter_data[col.field].from!='')
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "cancel",
+                                          onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = {'from': '', 'to': ''}); }, ["stop"]),
+                                          class: "cursor-pointer"
+                                        }, null, 8, ["onClick"]))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["model-value"]))
+                              : vue.createCommentVNode("", true),
+                            (col.hasOwnProperty('filter_type') && col.filter_type=='number_range')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                                  key: 3,
+                                  dense: "",
+                                  color: "teal",
+                                  class: "q-pl-xs q-pr-xs",
+                                  filled: "",
+                                  "model-value": _ctx.filter_data[col.field].from+(typeof _ctx.filter_data[col.field].from!='string'?'-':'')+_ctx.filter_data[col.field].to
+                                }, {
+                                  append: vue.withCtx(function () { return [
+                                    vue.createVNode(_component_q_icon, {
+                                      name: "tag",
+                                      class: "cursor-pointer"
+                                    }, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_popup_proxy, {
+                                          ref_for: true,
+                                          ref: "qDateProxy",
+                                          cover: "",
+                                          class: "row q-pa-sm",
+                                          "transition-show": "scale",
+                                          "transition-hide": "scale"
+                                        }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_input, {
+                                              label: "From",
+                                              type: "number",
+                                              color: "teal",
+                                              modelValue: _ctx.filter_data[col.field].from,
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].from) = $event); },
+                                              modelModifiers: { number: true },
+                                              class: "q-pl-xs q-pr-xs",
+                                              filled: ""
+                                            }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                                            vue.createVNode(_component_q_input, {
+                                              label: "To",
+                                              type: "number",
+                                              color: "teal",
+                                              modelValue: _ctx.filter_data[col.field].to,
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].to) = $event); },
+                                              modelModifiers: { number: true },
+                                              class: "q-pl-xs q-pr-xs",
+                                              filled: ""
+                                            }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1536)
+                                      ]; }),
+                                      _: 2
+                                    }, 1024),
+                                    (typeof _ctx.filter_data[col.field].from!='string')
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "cancel",
+                                          onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = {'from': '', 'to': ''}); }, ["stop"]),
+                                          class: "cursor-pointer"
+                                        }, null, 8, ["onClick"]))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["model-value"]))
+                              : vue.createCommentVNode("", true)
                           ]; }),
                           _: 2
-                        }, 1032, ["disable"])), [
-                          [_directive_close_popup]
+                        }, 1024))
+                      }), 128))
+                    ]; }),
+                    _: 2
+                  }, 1032, ["props"]))
+                : vue.createCommentVNode("", true)
+            ]; }),
+            body: vue.withCtx(function (props) { return [
+              (!_ctx.hasDefaultSlot)
+                ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 0,
+                    props: props,
+                    onClick: function ($event) { return (_ctx.rowClick(props.row)); }
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      (_ctx.selection_prop!='none')
+                        ? (vue.openBlock(), vue.createBlock(_component_q_td, { key: 0 }, {
+                            default: vue.withCtx(function () { return [
+                              vue.createVNode(_component_q_checkbox, {
+                                color: "primary",
+                                modelValue: props.selected,
+                                "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); }
+                              }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                            ]; }),
+                            _: 2
+                          }, 1024))
+                        : vue.createCommentVNode("", true),
+                      (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, col_index) {
+                        return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                          key: col.name,
+                          props: props
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            (_ctx.groupby_filter && _ctx.selected_group_by_filed.value!='' && col_index==0)
+                              ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                                  key: 0,
+                                  size: "sm",
+                                  color: "accent",
+                                  round: "",
+                                  dense: "",
+                                  onClick: function ($event) { return (props.expand = !props.expand); },
+                                  class: "q-mr-sm",
+                                  icon: props.expand ? 'remove' : 'add'
+                                }, null, 8, ["onClick", "icon"]))
+                              : vue.createCommentVNode("", true),
+                            vue.createTextVNode(" " + vue.toDisplayString(props.row[col.field]), 1)
+                          ]; }),
+                          _: 2
+                        }, 1032, ["props"]))
+                      }), 128))
+                    ]; }),
+                    _: 2
+                  }, 1032, ["props", "onClick"]))
+                : vue.createCommentVNode("", true),
+              (_ctx.groupby_filter &&  _ctx.selected_group_by_filed.value!='')
+                ? vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 1,
+                    props: props
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      vue.createVNode(_component_q_td, { colspan: 2 }, {
+                        default: vue.withCtx(function () { return [
+                          vue.createVNode(_component_q_table, {
+                            rows: _ctx.sub_grouped_data[props.row.name],
+                            columns: _ctx.columns,
+                            "row-key": _ctx.row_key?_ctx.row_key:'name',
+                            pagination: _ctx.group_pagination,
+                            "hide-bottom": ""
+                          }, {
+                            default: vue.withCtx(function () { return [
+                              vue.createVNode(_component_q_tr, {
+                                slot: "header",
+                                "slot-scope": "props"
+                              }, {
+                                default: vue.withCtx(function () { return [
+                                  (_ctx.col.field!=_ctx.selected_group_by_filed)
+                                    ? (vue.openBlock(true), vue.createElementBlock(vue.Fragment, { key: 0 }, vue.renderList(props.cols, function (col) {
+                                        return (vue.openBlock(), vue.createBlock(_component_q_th, {
+                                          key: col.name,
+                                          props: props
+                                        }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createTextVNode(vue.toDisplayString(col.label), 1)
+                                          ]; }),
+                                          _: 2
+                                        }, 1032, ["props"]))
+                                      }), 128))
+                                    : vue.createCommentVNode("", true)
+                                ]; }),
+                                _: 2
+                              }, 1024),
+                              vue.createElementVNode("template", _hoisted_6, [
+                                vue.createVNode(_component_q_tr, { props: props }, {
+                                  default: vue.withCtx(function () { return [
+                                    (_ctx.col.field!=_ctx.selected_group_by_filed)
+                                      ? (vue.openBlock(true), vue.createElementBlock(vue.Fragment, { key: 0 }, vue.renderList(props.cols, function (col) {
+                                          return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                                            key: col.name,
+                                            props: props
+                                          }, {
+                                            default: vue.withCtx(function () { return [
+                                              vue.createTextVNode(vue.toDisplayString(props.row[col.field]), 1)
+                                            ]; }),
+                                            _: 2
+                                          }, 1032, ["props"]))
+                                        }), 128))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["props"])
+                              ])
+                            ]; }),
+                            _: 2
+                          }, 1032, ["rows", "columns", "row-key", "pagination"])
+                        ]; }),
+                        _: 2
+                      }, 1024)
+                    ]; }),
+                    _: 2
+                  }, 1032, ["props"])), [
+                    [vue.vShow, props.expand]
+                  ])
+                : vue.createCommentVNode("", true),
+              (_ctx.hasDefaultSlot)
+                ? vue.renderSlot(_ctx.$slots, "body", {
+                    key: 2,
+                    row: props.row
+                  })
+                : vue.createCommentVNode("", true)
+            ]; }),
+            _: 2
+          }, [
+            (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search)
+              ? {
+                  name: "top-right",
+                  fn: vue.withCtx(function (props) { return [
+                    (_ctx.global_search)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                          key: 0,
+                          filled: "",
+                          borderless: "",
+                          dense: "",
+                          debounce: "300",
+                          modelValue: _ctx.filter,
+                          "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) { return ((_ctx.filter) = $event); }),
+                          class: "q-mr-md",
+                          placeholder: "Search"
+                        }, {
+                          append: vue.withCtx(function () { return [
+                            vue.createVNode(_component_q_icon, { name: "search" })
+                          ]; }),
+                          _: 1
+                        }, 8, ["modelValue"]))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.excel_download)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                          key: 1,
+                          class: "bg-grey-2 q-mr-sm",
+                          icon: "fas fa-file-excel",
+                          "no-caps": "",
+                          onClick: _cache[3] || (_cache[3] = function ($event) { return (_ctx.exportTable('xlsx')); })
+                        }))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.csv_download)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                          key: 2,
+                          class: "bg-primary text-white",
+                          icon: "fas fa-file-csv",
+                          "no-caps": "",
+                          onClick: _cache[4] || (_cache[4] = function ($event) { return (_ctx.exportTable('csv')); })
+                        }))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.groupby_filter)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_select, {
+                          key: 3,
+                          class: "q-mr-sm q-ml-sm",
+                          outlined: "",
+                          dense: "",
+                          modelValue: _ctx.selected_group_by_filed,
+                          "onUpdate:modelValue": _cache[5] || (_cache[5] = function ($event) { return ((_ctx.selected_group_by_filed) = $event); }),
+                          options: _ctx.gorupby_option,
+                          style: {"width":"150px"}
+                        }, null, 8, ["modelValue", "options"]))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.fullscreen)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                          key: 4,
+                          flat: "",
+                          round: "",
+                          class: "q-ml-sm",
+                          dense: "",
+                          icon: props.inFullscreen ? 'fullscreen_exit' : 'fullscreen',
+                          onClick: props.toggleFullscreen
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tooltip, {
+                              disable: _ctx.$q.platform.is.mobile
+                            }, {
+                              default: vue.withCtx(function () { return [
+                                vue.createTextVNode(vue.toDisplayString(props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen'), 1)
+                              ]; }),
+                              _: 2
+                            }, 1032, ["disable"])), [
+                              [_directive_close_popup]
+                            ])
+                          ]; }),
+                          _: 2
+                        }, 1032, ["icon", "onClick"]))
+                      : vue.createCommentVNode("", true)
+                  ]; })
+                }
+              : undefined,
+            (_ctx.$slots['loading'])
+              ? {
+                  name: "loading",
+                  fn: vue.withCtx(function () { return [
+                    vue.renderSlot(_ctx.$slots, "loading")
+                  ]; })
+                }
+              : undefined
+          ]), 1032, ["id", "loading", "rows", "columns", "row-key", "class", "visible-columns", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter", "pagination", "onRequest"]))
+        : (vue.openBlock(), vue.createBlock(_component_q_table, {
+            key: 1,
+            id: _ctx.uuid,
+            loading: _ctx.loading,
+            rows: _ctx.getFilteredValuesData,
+            columns: _ctx.final_column,
+            "row-key": _ctx.row_key?_ctx.row_key:'name',
+            class: vue.normalizeClass(_ctx.classes),
+            "visible-columns": _ctx.visible_columns,
+            separator: _ctx.separator,
+            dense: _ctx.dense,
+            dark: _ctx.dark,
+            flat: _ctx.flat,
+            bordered: _ctx.bordered,
+            square: _ctx.square,
+            selection: _ctx.selection_prop,
+            selected: _ctx.selected_prop,
+            "onUpdate:selected": _cache[14] || (_cache[14] = function ($event) { return ((_ctx.selected_prop) = $event); }),
+            filter: _ctx.global_filter || _ctx.filter,
+            pagination: _ctx.pagination_this,
+            onRequest: _ctx.onRequest
+          }, vue.createSlots({
+            header: vue.withCtx(function (props) { return [
+              vue.withDirectives(vue.createVNode(_component_q_tr, { props: props }, {
+                default: vue.withCtx(function () { return [
+                  (_ctx.selection_prop!='none')
+                    ? (vue.openBlock(), vue.createBlock(_component_q_th, {
+                        key: 0,
+                        "auto-width": "",
+                        class: "ignore-elements"
+                      }, {
+                        default: vue.withCtx(function () { return [
+                          (_ctx.selection_prop=='multiple')
+                            ? (vue.openBlock(), vue.createBlock(_component_q_checkbox, {
+                                key: 0,
+                                modelValue: props.selected,
+                                "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); },
+                                "indeterminate-value": "some"
+                              }, null, 8, ["modelValue", "onUpdate:modelValue"]))
+                            : vue.createCommentVNode("", true)
+                        ]; }),
+                        _: 2
+                      }, 1024))
+                    : vue.createCommentVNode("", true),
+                  (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
+                    return (vue.openBlock(), vue.createBlock(_component_q_th, {
+                      props: props,
+                      onHover: _cache[9] || (_cache[9] = vue.withModifiers(function () {}, ["stop"])),
+                      key: col.name
+                    }, {
+                      default: vue.withCtx(function () { return [
+                        vue.createElementVNode("div", _hoisted_7, [
+                          vue.createElementVNode("div", _hoisted_8, [
+                            vue.createElementVNode("p", null, vue.toDisplayString(col.label), 1)
+                          ]),
+                          vue.createElementVNode("div", _hoisted_9, [
+                            (_ctx.header_filter && col.hasOwnProperty('show_filter') && col['show_filter'])
+                              ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                                  key: 0,
+                                  flat: "",
+                                  dense: "",
+                                  size: "sm",
+                                  icon: "fa fa-filter",
+                                  class: "q-ml-xs",
+                                  onClick: _cache[8] || (_cache[8] = vue.withModifiers(function () {}, ["stop"]))
+                                }, {
+                                  default: vue.withCtx(function () { return [
+                                    (_ctx.column_options_selected[col.field].length>0)
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "fas fa-asterisk",
+                                          color: "red",
+                                          style: {"font-size":"7px"}
+                                        }))
+                                      : vue.createCommentVNode("", true),
+                                    vue.createVNode(_component_q_menu, null, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_space),
+                                        vue.withDirectives(vue.createVNode(_component_q_btn, {
+                                          dense: "",
+                                          class: "float-right q-ma-sm bg-red text-white",
+                                          round: "",
+                                          size: "sm",
+                                          flat: "",
+                                          icon: "close"
+                                        }, null, 512), [
+                                          [_directive_close_popup]
+                                        ]),
+                                        vue.createElementVNode("div", _hoisted_10, [
+                                          vue.createVNode(_component_q_select, {
+                                            "map-options": "",
+                                            multiple: "",
+                                            "emit-value": "",
+                                            filled: "",
+                                            modelValue: _ctx.column_options_selected[col.field],
+                                            "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                            options: _ctx.getColumnOptions(col.field),
+                                            style: {"width":"150px !important"}
+                                          }, {
+                                            "before-options": vue.withCtx(function () { return [
+                                              vue.createVNode(_component_q_item, { class: "sticky-top" }, {
+                                                default: vue.withCtx(function () { return [
+                                                  vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_checkbox, {
+                                                        "onUpdate:modelValue": function ($event) { return (_ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?_ctx.column_options_selected[col.field]=[]:_ctx.column_options_selected[col.field] = _ctx.getColumnOptions(col.field).map(function (item){ return item.value; })); },
+                                                        "model-value": _ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?true:(_ctx.column_options_selected[col.field].length==0?false:null),
+                                                        color: "teal"
+                                                      }, null, 8, ["onUpdate:modelValue", "model-value"])
+                                                    ]; }),
+                                                    _: 2
+                                                  }, 1024),
+                                                  vue.createVNode(_component_q_item_section, null, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_item_label, { innerHTML: 'Select All' })
+                                                    ]; }),
+                                                    _: 1
+                                                  })
+                                                ]; }),
+                                                _: 2
+                                              }, 1024)
+                                            ]; }),
+                                            option: vue.withCtx(function (scope) { return [
+                                              vue.createVNode(_component_q_item, vue.mergeProps(scope.itemProps, vue.toHandlers(scope.itemEvents)), {
+                                                default: vue.withCtx(function () { return [
+                                                  vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_checkbox, {
+                                                        modelValue: _ctx.column_options_selected[col.field],
+                                                        "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                                        val: scope.opt.value,
+                                                        color: "teal"
+                                                      }, null, 8, ["modelValue", "onUpdate:modelValue", "val"])
+                                                    ]; }),
+                                                    _: 2
+                                                  }, 1024),
+                                                  vue.createVNode(_component_q_item_section, null, {
+                                                    default: vue.withCtx(function () { return [
+                                                      vue.createVNode(_component_q_item_label, {
+                                                        class: "text-black",
+                                                        innerHTML: scope.opt.label
+                                                      }, null, 8, ["innerHTML"])
+                                                    ]; }),
+                                                    _: 2
+                                                  }, 1024)
+                                                ]; }),
+                                                _: 2
+                                              }, 1040)
+                                            ]; }),
+                                            _: 2
+                                          }, 1032, ["modelValue", "onUpdate:modelValue", "options"])
+                                        ]),
+                                        vue.withDirectives(vue.createVNode(_component_q_btn, {
+                                          color: "primary",
+                                          class: "float-right q-mr-sm q-mb-sm text-capitalize",
+                                          size: "sm",
+                                          onClick: function ($event) { return (_ctx.column_options_selected[col.field]=[]); },
+                                          label: "Clear"
+                                        }, null, 8, ["onClick"]), [
+                                          [_directive_close_popup]
+                                        ])
+                                      ]; }),
+                                      _: 2
+                                    }, 1024)
+                                  ]; }),
+                                  _: 2
+                                }, 1024))
+                              : vue.createCommentVNode("", true)
+                          ])
                         ])
                       ]; }),
                       _: 2
-                    }, 1032, ["icon", "onClick"]))
-                  : vue.createCommentVNode("", true)
-              ]; })
-            }
-          : undefined,
-        (_ctx.$slots['loading'])
-          ? {
-              name: "loading",
-              fn: vue.withCtx(function () { return [
-                vue.renderSlot(_ctx.$slots, "loading")
-              ]; })
-            }
-          : undefined
-      ]), 1032, ["id", "loading", "rows", "columns", "class", "visible-columns", "pagination", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter"])
+                    }, 1032, ["props"]))
+                  }), 128))
+                ]; }),
+                _: 2
+              }, 1032, ["props"]), [
+                [vue.vShow, !_ctx.hasHeaderSlot]
+              ]),
+              (_ctx.hasHeaderSlot)
+                ? vue.renderSlot(_ctx.$slots, "header", {
+                    key: 0,
+                    cols: props.cols
+                  })
+                : vue.createCommentVNode("", true),
+              (_ctx.columns_filter)
+                ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 1,
+                    props: props,
+                    class: "ignore-elements"
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      (_ctx.selection_prop!='none')
+                        ? (vue.openBlock(), vue.createBlock(_component_q_th, {
+                            key: 0,
+                            "auto-width": ""
+                          }))
+                        : vue.createCommentVNode("", true),
+                      (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
+                        return (vue.openBlock(), vue.createBlock(_component_q_th, {
+                          key: col.name,
+                          style: {"padding":"0px 0px 0px 0px"}
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            (!col.hasOwnProperty('filter_type') || col.filter_type=='text')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                                  key: 0,
+                                  dense: "",
+                                  color: "teal",
+                                  class: "q-pl-xs q-pr-xs",
+                                  filled: "",
+                                  modelValue: _ctx.filter_data[col.field],
+                                  "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); }
+                                }, vue.createSlots({ _: 2 }, [
+                                  (_ctx.filter_data[col.field])
+                                    ? {
+                                        name: "append",
+                                        fn: vue.withCtx(function () { return [
+                                          vue.createVNode(_component_q_icon, {
+                                            name: "cancel",
+                                            onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = ''); }, ["stop"]),
+                                            class: "cursor-pointer"
+                                          }, null, 8, ["onClick"])
+                                        ]; })
+                                      }
+                                    : undefined
+                                ]), 1032, ["modelValue", "onUpdate:modelValue"]))
+                              : vue.createCommentVNode("", true),
+                            (col.hasOwnProperty('filter_type') && col.filter_type=='select')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_select, {
+                                  key: 1,
+                                  "map-options": "",
+                                  multiple: "",
+                                  "emit-value": "",
+                                  filled: "",
+                                  modelValue: _ctx.column_options_selected[col.field],
+                                  "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                  options: _ctx.getColumnOptions(col.field),
+                                  dense: ""
+                                }, {
+                                  append: vue.withCtx(function () { return [
+                                    (_ctx.column_options_selected[col.field].length>0)
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "close",
+                                          onClick: vue.withModifiers(function ($event) { return (_ctx.column_options_selected[col.field]=[]); }, ["stop"]),
+                                          class: "cursor-pointer"
+                                        }, null, 8, ["onClick"]))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  "before-options": vue.withCtx(function () { return [
+                                    vue.createVNode(_component_q_item, { class: "sticky-top" }, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_checkbox, {
+                                              "onUpdate:modelValue": function ($event) { return (_ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?_ctx.column_options_selected[col.field]=[]:_ctx.column_options_selected[col.field] = _ctx.getColumnOptions(col.field).map(function (item){ return item.value; })); },
+                                              "model-value": _ctx.getColumnOptions(col.field).length == _ctx.column_options_selected[col.field].length?true:(_ctx.column_options_selected[col.field].length==0?false:null),
+                                              color: "teal"
+                                            }, null, 8, ["onUpdate:modelValue", "model-value"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1024),
+                                        vue.createVNode(_component_q_item_section, null, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_item_label, { innerHTML: 'Select All' })
+                                          ]; }),
+                                          _: 1
+                                        })
+                                      ]; }),
+                                      _: 2
+                                    }, 1024)
+                                  ]; }),
+                                  option: vue.withCtx(function (scope) { return [
+                                    vue.createVNode(_component_q_item, vue.mergeProps(scope.itemProps, vue.toHandlers(scope.itemEvents)), {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_item_section, { avatar: "" }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_checkbox, {
+                                              modelValue: _ctx.column_options_selected[col.field],
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
+                                              val: scope.opt.value,
+                                              color: "teal"
+                                            }, null, 8, ["modelValue", "onUpdate:modelValue", "val"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1024),
+                                        vue.createVNode(_component_q_item_section, null, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_item_label, {
+                                              innerHTML: scope.opt.label
+                                            }, null, 8, ["innerHTML"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1024)
+                                      ]; }),
+                                      _: 2
+                                    }, 1040)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["modelValue", "onUpdate:modelValue", "options"]))
+                              : vue.createCommentVNode("", true),
+                            (col.hasOwnProperty('filter_type') && col.filter_type=='date')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                                  key: 2,
+                                  dense: "",
+                                  color: "teal",
+                                  class: "q-pl-xs q-pr-xs",
+                                  filled: "",
+                                  "model-value": _ctx.filter_data[col.field].from+(_ctx.filter_data[col.field].from?'-':'')+_ctx.filter_data[col.field].to
+                                }, {
+                                  append: vue.withCtx(function () { return [
+                                    vue.createVNode(_component_q_icon, {
+                                      name: "event",
+                                      class: "cursor-pointer"
+                                    }, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_popup_proxy, {
+                                          ref_for: true,
+                                          ref: "qDateProxy",
+                                          cover: "",
+                                          "transition-show": "scale",
+                                          "transition-hide": "scale"
+                                        }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_date, {
+                                              modelValue: _ctx.filter_data[col.field],
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); },
+                                              range: ""
+                                            }, {
+                                              default: vue.withCtx(function () { return [
+                                                vue.createElementVNode("div", _hoisted_11, [
+                                                  vue.withDirectives(vue.createVNode(_component_q_btn, {
+                                                    label: "Close",
+                                                    class: "text-capitalize",
+                                                    color: "primary",
+                                                    flat: ""
+                                                  }, null, 512), [
+                                                    [_directive_close_popup]
+                                                  ])
+                                                ])
+                                              ]; }),
+                                              _: 2
+                                            }, 1032, ["modelValue", "onUpdate:modelValue"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1536)
+                                      ]; }),
+                                      _: 2
+                                    }, 1024),
+                                    (_ctx.filter_data[col.field].from!='')
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "cancel",
+                                          onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = {'from': '', 'to': ''}); }, ["stop"]),
+                                          class: "cursor-pointer"
+                                        }, null, 8, ["onClick"]))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["model-value"]))
+                              : vue.createCommentVNode("", true),
+                            (col.hasOwnProperty('filter_type') && col.filter_type=='number_range')
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                                  key: 3,
+                                  dense: "",
+                                  color: "teal",
+                                  class: "q-pl-xs q-pr-xs",
+                                  filled: "",
+                                  "model-value": _ctx.filter_data[col.field].from+(typeof _ctx.filter_data[col.field].from!='string'?'-':'')+_ctx.filter_data[col.field].to
+                                }, {
+                                  append: vue.withCtx(function () { return [
+                                    vue.createVNode(_component_q_icon, {
+                                      name: "tag",
+                                      class: "cursor-pointer"
+                                    }, {
+                                      default: vue.withCtx(function () { return [
+                                        vue.createVNode(_component_q_popup_proxy, {
+                                          ref_for: true,
+                                          ref: "qDateProxy",
+                                          cover: "",
+                                          class: "row q-pa-sm",
+                                          "transition-show": "scale",
+                                          "transition-hide": "scale"
+                                        }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createVNode(_component_q_input, {
+                                              label: "From",
+                                              type: "number",
+                                              color: "teal",
+                                              modelValue: _ctx.filter_data[col.field].from,
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].from) = $event); },
+                                              modelModifiers: { number: true },
+                                              class: "q-pl-xs q-pr-xs",
+                                              filled: ""
+                                            }, null, 8, ["modelValue", "onUpdate:modelValue"]),
+                                            vue.createVNode(_component_q_input, {
+                                              label: "To",
+                                              type: "number",
+                                              color: "teal",
+                                              modelValue: _ctx.filter_data[col.field].to,
+                                              "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].to) = $event); },
+                                              modelModifiers: { number: true },
+                                              class: "q-pl-xs q-pr-xs",
+                                              filled: ""
+                                            }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                          ]; }),
+                                          _: 2
+                                        }, 1536)
+                                      ]; }),
+                                      _: 2
+                                    }, 1024),
+                                    (typeof _ctx.filter_data[col.field].from!='string')
+                                      ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                          key: 0,
+                                          name: "cancel",
+                                          onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[col.field] = {'from': '', 'to': ''}); }, ["stop"]),
+                                          class: "cursor-pointer"
+                                        }, null, 8, ["onClick"]))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["model-value"]))
+                              : vue.createCommentVNode("", true)
+                          ]; }),
+                          _: 2
+                        }, 1024))
+                      }), 128))
+                    ]; }),
+                    _: 2
+                  }, 1032, ["props"]))
+                : vue.createCommentVNode("", true)
+            ]; }),
+            body: vue.withCtx(function (props) { return [
+              (!_ctx.hasDefaultSlot)
+                ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 0,
+                    props: props,
+                    onClick: function ($event) { return (_ctx.rowClick(props.row)); }
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      (_ctx.selection_prop!='none')
+                        ? (vue.openBlock(), vue.createBlock(_component_q_td, { key: 0 }, {
+                            default: vue.withCtx(function () { return [
+                              vue.createVNode(_component_q_checkbox, {
+                                color: "primary",
+                                modelValue: props.selected,
+                                "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); }
+                              }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                            ]; }),
+                            _: 2
+                          }, 1024))
+                        : vue.createCommentVNode("", true),
+                      (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, col_index) {
+                        return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                          key: col.name,
+                          props: props
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            (_ctx.groupby_filter && _ctx.selected_group_by_filed.value!='' && col_index==0)
+                              ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                                  key: 0,
+                                  size: "sm",
+                                  color: "accent",
+                                  round: "",
+                                  dense: "",
+                                  onClick: function ($event) { return (props.expand = !props.expand); },
+                                  class: "q-mr-sm",
+                                  icon: props.expand ? 'remove' : 'add'
+                                }, null, 8, ["onClick", "icon"]))
+                              : vue.createCommentVNode("", true),
+                            vue.createTextVNode(" " + vue.toDisplayString(props.row[col.field]), 1)
+                          ]; }),
+                          _: 2
+                        }, 1032, ["props"]))
+                      }), 128))
+                    ]; }),
+                    _: 2
+                  }, 1032, ["props", "onClick"]))
+                : vue.createCommentVNode("", true),
+              (_ctx.groupby_filter &&  _ctx.selected_group_by_filed.value!='')
+                ? vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 1,
+                    props: props
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      vue.createVNode(_component_q_td, { colspan: 2 }, {
+                        default: vue.withCtx(function () { return [
+                          vue.createVNode(_component_q_table, {
+                            rows: _ctx.sub_grouped_data[props.row.name],
+                            columns: _ctx.columns,
+                            "row-key": _ctx.row_key?_ctx.row_key:'name',
+                            pagination: _ctx.group_pagination,
+                            "hide-bottom": ""
+                          }, {
+                            default: vue.withCtx(function () { return [
+                              vue.createVNode(_component_q_tr, {
+                                slot: "header",
+                                "slot-scope": "props"
+                              }, {
+                                default: vue.withCtx(function () { return [
+                                  (_ctx.col.field!=_ctx.selected_group_by_filed)
+                                    ? (vue.openBlock(true), vue.createElementBlock(vue.Fragment, { key: 0 }, vue.renderList(props.cols, function (col) {
+                                        return (vue.openBlock(), vue.createBlock(_component_q_th, {
+                                          key: col.name,
+                                          props: props
+                                        }, {
+                                          default: vue.withCtx(function () { return [
+                                            vue.createTextVNode(vue.toDisplayString(col.label), 1)
+                                          ]; }),
+                                          _: 2
+                                        }, 1032, ["props"]))
+                                      }), 128))
+                                    : vue.createCommentVNode("", true)
+                                ]; }),
+                                _: 2
+                              }, 1024),
+                              vue.createElementVNode("template", _hoisted_12, [
+                                vue.createVNode(_component_q_tr, { props: props }, {
+                                  default: vue.withCtx(function () { return [
+                                    (_ctx.col.field!=_ctx.selected_group_by_filed)
+                                      ? (vue.openBlock(true), vue.createElementBlock(vue.Fragment, { key: 0 }, vue.renderList(props.cols, function (col) {
+                                          return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                                            key: col.name,
+                                            props: props
+                                          }, {
+                                            default: vue.withCtx(function () { return [
+                                              vue.createTextVNode(vue.toDisplayString(props.row[col.field]), 1)
+                                            ]; }),
+                                            _: 2
+                                          }, 1032, ["props"]))
+                                        }), 128))
+                                      : vue.createCommentVNode("", true)
+                                  ]; }),
+                                  _: 2
+                                }, 1032, ["props"])
+                              ])
+                            ]; }),
+                            _: 2
+                          }, 1032, ["rows", "columns", "row-key", "pagination"])
+                        ]; }),
+                        _: 2
+                      }, 1024)
+                    ]; }),
+                    _: 2
+                  }, 1032, ["props"])), [
+                    [vue.vShow, props.expand]
+                  ])
+                : vue.createCommentVNode("", true),
+              (_ctx.hasDefaultSlot)
+                ? vue.renderSlot(_ctx.$slots, "body", {
+                    key: 2,
+                    row: props.row
+                  })
+                : vue.createCommentVNode("", true)
+            ]; }),
+            _: 2
+          }, [
+            (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search)
+              ? {
+                  name: "top-right",
+                  fn: vue.withCtx(function (props) { return [
+                    (_ctx.global_search)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                          key: 0,
+                          filled: "",
+                          borderless: "",
+                          dense: "",
+                          debounce: "300",
+                          modelValue: _ctx.filter,
+                          "onUpdate:modelValue": _cache[10] || (_cache[10] = function ($event) { return ((_ctx.filter) = $event); }),
+                          class: "q-mr-md",
+                          placeholder: "Search"
+                        }, {
+                          append: vue.withCtx(function () { return [
+                            vue.createVNode(_component_q_icon, { name: "search" })
+                          ]; }),
+                          _: 1
+                        }, 8, ["modelValue"]))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.excel_download)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                          key: 1,
+                          class: "bg-grey-2 q-mr-sm",
+                          icon: "fas fa-file-excel",
+                          "no-caps": "",
+                          onClick: _cache[11] || (_cache[11] = function ($event) { return (_ctx.exportTable('xlsx')); })
+                        }))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.csv_download)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                          key: 2,
+                          class: "bg-primary text-white",
+                          icon: "fas fa-file-csv",
+                          "no-caps": "",
+                          onClick: _cache[12] || (_cache[12] = function ($event) { return (_ctx.exportTable('csv')); })
+                        }))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.groupby_filter)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_select, {
+                          key: 3,
+                          class: "q-mr-sm q-ml-sm",
+                          outlined: "",
+                          dense: "",
+                          modelValue: _ctx.selected_group_by_filed,
+                          "onUpdate:modelValue": _cache[13] || (_cache[13] = function ($event) { return ((_ctx.selected_group_by_filed) = $event); }),
+                          options: _ctx.gorupby_option,
+                          style: {"width":"150px"}
+                        }, null, 8, ["modelValue", "options"]))
+                      : vue.createCommentVNode("", true),
+                    (_ctx.fullscreen)
+                      ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                          key: 4,
+                          flat: "",
+                          round: "",
+                          class: "q-ml-sm",
+                          dense: "",
+                          icon: props.inFullscreen ? 'fullscreen_exit' : 'fullscreen',
+                          onClick: props.toggleFullscreen
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tooltip, {
+                              disable: _ctx.$q.platform.is.mobile
+                            }, {
+                              default: vue.withCtx(function () { return [
+                                vue.createTextVNode(vue.toDisplayString(props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen'), 1)
+                              ]; }),
+                              _: 2
+                            }, 1032, ["disable"])), [
+                              [_directive_close_popup]
+                            ])
+                          ]; }),
+                          _: 2
+                        }, 1032, ["icon", "onClick"]))
+                      : vue.createCommentVNode("", true)
+                  ]; })
+                }
+              : undefined,
+            (_ctx.$slots['loading'])
+              ? {
+                  name: "loading",
+                  fn: vue.withCtx(function () { return [
+                    vue.renderSlot(_ctx.$slots, "loading")
+                  ]; })
+                }
+              : undefined
+          ]), 1032, ["id", "loading", "rows", "columns", "row-key", "class", "visible-columns", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter", "pagination", "onRequest"]))
     ]))
   }
 
   script.render = render;
 
   var name = "quasar-ui-qgrid";
-  var version$1 = "1.0.8";
+  var version$1 = "1.0.18";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid";
   var license = "MIT";
