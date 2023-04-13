@@ -13,6 +13,9 @@
           <q-banner inline-actions class="text-white bg-red rounded-borders">
             Please note that the codepen links, in the documentation examples, do not work at this time.
           </q-banner>
+          <q-banner inline-actions class="text-white bg-red q-mt-md rounded-borders">
+            Please note that If you are using ServerSide Pagination then you need to pass ssr_pagination props as true.
+          </q-banner>
         </q-card-section>
         <q-card-section>
           <div class="text-h6">Note</div>
@@ -280,6 +283,16 @@ const json = {
       "desc": "Returns the selected value",
       "examples": ["@selected-val=\"GetSelected($event)\""],
       "category": "Selection"
+    },
+    "FilteredData":{
+      "desc": "For getting filtered data",
+      "examples": ["@FilteredData=\"filteredData($event)\""],
+      "category": "General"
+    },
+    "row-click":{
+      "desc": "Emitted when user clicks/taps on a row; Is not emitted when using body/row/item scoped slots",
+      "examples": ["@row-click=\"clickRow($event)\""],
+      "category": "General"
     }
   }
 }
