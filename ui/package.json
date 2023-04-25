@@ -1,6 +1,6 @@
 {
   "name": "quasar-ui-qgrid",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "author": "pratikpatelpp802@gmail.com",
   "description": "QGrid",
   "license": "MIT",
@@ -15,6 +15,10 @@
     "dev:electron": "cd dev && yarn 'dev:electron' && cd ..",
     "build": "node build/index.js",
     "build:js": "node build/script.javascript.js"
+  },
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/pratik227"
   },
   "repository": {
     "type": "git",
