@@ -113,8 +113,6 @@ If this helped you in any way, you can contribute to the package's long term sur
 
 Be sure to check out my sponsor page.
 
-(GitHub currently **doubles your support**! So if you support me with $10/mo, I will get $20 instead! They're alchemists 😉)
-
 Thank you so much!!!
 
 
