@@ -104,6 +104,13 @@ can be found [here](https://next-quasar-qgrid.netlify.app/).
 
 can be found [here](https://github.com/pratik227/quasar-qgrid/tree/ui/dev).
 
+# Sponsors
+
+<p align="center">
+  <a href="https://github.com/pratik227/static/blob/main/sponsors.svg">
+    <img src='https://github.com/pratik227/static/blob/main/sponsors.svg'/>
+  </a>
+</p>
 
 # Support
 
