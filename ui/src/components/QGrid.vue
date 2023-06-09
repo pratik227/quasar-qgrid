@@ -567,22 +567,26 @@ import {
 } from 'quasar'
 import {exportFile} from 'quasar'
 
-function wrapCsvValue(val, formatFn) {
+function wrapCsvValue (val, formatFn, row) {
   let formatted = formatFn !== void 0
-      ? formatFn(val)
-      : val;
+    ? formatFn(val, row)
+    : val
+
   formatted = formatted === void 0 || formatted === null
-      ? ''
-      : String(formatted)
-  formatted = formatted.split('"').join('""');
+    ? ''
+    : String(formatted)
+
+  formatted = formatted.split('"').join('""')
   /**
    * Excel accepts \n and \r in strings, but some other CSV parsers do not
    * Uncomment the next two lines to escape new lines
    */
   // .split('\n').join('\\n')
   // .split('\r').join('\\r')
+
   return `"${formatted}"`
 }
+
 
 export default defineComponent({
   name: "QGrid",
@@ -803,29 +807,32 @@ export default defineComponent({
       })
       return column_option
     },
-    exportTable(type) {
-      // naive encoding to csv format
-      const content = [this.columns.map(col => wrapCsvValue(col.label))].concat(
+    exportTable () {
+        // naive encoding to csv format
+        const content = [this.columns.map(col => wrapCsvValue(col.label))].concat(
           this.data.map(row => this.columns.map(col => wrapCsvValue(
-              typeof col.field === 'function'
-                  ? col.field(row)
-                  : row[col.field === void 0 ? col.name : col.field],
-              col.format
+            typeof col.field === 'function'
+              ? col.field(row)
+              : row[ col.field === void 0 ? col.name : col.field ],
+            col.format,
+            row
           )).join(','))
-      ).join('\r\n')
-      const status = exportFile(
-          this.file_name + '.' + type,
+        ).join('\r\n')
+
+        const status = exportFile(
+          'table-export.csv',
           content,
-          'text/' + type
-      )
-      if (status !== true) {
-        this.$q.notify({
-          message: 'Browser denied file download...',
-          color: 'negative',
-          icon: 'warning'
-        })
-      }
-    },
+          'text/csv'
+        )
+
+        if (status !== true) {
+          this.$q.notify({
+            message: 'Browser denied file download...',
+            color: 'negative',
+            icon: 'warning'
+          })
+        }
+      },
     groupBy(array, key) {
       const result = {};
       array.forEach(item => {
