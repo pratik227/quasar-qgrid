@@ -865,7 +865,6 @@ export default defineComponent({
           // }
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
-          console.log(evt.related.className)
           if (evt.related.className.includes('ignore-elements')) {
             return false
           }
