@@ -26,6 +26,7 @@
                 @hover.native.stop
                 v-for="col in props.cols"
                 :key="col.name"
+                :class="ignore_cols && ignore_cols.includes(props.cols.indexOf(col))?'ignore-elements':''"
             >
               <div class="row inline">
                 <div class="column">
@@ -303,6 +304,7 @@
                 @hover.native.stop
                 v-for="col in props.cols"
                 :key="col.name"
+                :class="ignore_cols && ignore_cols.includes(props.cols.indexOf(col))?'ignore-elements':''"
             >
               <div class="row inline">
                 <div class="column">
@@ -590,7 +592,7 @@ function wrapCsvValue (val, formatFn, row) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination', 'ignore_rows'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination', 'ignore_rows', 'ignore_cols'],
   setup(props) {
 
     // onMounted(()=>{
@@ -894,7 +896,9 @@ export default defineComponent({
           })
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
-          if (evt.related.className == 'q-table--col-auto-width ignore-elements') {
+          console.log(evt.related.className)
+          console.log(self.ignore_cols)
+          if (evt.related.className.includes('ignore-elements')) {
             return false
           }
         },
