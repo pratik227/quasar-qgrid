@@ -866,6 +866,7 @@ export default defineComponent({
           })
           // }
         },
+        filter: ".ignore-elements",
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
           if (evt.related.className.includes('ignore-elements')) {
             return false
@@ -873,7 +874,7 @@ export default defineComponent({
         },
       });
       const sortable2 = Sortable.create(element2, {
-        // filter:'.ignore-elements',
+        filter:'.ignore-elements',
         // preventOnFilter: true,
         disabled: !this.draggable_columns,
         onEnd(event) {
@@ -896,8 +897,6 @@ export default defineComponent({
           })
         },
         onMove: function (/**Event*/evt, /**Event*/originalEvent) {
-          console.log(evt.related.className)
-          console.log(self.ignore_cols)
           if (evt.related.className.includes('ignore-elements')) {
             return false
           }
