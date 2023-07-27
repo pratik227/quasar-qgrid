@@ -923,7 +923,7 @@ export default defineComponent({
       }
     }
   },
-  emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest', 'FilteredData']
+  emits: ['selected-val', 'dragged_column', 'row-click', 'OnRequest', 'FilteredData', 'dragged_row']
 })
 </script>
 
