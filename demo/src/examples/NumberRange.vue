@@ -6,7 +6,7 @@
 
 <script>
 import {defineComponent, ref} from 'vue'
-
+//define columns
 const columns = [
   {
     name: 'name',
