@@ -1,6 +1,6 @@
 /*!
- * quasar-ui-qgrid v1.0.30
- * (c) 2025 pratikpatelpp802@gmail.com
+ * quasar-ui-qgrid v1.0.31
+ * (c) 2026 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
 
@@ -8,7 +8,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('vue'), require('quasar')) :
   typeof define === 'function' && define.amd ? define(['vue', 'quasar'], factory) :
   (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.QGrid = factory(global.Vue, global.Quasar));
-}(this, (function (vue, quasar) { 'use strict';
+})(this, (function (vue, quasar) { 'use strict';
 
   /**!
    * Sortable 1.13.0
@@ -2980,12 +2980,18 @@
   Sortable.mount(new AutoScrollPlugin());
   Sortable.mount(Remove, Revert);
 
-  //! moment.js
+  var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
+
+  function commonjsRequire (path) {
+  	throw new Error('Could not dynamically require "' + path + '". Please configure the dynamicRequireTargets or/and ignoreDynamicRequires option of @rollup/plugin-commonjs appropriately for this require call to work.');
+  }
+
+  var moment$1 = {exports: {}};
+
+  (function (module, exports) {
   (function (global, factory) {
-      typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-      typeof define === 'function' && define.amd ? define(factory) :
-      global.moment = factory();
-  }(undefined, (function () {
+      module.exports = factory() ;
+  }(commonjsGlobal, (function () {
       var hookCallback;
 
       function hooks() {
@@ -5069,14 +5075,14 @@
           // TODO: Find a better way to register and load all the locales in Node
           if (
               locales[name] === undefined &&
-              typeof module !== 'undefined' &&
+              'object' !== 'undefined' &&
               module &&
               module.exports &&
               isLocaleNameSane(name)
           ) {
               try {
                   oldLocale = globalLocale._abbr;
-                  aliasedRequire = require;
+                  aliasedRequire = commonjsRequire;
                   aliasedRequire('./locale/' + name);
                   getSetGlobalLocale(oldLocale);
               } catch (e) {
@@ -8652,10 +8658,9 @@
       return hooks;
 
   })));
+  }(moment$1));
 
-  var moment = /*#__PURE__*/Object.freeze({
-    __proto__: null
-  });
+  var moment = moment$1.exports;
 
   function wrapCsvValue (val, formatFn, row) {
     var formatted = formatFn !== void 0
@@ -8680,7 +8685,7 @@
 
   var script = vue.defineComponent({
     name: "QGrid",
-    props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination', 'ignore_rows', 'ignore_cols'],
+    props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination', 'ignore_rows', 'ignore_cols', 'filter_input_props', 'columns_filter_toggle'],
     setup: function setup(props) {
 
       // onMounted(()=>{
@@ -8695,6 +8700,7 @@
 
       return {
         filter_data: vue.ref({}),
+        showFilterRow: vue.ref(true),
         pagination_this: pagination_this,
         uuid: vue.ref(''),
         column_options: vue.ref({}),
@@ -8728,6 +8734,15 @@
       this.Sorting();
     },
     computed: {
+      filterInputPropsComputed: function filterInputPropsComputed() {
+        var this$1$1 = this;
+
+        var styleProps = ['filled', 'outlined', 'standout', 'borderless'];
+        var hasStyle = this.filter_input_props && styleProps.some(function (p) { return p in this$1$1.filter_input_props; });
+        return Object.assign({}, (hasStyle ? {} : { filled: true }),
+          {color: 'teal'},
+          this.filter_input_props);
+      },
       getFilteredData: function getFilteredData() {
         var self = this;
         var table_columns = this.final_column.map(function (item) {
@@ -8776,12 +8791,22 @@
         this.column_options_selected = Object.assign({}, this.column_options_selected);
         var table_Data = this.getFilteredData.filter(function (item) {
           var i = '';
-          for (i = 0; i < self.columns.length; i++) {
+          var loop = function (  ) {
             if (self.column_options_selected[self.columns[i].field].length == 0)
-              { continue; }
-            if (self.column_options_selected[self.columns[i].field].indexOf(item[self.columns[i].field].toString().toLowerCase()) == -1) {
-              return false;
+              { return; }
+            var fieldVal = item[self.columns[i].field];
+            var fieldTokens = Array.isArray(fieldVal)
+              ? fieldVal.map(function (v) { return v.toString().toLowerCase().replace(/_/g, '_'); })
+              : [fieldVal.toString().toLowerCase().replace(/_/g, '_')];
+            if (!self.column_options_selected[self.columns[i].field].some(function (sel) { return fieldTokens.includes(sel); })) {
+              return { v: false };
             }
+          };
+
+          for (i = 0; i < self.columns.length; i++) {
+            var returned = loop(  );
+
+            if ( returned ) return returned.v;
           }
           return true
         });
@@ -8856,6 +8881,9 @@
       // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
     },
     methods: {
+      toggleFilterRow: function toggleFilterRow() {
+        this.showFilterRow = !this.showFilterRow;
+      },
       onRequest: function onRequest(data) {
         this.$emit("OnRequest", data);
       },
@@ -8877,9 +8905,12 @@
         self.data.filter(function (item) {
           self.columns.filter(function (column) {
             if (item[column.field] != null) {
-              self.column_options[column.field].push({
-                label: item[column.field].toString(),
-                value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
+              var vals = Array.isArray(item[column.field]) ? item[column.field] : [item[column.field]];
+              vals.forEach(function (v) {
+                self.column_options[column.field].push({
+                  label: v.toString(),
+                  value: v.toString().toLowerCase().replace(/_/g, '_')
+                });
               });
             }
           });
@@ -8896,7 +8927,11 @@
         this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
       },
       getColumnOptions: function getColumnOptions(column) {
-        var column_option_simple = [].concat( new Set(this.data.map(function (item) { return item[column]; })) );
+        var ref;
+
+        var allValues = this.data.map(function (item) { return item[column]; });
+        var flat = (ref = []).concat.apply(ref, allValues.map(function (v) { return (Array.isArray(v) ? v : [v]); }));
+        var column_option_simple = [].concat( new Set(flat) );
         var column_option = [];
 
         column_option_simple.filter(function (col) {
@@ -9252,7 +9287,7 @@
                     cols: props.cols
                   })
                 : vue.createCommentVNode("", true),
-              (_ctx.columns_filter)
+              (_ctx.columns_filter && _ctx.showFilterRow)
                 ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
                     key: 1,
                     props: props,
@@ -9272,15 +9307,14 @@
                         }, {
                           default: vue.withCtx(function () { return [
                             (!col.hasOwnProperty('filter_type') || col.filter_type=='text')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 0,
                                   dense: "",
-                                  color: "teal",
-                                  class: "q-pl-xs q-pr-xs",
-                                  filled: "",
+                                  class: "q-pl-xs q-pr-xs"
+                                }, _ctx.filterInputPropsComputed, {
                                   modelValue: _ctx.filter_data[col.field],
                                   "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); }
-                                }, vue.createSlots({ _: 2 }, [
+                                }), vue.createSlots({ _: 2 }, [
                                   (_ctx.filter_data[col.field])
                                     ? {
                                         name: "append",
@@ -9293,20 +9327,19 @@
                                         ]; })
                                       }
                                     : undefined
-                                ]), 1032, ["modelValue", "onUpdate:modelValue"]))
+                                ]), 1040, ["modelValue", "onUpdate:modelValue"]))
                               : vue.createCommentVNode("", true),
                             (col.hasOwnProperty('filter_type') && col.filter_type=='select')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_select, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_select, vue.mergeProps({
                                   key: 1,
                                   "map-options": "",
                                   multiple: "",
                                   "emit-value": "",
-                                  filled: "",
                                   modelValue: _ctx.column_options_selected[col.field],
                                   "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
                                   options: _ctx.getColumnOptions(col.field),
                                   dense: ""
-                                }, {
+                                }, _ctx.filterInputPropsComputed), {
                                   append: vue.withCtx(function () { return [
                                     (_ctx.column_options_selected[col.field].length>0)
                                       ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
@@ -9367,17 +9400,16 @@
                                     }, 1040)
                                   ]; }),
                                   _: 2
-                                }, 1032, ["modelValue", "onUpdate:modelValue", "options"]))
+                                }, 1040, ["modelValue", "onUpdate:modelValue", "options"]))
                               : vue.createCommentVNode("", true),
                             (col.hasOwnProperty('filter_type') && col.filter_type=='date')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 2,
                                   dense: "",
-                                  color: "teal",
-                                  class: "q-pl-xs q-pr-xs",
-                                  filled: "",
+                                  class: "q-pl-xs q-pr-xs"
+                                }, _ctx.filterInputPropsComputed, {
                                   "model-value": _ctx.filter_data[col.field].from+(_ctx.filter_data[col.field].from?'-':'')+_ctx.filter_data[col.field].to
-                                }, {
+                                }), {
                                   append: vue.withCtx(function () { return [
                                     vue.createVNode(_component_q_icon, {
                                       name: "event",
@@ -9427,17 +9459,16 @@
                                       : vue.createCommentVNode("", true)
                                   ]; }),
                                   _: 2
-                                }, 1032, ["model-value"]))
+                                }, 1040, ["model-value"]))
                               : vue.createCommentVNode("", true),
                             (col.hasOwnProperty('filter_type') && col.filter_type=='number_range')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 3,
                                   dense: "",
-                                  color: "teal",
-                                  class: "q-pl-xs q-pr-xs",
-                                  filled: "",
+                                  class: "q-pl-xs q-pr-xs"
+                                }, _ctx.filterInputPropsComputed, {
                                   "model-value": _ctx.filter_data[col.field].from+(typeof _ctx.filter_data[col.field].from!='string'?'-':'')+_ctx.filter_data[col.field].to
-                                }, {
+                                }), {
                                   append: vue.withCtx(function () { return [
                                     vue.createVNode(_component_q_icon, {
                                       name: "tag",
@@ -9453,26 +9484,24 @@
                                           "transition-hide": "scale"
                                         }, {
                                           default: vue.withCtx(function () { return [
-                                            vue.createVNode(_component_q_input, {
+                                            vue.createVNode(_component_q_input, vue.mergeProps({
                                               label: "From",
-                                              type: "number",
-                                              color: "teal",
+                                              type: "number"
+                                            }, _ctx.filterInputPropsComputed, {
                                               modelValue: _ctx.filter_data[col.field].from,
                                               "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].from) = $event); },
                                               modelModifiers: { number: true },
-                                              class: "q-pl-xs q-pr-xs",
-                                              filled: ""
-                                            }, null, 8, ["modelValue", "onUpdate:modelValue"]),
-                                            vue.createVNode(_component_q_input, {
+                                              class: "q-pl-xs q-pr-xs"
+                                            }), null, 16, ["modelValue", "onUpdate:modelValue"]),
+                                            vue.createVNode(_component_q_input, vue.mergeProps({
                                               label: "To",
-                                              type: "number",
-                                              color: "teal",
+                                              type: "number"
+                                            }, _ctx.filterInputPropsComputed, {
                                               modelValue: _ctx.filter_data[col.field].to,
                                               "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].to) = $event); },
                                               modelModifiers: { number: true },
-                                              class: "q-pl-xs q-pr-xs",
-                                              filled: ""
-                                            }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                              class: "q-pl-xs q-pr-xs"
+                                            }), null, 16, ["modelValue", "onUpdate:modelValue"])
                                           ]; }),
                                           _: 2
                                         }, 1536)
@@ -9489,7 +9518,7 @@
                                       : vue.createCommentVNode("", true)
                                   ]; }),
                                   _: 2
-                                }, 1032, ["model-value"]))
+                                }, 1040, ["model-value"]))
                               : vue.createCommentVNode("", true)
                           ]; }),
                           _: 2
@@ -9539,7 +9568,7 @@
                                   icon: props.expand ? 'remove' : 'add'
                                 }, null, 8, ["onClick", "icon"]))
                               : vue.createCommentVNode("", true),
-                            vue.createTextVNode(" " + vue.toDisplayString(props.row[col.field]), 1)
+                            vue.createTextVNode(" " + vue.toDisplayString(col.format ? col.format(props.row[col.field], props.row) : props.row[col.field]), 1)
                           ]; }),
                           _: 2
                         }, 1032, ["props"]))
@@ -9595,7 +9624,7 @@
                                             props: props
                                           }, {
                                             default: vue.withCtx(function () { return [
-                                              vue.createTextVNode(vue.toDisplayString(props.row[col.field]), 1)
+                                              vue.createTextVNode(vue.toDisplayString(col.format ? col.format(props.row[col.field], props.row) : props.row[col.field]), 1)
                                             ]; }),
                                             _: 2
                                           }, 1032, ["props"]))
@@ -9620,13 +9649,15 @@
               (_ctx.hasDefaultSlot)
                 ? vue.renderSlot(_ctx.$slots, "body", {
                     key: 2,
-                    row: props.row
+                    row: props.row,
+                    cols: props.cols,
+                    selected: props.selected
                   })
                 : vue.createCommentVNode("", true)
             ]; }),
             _: 2
           }, [
-            (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search || _ctx.groupby_filter)
+            (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search || _ctx.groupby_filter || (_ctx.columns_filter && _ctx.columns_filter_toggle))
               ? {
                   name: "top-right",
                   fn: vue.withCtx(function (props) { return [
@@ -9643,7 +9674,9 @@
                           exportTable: _ctx.exportTable,
                           gorupby_option: _ctx.gorupby_option,
                           selected_group_by_filed: _ctx.selected_group_by_filed,
-                          filter: _ctx.filter
+                          filter: _ctx.filter,
+                          show_filter_row: _ctx.showFilterRow,
+                          toggle_filter_row: _ctx.toggleFilterRow
                         })
                       : (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: 1 }, [
                           (_ctx.global_search)
@@ -9718,6 +9751,31 @@
                                 ]; }),
                                 _: 2
                               }, 1032, ["icon", "onClick"]))
+                            : vue.createCommentVNode("", true),
+                          (_ctx.columns_filter && _ctx.columns_filter_toggle)
+                            ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                                key: 5,
+                                flat: "",
+                                round: "",
+                                class: "q-ml-sm",
+                                dense: "",
+                                icon: _ctx.showFilterRow ? 'filter_list_off' : 'filter_list',
+                                onClick: _ctx.toggleFilterRow
+                              }, {
+                                default: vue.withCtx(function () { return [
+                                  vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tooltip, {
+                                    disable: _ctx.$q.platform.is.mobile
+                                  }, {
+                                    default: vue.withCtx(function () { return [
+                                      vue.createTextVNode(vue.toDisplayString(_ctx.showFilterRow ? 'Hide Filters' : 'Show Filters'), 1)
+                                    ]; }),
+                                    _: 1
+                                  }, 8, ["disable"])), [
+                                    [_directive_close_popup]
+                                  ])
+                                ]; }),
+                                _: 1
+                              }, 8, ["icon", "onClick"]))
                             : vue.createCommentVNode("", true)
                         ], 64))
                   ]; })
@@ -9918,7 +9976,7 @@
                     cols: props.cols
                   })
                 : vue.createCommentVNode("", true),
-              (_ctx.columns_filter)
+              (_ctx.columns_filter && _ctx.showFilterRow)
                 ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
                     key: 1,
                     props: props,
@@ -9938,15 +9996,14 @@
                         }, {
                           default: vue.withCtx(function () { return [
                             (!col.hasOwnProperty('filter_type') || col.filter_type=='text')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 0,
                                   dense: "",
-                                  color: "teal",
-                                  class: "q-pl-xs q-pr-xs",
-                                  filled: "",
+                                  class: "q-pl-xs q-pr-xs"
+                                }, _ctx.filterInputPropsComputed, {
                                   modelValue: _ctx.filter_data[col.field],
                                   "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field]) = $event); }
-                                }, vue.createSlots({ _: 2 }, [
+                                }), vue.createSlots({ _: 2 }, [
                                   (_ctx.filter_data[col.field])
                                     ? {
                                         name: "append",
@@ -9959,20 +10016,19 @@
                                         ]; })
                                       }
                                     : undefined
-                                ]), 1032, ["modelValue", "onUpdate:modelValue"]))
+                                ]), 1040, ["modelValue", "onUpdate:modelValue"]))
                               : vue.createCommentVNode("", true),
                             (col.hasOwnProperty('filter_type') && col.filter_type=='select')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_select, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_select, vue.mergeProps({
                                   key: 1,
                                   "map-options": "",
                                   multiple: "",
                                   "emit-value": "",
-                                  filled: "",
                                   modelValue: _ctx.column_options_selected[col.field],
                                   "onUpdate:modelValue": function ($event) { return ((_ctx.column_options_selected[col.field]) = $event); },
                                   options: _ctx.getColumnOptions(col.field),
                                   dense: ""
-                                }, {
+                                }, _ctx.filterInputPropsComputed), {
                                   append: vue.withCtx(function () { return [
                                     (_ctx.column_options_selected[col.field].length>0)
                                       ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
@@ -10033,17 +10089,16 @@
                                     }, 1040)
                                   ]; }),
                                   _: 2
-                                }, 1032, ["modelValue", "onUpdate:modelValue", "options"]))
+                                }, 1040, ["modelValue", "onUpdate:modelValue", "options"]))
                               : vue.createCommentVNode("", true),
                             (col.hasOwnProperty('filter_type') && col.filter_type=='date')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 2,
                                   dense: "",
-                                  color: "teal",
-                                  class: "q-pl-xs q-pr-xs",
-                                  filled: "",
+                                  class: "q-pl-xs q-pr-xs"
+                                }, _ctx.filterInputPropsComputed, {
                                   "model-value": _ctx.filter_data[col.field].from+(_ctx.filter_data[col.field].from?'-':'')+_ctx.filter_data[col.field].to
-                                }, {
+                                }), {
                                   append: vue.withCtx(function () { return [
                                     vue.createVNode(_component_q_icon, {
                                       name: "event",
@@ -10093,17 +10148,16 @@
                                       : vue.createCommentVNode("", true)
                                   ]; }),
                                   _: 2
-                                }, 1032, ["model-value"]))
+                                }, 1040, ["model-value"]))
                               : vue.createCommentVNode("", true),
                             (col.hasOwnProperty('filter_type') && col.filter_type=='number_range')
-                              ? (vue.openBlock(), vue.createBlock(_component_q_input, {
+                              ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 3,
                                   dense: "",
-                                  color: "teal",
-                                  class: "q-pl-xs q-pr-xs",
-                                  filled: "",
+                                  class: "q-pl-xs q-pr-xs"
+                                }, _ctx.filterInputPropsComputed, {
                                   "model-value": _ctx.filter_data[col.field].from+(typeof _ctx.filter_data[col.field].from!='string'?'-':'')+_ctx.filter_data[col.field].to
-                                }, {
+                                }), {
                                   append: vue.withCtx(function () { return [
                                     vue.createVNode(_component_q_icon, {
                                       name: "tag",
@@ -10119,26 +10173,24 @@
                                           "transition-hide": "scale"
                                         }, {
                                           default: vue.withCtx(function () { return [
-                                            vue.createVNode(_component_q_input, {
+                                            vue.createVNode(_component_q_input, vue.mergeProps({
                                               label: "From",
-                                              type: "number",
-                                              color: "teal",
+                                              type: "number"
+                                            }, _ctx.filterInputPropsComputed, {
                                               modelValue: _ctx.filter_data[col.field].from,
                                               "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].from) = $event); },
                                               modelModifiers: { number: true },
-                                              class: "q-pl-xs q-pr-xs",
-                                              filled: ""
-                                            }, null, 8, ["modelValue", "onUpdate:modelValue"]),
-                                            vue.createVNode(_component_q_input, {
+                                              class: "q-pl-xs q-pr-xs"
+                                            }), null, 16, ["modelValue", "onUpdate:modelValue"]),
+                                            vue.createVNode(_component_q_input, vue.mergeProps({
                                               label: "To",
-                                              type: "number",
-                                              color: "teal",
+                                              type: "number"
+                                            }, _ctx.filterInputPropsComputed, {
                                               modelValue: _ctx.filter_data[col.field].to,
                                               "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[col.field].to) = $event); },
                                               modelModifiers: { number: true },
-                                              class: "q-pl-xs q-pr-xs",
-                                              filled: ""
-                                            }, null, 8, ["modelValue", "onUpdate:modelValue"])
+                                              class: "q-pl-xs q-pr-xs"
+                                            }), null, 16, ["modelValue", "onUpdate:modelValue"])
                                           ]; }),
                                           _: 2
                                         }, 1536)
@@ -10155,7 +10207,7 @@
                                       : vue.createCommentVNode("", true)
                                   ]; }),
                                   _: 2
-                                }, 1032, ["model-value"]))
+                                }, 1040, ["model-value"]))
                               : vue.createCommentVNode("", true)
                           ]; }),
                           _: 2
@@ -10205,7 +10257,7 @@
                                   icon: props.expand ? 'remove' : 'add'
                                 }, null, 8, ["onClick", "icon"]))
                               : vue.createCommentVNode("", true),
-                            vue.createTextVNode(" " + vue.toDisplayString(props.row[col.field]), 1)
+                            vue.createTextVNode(" " + vue.toDisplayString(col.format ? col.format(props.row[col.field], props.row) : props.row[col.field]), 1)
                           ]; }),
                           _: 2
                         }, 1032, ["props"]))
@@ -10261,7 +10313,7 @@
                                             props: props
                                           }, {
                                             default: vue.withCtx(function () { return [
-                                              vue.createTextVNode(vue.toDisplayString(props.row[col.field]), 1)
+                                              vue.createTextVNode(vue.toDisplayString(col.format ? col.format(props.row[col.field], props.row) : props.row[col.field]), 1)
                                             ]; }),
                                             _: 2
                                           }, 1032, ["props"]))
@@ -10286,13 +10338,15 @@
               (_ctx.hasDefaultSlot)
                 ? vue.renderSlot(_ctx.$slots, "body", {
                     key: 2,
-                    row: props.row
+                    row: props.row,
+                    cols: props.cols,
+                    selected: props.selected
                   })
                 : vue.createCommentVNode("", true)
             ]; }),
             _: 2
           }, [
-            (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search || _ctx.groupby_filter)
+            (_ctx.excel_download || _ctx.csv_download || _ctx.fullscreen || _ctx.global_search || _ctx.groupby_filter || (_ctx.columns_filter && _ctx.columns_filter_toggle))
               ? {
                   name: "top-right",
                   fn: vue.withCtx(function (props) { return [
@@ -10309,7 +10363,9 @@
                           exportTable: _ctx.exportTable,
                           gorupby_option: _ctx.gorupby_option,
                           selected_group_by_filed: _ctx.selected_group_by_filed,
-                          filter: _ctx.filter
+                          filter: _ctx.filter,
+                          show_filter_row: _ctx.showFilterRow,
+                          toggle_filter_row: _ctx.toggleFilterRow
                         })
                       : (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: 1 }, [
                           (_ctx.global_search)
@@ -10384,6 +10440,31 @@
                                 ]; }),
                                 _: 2
                               }, 1032, ["icon", "onClick"]))
+                            : vue.createCommentVNode("", true),
+                          (_ctx.columns_filter && _ctx.columns_filter_toggle)
+                            ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
+                                key: 5,
+                                flat: "",
+                                round: "",
+                                class: "q-ml-sm",
+                                dense: "",
+                                icon: _ctx.showFilterRow ? 'filter_list_off' : 'filter_list',
+                                onClick: _ctx.toggleFilterRow
+                              }, {
+                                default: vue.withCtx(function () { return [
+                                  vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tooltip, {
+                                    disable: _ctx.$q.platform.is.mobile
+                                  }, {
+                                    default: vue.withCtx(function () { return [
+                                      vue.createTextVNode(vue.toDisplayString(_ctx.showFilterRow ? 'Hide Filters' : 'Show Filters'), 1)
+                                    ]; }),
+                                    _: 1
+                                  }, 8, ["disable"])), [
+                                    [_directive_close_popup]
+                                  ])
+                                ]; }),
+                                _: 1
+                              }, 8, ["icon", "onClick"]))
                             : vue.createCommentVNode("", true)
                         ], 64))
                   ]; })
@@ -10404,11 +10485,11 @@
   script.render = render;
 
   var name = "quasar-ui-qgrid";
-  var version$1 = "1.0.30";
+  var version$1 = "1.0.31";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid";
   var license = "MIT";
-  var module$1 = "dist/index.esm.js";
+  var module = "dist/index.esm.js";
   var main = "dist/index.common.js";
   var scripts = {
   	dev: "cd dev && yarn dev && cd ..",
@@ -10439,6 +10520,7 @@
   var homepage = "";
   var devDependencies = {
   	"@rollup/plugin-buble": "^0.21.3",
+  	"@rollup/plugin-commonjs": "^19.0.2",
   	"@rollup/plugin-json": "^4.0.0",
   	"@rollup/plugin-node-resolve": "^11.2.1",
   	"@rollup/plugin-replace": "^2.4.2",
@@ -10467,7 +10549,7 @@
   	author: author,
   	description: description,
   	license: license,
-  	module: module$1,
+  	module: module,
   	main: main,
   	scripts: scripts,
   	funding: funding,
@@ -10494,4 +10576,4 @@
 
   return VuePlugin;
 
-})));
+}));

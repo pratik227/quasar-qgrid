@@ -124,6 +124,16 @@
                 QGrid Slot Demo with Selection
               </q-item-section>
             </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-filter-customization'?'bg-grey-3':''" to="/example-qgrid-filter-customization" dense clickable>
+              <q-item-section>
+                QGrid Filter Customization
+              </q-item-section>
+            </q-item>
+            <q-item class="text-primary q-ml-md" :active-class="$route.path=='/example-qgrid-array-field'?'bg-grey-3':''" to="/example-qgrid-array-field" dense clickable>
+              <q-item-section>
+                QGrid Array Field (tags)
+              </q-item-section>
+            </q-item>
           </q-card>
         </q-expansion-item>
         <q-expansion-item dense style="font-size: 12px;"

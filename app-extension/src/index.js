@@ -22,7 +22,7 @@ module.exports = function (api) {
   // package or a minimum version of "@quasar/app" CLI
   api.compatibleWith('quasar', '^2.0.0')
   if (api.hasVite === true) {
-    api.compatibleWith('@quasar/app-vite', '^1.0.0-alpha.0')
+    api.compatibleWith('@quasar/app-vite', '^1.0.0-alpha.0 || ^2.0.0')
   }
   else {
     api.compatibleWith('@quasar/app', '^3.0.0')

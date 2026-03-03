@@ -84,22 +84,22 @@
           </q-tr>
           <slot name="header" v-bind:cols="props.cols" v-if="hasHeaderSlot">
           </slot>
-          <q-tr :props="props" class="ignore-elements" v-if="columns_filter">
+          <q-tr :props="props" class="ignore-elements" v-if="columns_filter && showFilterRow">
 
             <q-th auto-width v-if="selection_prop!='none'">
 
             </q-th>
             <q-th :key="col.name" v-for="col in props.cols" style="padding: 0px 0px 0px 0px;">
-              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
+              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense
+                       class="q-pl-xs q-pr-xs" v-bind="filterInputPropsComputed" v-model="filter_data[col.field]">
                 <template v-if="filter_data[col.field]" v-slot:append>
                   <q-icon name="cancel" @click.stop="filter_data[col.field] = ''" class="cursor-pointer"/>
                 </template>
               </q-input>
 
               <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
-                        multiple emit-value filled v-model="column_options_selected[col.field]"
-                        :options="getColumnOptions(col.field)" dense>
+                        multiple emit-value v-model="column_options_selected[col.field]"
+                        :options="getColumnOptions(col.field)" dense v-bind="filterInputPropsComputed">
                 <template v-slot:append>
                   <q-icon v-if="column_options_selected[col.field].length>0" name="close"
                           @click.stop="column_options_selected[col.field]=[]" class="cursor-pointer"/>
@@ -132,8 +132,8 @@
 
               </q-select>
 
-              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense
+                       class="q-pl-xs q-pr-xs" v-bind="filterInputPropsComputed"
                        :model-value="filter_data[col.field].from+(filter_data[col.field].from?'-':'')+filter_data[col.field].to">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
@@ -150,8 +150,8 @@
                 </template>
               </q-input>
 
-              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='number_range'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='number_range'" dense
+                       class="q-pl-xs q-pr-xs" v-bind="filterInputPropsComputed"
                        :model-value="filter_data[col.field].from+(typeof filter_data[col.field].from!='string'?'-':'')+filter_data[col.field].to">
                 <template v-slot:append>
                   <q-icon name="tag" class="cursor-pointer">
@@ -160,13 +160,13 @@
                                    transition-hide="scale">
                         <q-input label="From"
                                  type="number"
-                                 color="teal" v-model.number="filter_data[col.field].from"
-                                 class="q-pl-xs q-pr-xs" filled>
+                                 v-bind="filterInputPropsComputed" v-model.number="filter_data[col.field].from"
+                                 class="q-pl-xs q-pr-xs">
                         </q-input>
                         <q-input label="To"
                                  type="number"
-                                 color="teal" v-model.number="filter_data[col.field].to"
-                                 class="q-pl-xs  q-pr-xs" filled>
+                                 v-bind="filterInputPropsComputed" v-model.number="filter_data[col.field].to"
+                                 class="q-pl-xs  q-pr-xs">
                         </q-input>
                     </q-popup-proxy>
                   </q-icon>
@@ -179,7 +179,7 @@
         </template>
 
 
-        <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search || groupby_filter">
+        <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search || groupby_filter || (columns_filter && columns_filter_toggle)">
 
 
 
@@ -196,6 +196,8 @@
               :gorupby_option="gorupby_option"
               :selected_group_by_filed="selected_group_by_filed"
               :filter="filter"
+              :show_filter_row="showFilterRow"
+              :toggle_filter_row="toggleFilterRow"
           >
           </slot>
           <template v-else>
@@ -239,6 +241,19 @@
                   v-close-popup
               >{{ props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen' }}</q-tooltip>
             </q-btn>
+
+          <q-btn v-if="columns_filter && columns_filter_toggle"
+                 flat
+                 round
+                 class="q-ml-sm"
+                 dense
+                 :icon="showFilterRow ? 'filter_list_off' : 'filter_list'"
+                 @click="toggleFilterRow"
+          >
+            <q-tooltip :disable="$q.platform.is.mobile" v-close-popup>
+              {{ showFilterRow ? 'Hide Filters' : 'Show Filters' }}
+            </q-tooltip>
+          </q-btn>
           </template>
         </template>
 
@@ -257,7 +272,7 @@
                      :icon="props.expand ? 'remove' : 'add'"
                      v-if="groupby_filter && selected_group_by_filed.value!='' && col_index==0"/>
 
-              {{ props.row[col.field] }}
+              {{ col.format ? col.format(props.row[col.field], props.row) : props.row[col.field] }}
             </q-td>
           </q-tr>
           <q-tr v-if="groupby_filter &&  selected_group_by_filed.value!=''" v-show="props.expand" :props="props">
@@ -280,14 +295,14 @@
                 <q-tr :props="props">
                   <q-td :key="col.name" v-if="col.field!=selected_group_by_filed" v-for="col in props.cols"
                         :props="props">
-                    {{ props.row[col.field] }}
+                    {{ col.format ? col.format(props.row[col.field], props.row) : props.row[col.field] }}
                   </q-td>
                 </q-tr>
               </template>
             </q-table>
           </q-td>
           </q-tr>
-          <slot name="body" v-bind:row="props.row" v-if="hasDefaultSlot">
+          <slot name="body" v-bind:row="props.row" v-bind:cols="props.cols" v-bind:selected="props.selected" v-if="hasDefaultSlot">
           </slot>
         </template>
 
@@ -379,22 +394,22 @@
           </q-tr>
           <slot name="header" v-bind:cols="props.cols" v-if="hasHeaderSlot">
           </slot>
-          <q-tr :props="props" class="ignore-elements" v-if="columns_filter">
+          <q-tr :props="props" class="ignore-elements" v-if="columns_filter && showFilterRow">
 
             <q-th auto-width v-if="selection_prop!='none'">
 
             </q-th>
             <q-th :key="col.name" v-for="col in props.cols" style="padding: 0px 0px 0px 0px;">
-              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled v-model="filter_data[col.field]">
+              <q-input v-if="!col.hasOwnProperty('filter_type') || col.filter_type=='text'" dense
+                       class="q-pl-xs q-pr-xs" v-bind="filterInputPropsComputed" v-model="filter_data[col.field]">
                 <template v-if="filter_data[col.field]" v-slot:append>
                   <q-icon name="cancel" @click.stop="filter_data[col.field] = ''" class="cursor-pointer"/>
                 </template>
               </q-input>
 
               <q-select v-if="col.hasOwnProperty('filter_type') && col.filter_type=='select'" map-options
-                        multiple emit-value filled v-model="column_options_selected[col.field]"
-                        :options="getColumnOptions(col.field)" dense>
+                        multiple emit-value v-model="column_options_selected[col.field]"
+                        :options="getColumnOptions(col.field)" dense v-bind="filterInputPropsComputed">
                 <template v-slot:append>
                   <q-icon v-if="column_options_selected[col.field].length>0" name="close"
                           @click.stop="column_options_selected[col.field]=[]" class="cursor-pointer"/>
@@ -427,8 +442,8 @@
 
               </q-select>
 
-              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='date'" dense
+                       class="q-pl-xs q-pr-xs" v-bind="filterInputPropsComputed"
                        :model-value="filter_data[col.field].from+(filter_data[col.field].from?'-':'')+filter_data[col.field].to">
                 <template v-slot:append>
                   <q-icon name="event" class="cursor-pointer">
@@ -445,8 +460,8 @@
                 </template>
               </q-input>
 
-              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='number_range'" dense color="teal"
-                       class="q-pl-xs q-pr-xs" filled
+              <q-input v-if="col.hasOwnProperty('filter_type') && col.filter_type=='number_range'" dense
+                       class="q-pl-xs q-pr-xs" v-bind="filterInputPropsComputed"
                        :model-value="filter_data[col.field].from+(typeof filter_data[col.field].from!='string'?'-':'')+filter_data[col.field].to">
                 <template v-slot:append>
                   <q-icon name="tag" class="cursor-pointer">
@@ -455,13 +470,13 @@
                                    transition-hide="scale">
                         <q-input label="From"
                                  type="number"
-                                 color="teal" v-model.number="filter_data[col.field].from"
-                                 class="q-pl-xs q-pr-xs" filled>
+                                 v-bind="filterInputPropsComputed" v-model.number="filter_data[col.field].from"
+                                 class="q-pl-xs q-pr-xs">
                         </q-input>
                         <q-input label="To"
                                  type="number"
-                                 color="teal" v-model.number="filter_data[col.field].to"
-                                 class="q-pl-xs  q-pr-xs" filled>
+                                 v-bind="filterInputPropsComputed" v-model.number="filter_data[col.field].to"
+                                 class="q-pl-xs  q-pr-xs">
                         </q-input>
                     </q-popup-proxy>
                   </q-icon>
@@ -474,7 +489,7 @@
         </template>
 
 
-        <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search || groupby_filter">
+        <template v-slot:top-right="props" v-if="excel_download || csv_download || fullscreen || global_search || groupby_filter || (columns_filter && columns_filter_toggle)">
 
 
 
@@ -491,6 +506,8 @@
               :gorupby_option="gorupby_option"
               :selected_group_by_filed="selected_group_by_filed"
               :filter="filter"
+              :show_filter_row="showFilterRow"
+              :toggle_filter_row="toggleFilterRow"
           >
           </slot>
           <template v-else>
@@ -534,6 +551,19 @@
                   v-close-popup
               >{{ props.inFullscreen ? 'Exit Fullscreen' : 'Toggle Fullscreen' }}</q-tooltip>
             </q-btn>
+
+          <q-btn v-if="columns_filter && columns_filter_toggle"
+                 flat
+                 round
+                 class="q-ml-sm"
+                 dense
+                 :icon="showFilterRow ? 'filter_list_off' : 'filter_list'"
+                 @click="toggleFilterRow"
+          >
+            <q-tooltip :disable="$q.platform.is.mobile" v-close-popup>
+              {{ showFilterRow ? 'Hide Filters' : 'Show Filters' }}
+            </q-tooltip>
+          </q-btn>
           </template>
 
         </template>
@@ -553,7 +583,7 @@
                      :icon="props.expand ? 'remove' : 'add'"
                      v-if="groupby_filter && selected_group_by_filed.value!='' && col_index==0"/>
 
-              {{ props.row[col.field] }}
+              {{ col.format ? col.format(props.row[col.field], props.row) : props.row[col.field] }}
             </q-td>
           </q-tr>
           <q-tr v-if="groupby_filter &&  selected_group_by_filed.value!=''" v-show="props.expand" :props="props">
@@ -576,14 +606,14 @@
                 <q-tr :props="props">
                   <q-td :key="col.name" v-if="col.field!=selected_group_by_filed" v-for="col in props.cols"
                         :props="props">
-                    {{ props.row[col.field] }}
+                    {{ col.format ? col.format(props.row[col.field], props.row) : props.row[col.field] }}
                   </q-td>
                 </q-tr>
               </template>
             </q-table>
           </q-td>
           </q-tr>
-          <slot name="body" v-bind:row="props.row" v-if="hasDefaultSlot">
+          <slot name="body" v-bind:row="props.row" v-bind:cols="props.cols" v-bind:selected="props.selected" v-if="hasDefaultSlot">
           </slot>
         </template>
 
@@ -627,7 +657,7 @@ function wrapCsvValue (val, formatFn, row) {
 
 export default defineComponent({
   name: "QGrid",
-  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination', 'ignore_rows', 'ignore_cols'],
+  props: ['data', 'columns', 'file_name', 'csv_download', 'excel_download', 'columns_filter', 'header_filter', 'draggable', 'draggable_columns', 'classes', 'separator', 'dense', 'dark', 'flat', 'bordered', 'square', 'selection', 'selected', 'fullscreen', 'global_search', 'groupby_filter', 'visible_columns', 'pagination', 'loading', 'row_key', 'global_filter','ssr_pagination', 'ignore_rows', 'ignore_cols', 'filter_input_props', 'columns_filter_toggle'],
   setup(props) {
 
     // onMounted(()=>{
@@ -642,6 +672,7 @@ export default defineComponent({
 
     return {
       filter_data: ref({}),
+      showFilterRow: ref(true),
       pagination_this,
       uuid: ref(''),
       column_options: ref({}),
@@ -675,6 +706,15 @@ export default defineComponent({
     this.Sorting();
   },
   computed: {
+    filterInputPropsComputed() {
+      const styleProps = ['filled', 'outlined', 'standout', 'borderless'];
+      const hasStyle = this.filter_input_props && styleProps.some(p => p in this.filter_input_props);
+      return {
+        ...(hasStyle ? {} : { filled: true }),
+        color: 'teal',
+        ...this.filter_input_props
+      };
+    },
     getFilteredData() {
       let self = this;
       let table_columns = this.final_column.map(function (item) {
@@ -726,7 +766,11 @@ export default defineComponent({
         for (i = 0; i < self.columns.length; i++) {
           if (self.column_options_selected[self.columns[i].field].length == 0)
             continue;
-          if (self.column_options_selected[self.columns[i].field].indexOf(item[self.columns[i].field].toString().toLowerCase()) == -1) {
+          let fieldVal = item[self.columns[i].field];
+          let fieldTokens = Array.isArray(fieldVal)
+            ? fieldVal.map(v => v.toString().toLowerCase().replace(/_/g, '_'))
+            : [fieldVal.toString().toLowerCase().replace(/_/g, '_')];
+          if (!self.column_options_selected[self.columns[i].field].some(sel => fieldTokens.includes(sel))) {
             return false;
           }
         }
@@ -803,6 +847,9 @@ export default defineComponent({
     // this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
   },
   methods: {
+    toggleFilterRow() {
+      this.showFilterRow = !this.showFilterRow;
+    },
     onRequest(data) {
       this.$emit("OnRequest", data);
     },
@@ -824,10 +871,13 @@ export default defineComponent({
       self.data.filter(function (item) {
         self.columns.filter(function (column) {
           if (item[column.field] != null) {
-            self.column_options[column.field].push({
-              label: item[column.field].toString(),
-              value: item[column.field].toString().toLowerCase().replace(/_/g, '_')
-            })
+            let vals = Array.isArray(item[column.field]) ? item[column.field] : [item[column.field]];
+            vals.forEach(function (v) {
+              self.column_options[column.field].push({
+                label: v.toString(),
+                value: v.toString().toLowerCase().replace(/_/g, '_')
+              });
+            });
           }
         });
       });
@@ -844,7 +894,9 @@ export default defineComponent({
       this.final_column = this.selected_group_by_filed.value != '' ? this.grouped_column : this.columns;
     },
     getColumnOptions(column) {
-      let column_option_simple = [...new Set(this.data.map(item => item[column]))];
+      let allValues = this.data.map(item => item[column]);
+      let flat = [].concat(...allValues.map(v => (Array.isArray(v) ? v : [v])));
+      let column_option_simple = [...new Set(flat)];
       let column_option = []
 
       column_option_simple.filter(function (col) {
