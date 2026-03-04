@@ -6,7 +6,6 @@
         <div class="text-subtitle2 q-mb-sm">Filter input style</div>
         <q-btn-toggle
           v-model="filterStyle"
-          dense
           no-caps
           :options="[
             { label: 'filled (default)', value: 'filled' },
@@ -20,7 +19,6 @@
         <div class="text-subtitle2 q-mb-sm">Filter input color</div>
         <q-btn-toggle
           v-model="filterColor"
-          dense
           no-caps
           :options="[
             { label: 'teal (default)', value: 'teal' },
@@ -30,7 +28,8 @@
           ]"
         />
       </q-card-section>
-    </q-card>
+
+      <q-card-section>
 
     <q-grid
       :data="data"
@@ -39,6 +38,9 @@
       :columns_filter_toggle="true"
       :filter_input_props="filterInputProps"
     />
+      </q-card-section>
+    </q-card>
+
 
   </div>
 </template>
