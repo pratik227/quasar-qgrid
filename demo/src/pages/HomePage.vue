@@ -161,12 +161,12 @@
 
 <script setup>
 import { ref } from 'vue'
-import { useMeta } from 'quasar'
+import { usePageHead } from '../docs/head.js'
 import BrandMark from '../components/BrandMark.vue'
 import CodeBlock from '../components/CodeBlock.vue'
 import { desserts as dessertRows, makeOrders } from '../examples/data.js'
 
-useMeta({ title: 'QGrid — the data grid for Quasar' })
+usePageHead(() => ({ path: '/' }))
 
 const year = new Date().getFullYear()
 const desserts = dessertRows

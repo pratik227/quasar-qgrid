@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://next-quasar-qgrid.netlify.app/sitemap.xml

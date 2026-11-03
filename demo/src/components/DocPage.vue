@@ -34,8 +34,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { copyToClipboard, useMeta } from 'quasar'
+import { copyToClipboard } from 'quasar'
+import { usePageHead } from '../docs/head.js'
 import { tabs, tabForPath } from '../docs/nav.js'
+
+const $route = useRoute()
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -44,9 +47,8 @@ const props = defineProps({
   isNew: Boolean
 })
 
-useMeta(() => ({ title: props.title + ' · QGrid' }))
+usePageHead(() => ({ title: props.title, description: props.lead, path: $route.path }))
 
-const $route = useRoute()
 const copied = ref(false)
 
 const flat = computed(() => {
