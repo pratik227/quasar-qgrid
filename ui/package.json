@@ -1,6 +1,6 @@
 {
   "name": "quasar-ui-qgrid",
-  "version": "1.0.31",
+  "version": "1.1.0",
   "author": "pratikpatelpp802@gmail.com",
   "description": "QGrid - a feature-rich data grid for Quasar (Vue 3): column & header filters, grouping, aggregation, drag & drop, inline editing, CSV/Excel export, virtual scroll and more.",
   "license": "MIT",

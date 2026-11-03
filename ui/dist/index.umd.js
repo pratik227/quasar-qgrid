@@ -1,5 +1,5 @@
 /*!
- * quasar-ui-qgrid v1.0.31
+ * quasar-ui-qgrid v1.1.0
  * (c) 2026 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
@@ -2792,19 +2792,15 @@
   script.render = render;
 
   var name = "quasar-ui-qgrid";
-  var version$2 = "1.0.31";
+  var version$2 = "1.1.0";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid - a feature-rich data grid for Quasar (Vue 3): column & header filters, grouping, aggregation, drag & drop, inline editing, CSV/Excel export, virtual scroll and more.";
   var license = "MIT";
   var module = "dist/index.esm.js";
   var main = "dist/index.common.js";
   var scripts = {
-  	dev: "cd dev && yarn dev && cd ..",
-  	"dev:umd": "yarn build && node build/script.open-umd.js",
-  	"dev:ssr": "cd dev && yarn 'dev:ssr' && cd ..",
-  	"dev:ios": "cd dev && yarn 'dev:ios' && cd ..",
-  	"dev:android": "cd dev && yarn 'dev:android' && cd ..",
-  	"dev:electron": "cd dev && yarn 'dev:electron' && cd ..",
+  	dev: "cd dev && npm run dev",
+  	"dev:umd": "npm run build && node build/script.open-umd.js",
   	build: "node build/index.js",
   	"build:js": "node build/script.javascript.js",
   	test: "node --test \"test/*.test.mjs\"",

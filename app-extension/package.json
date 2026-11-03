@@ -1,6 +1,6 @@
 {
   "name": "quasar-app-extension-qgrid",
-  "version": "1.0.31",
+  "version": "1.1.0",
   "description": "QGrid - a feature-rich data grid for Quasar: column filters, header filters, global search, grouping, drag & drop rows/columns, CSV/Excel export and more.",
   "author": "pratikpatelpp802@gmail.com",
   "license": "MIT",
@@ -31,7 +31,7 @@
     "vue3"
   ],
   "dependencies": {
-    "quasar-ui-qgrid": "^1.0.31"
+    "quasar-ui-qgrid": "^1.1.0"
   },
   "funding": {
     "type": "github",
