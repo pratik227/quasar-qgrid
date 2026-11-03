@@ -5,75 +5,60 @@
 
 **Compatible with Quasar UI v2 and Vue 3**.
 
-# Component QGrid
-> Short description of the component
-
+QGrid turns Quasar's QTable into a full data grid: column & header filters, grouping, totals, inline editing,
+drag & drop, real Excel export, virtual scroll and state persistence. Docs: https://next-quasar-qgrid.netlify.app
 
 # Usage
 
 ## Quasar CLI project
 
-Install the [App Extension](../app-extension).
+Install the [App Extension](../app-extension): `quasar ext add qgrid`.
 
-**OR**:
-
-Create and register a boot file:
+**OR** create and register a boot file:
 
 ```js
-import Vue from 'vue'
-import Plugin from 'quasar-ui-qgrid'
+import { defineBoot } from '#q-app' // 'quasar/wrappers' on older Quasar CLIs
+import QGrid from 'quasar-ui-qgrid'
+import 'quasar-ui-qgrid/dist/index.css'
 
-Vue.use(Plugin)
+export default defineBoot(({ app }) => {
+  app.use(QGrid)
+})
 ```
 
-**OR**:
-
-```html
-<script>
-import QGrid from 'quasar-ui-qgrid/src/components/QGrid.vue'
-
-export default {
-  components: {
-    QGrid
-  }
-}
-</script>
-```
-
-## Vue CLI project
+## Vue / Vite project
 
 ```js
-import Vue from 'vue'
-import Plugin from 'quasar-ui-qgrid'
+import { createApp } from 'vue'
+import { Quasar } from 'quasar'
+import QGrid from 'quasar-ui-qgrid'
+import 'quasar-ui-qgrid/dist/index.css'
 
-Vue.use(Plugin)
+createApp(App).use(Quasar).use(QGrid).mount('#app')
 ```
 
-**OR**:
+**OR** locally:
 
-```html
-<script>
-import { Component as QGrid } from 'quasar-ui-qgrid'
-
-export default {
-  components: {
-    QGrid
-  }
-}
-</script>
+```js
+import { QGrid } from 'quasar-ui-qgrid'
 ```
 
 ## UMD variant
 
-Exports `window.QGrid`.
-
-Add the following tag(s) after the Quasar ones:
+Exports `window.QGrid`. Add the following tags after the Quasar ones:
 
 ```html
-<body>
-  <!-- at end of body, AFTER Quasar script(s): -->
-  <script src="https://cdn.jsdelivr.net/npm/quasar-ui-qgrid/dist/index.umd.min.js"></script>
-</body>
+<link href="https://cdn.jsdelivr.net/npm/quasar-ui-qgrid/dist/index.min.css" rel="stylesheet">
+<!-- at end of body, AFTER Quasar script(s): -->
+<script src="https://cdn.jsdelivr.net/npm/quasar-ui-qgrid/dist/index.umd.min.js"></script>
+```
+
+# Tests & benchmark
+
+```bash
+npm install
+npm test          # unit tests (Node 22+; the .xlsx round-trip test uses python3 + openpyxl when available)
+npm run bench     # filtering benchmark vs. v1.0.31 (pass a row count: node test/bench.mjs 200000)
 ```
 
 # Setup

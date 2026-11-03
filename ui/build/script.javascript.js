@@ -15,6 +15,33 @@ const { version } = require('../package.json')
 const buildConf = require('./config')
 const buildUtils = require('./utils')
 
+// SFC <style> blocks are extracted into dist/index.css (+ .min.css) instead of
+// being bundled into JS (apps using the App Extension compile the .vue sources)
+const cssChunks = new Map()
+const extractCss = {
+  name: 'qgrid-extract-css',
+  transform (code, id) {
+    if (/\?vue&type=style/.test(id)) {
+      cssChunks.set(id, code)
+      return { code: 'export default {}', map: null }
+    }
+  }
+}
+
+function writeCss () {
+  const css = Array.from(cssChunks.values()).join('\n').trim() + '\n'
+  const min = css
+    .replace(/\/\*[\s\S]*?\*\//g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*([{}:;,>])\s*/g, '$1')
+    .replace(/;}/g, '}')
+    .trim()
+  return Promise.all([
+    buildUtils.writeFile(pathResolve('../dist/index.css'), buildConf.banner + css),
+    buildUtils.writeFile(pathResolve('../dist/index.min.css'), buildConf.banner + min, true)
+  ])
+}
+
 const rollupPlugins = [
   replace({
     preventAssignment: false,
@@ -28,6 +55,7 @@ const rollupPlugins = [
   }),
   commonjs({ include: /node_modules/ }),
   vuePlugin(),
+  extractCss,
   json(),
   buble({
     objectAssign: 'Object.assign'
@@ -133,6 +161,7 @@ function addAssets (builds, type, injectName) {
 function build (builds) {
   return Promise
     .all(builds.map(genConfig).map(buildEntry))
+    .then(writeCss)
     .catch(buildUtils.logError)
 }
 
@@ -144,6 +173,8 @@ function genConfig (opts) {
 
   Object.assign(opts.rollup.output, {
     banner: buildConf.banner,
+    // sortablejs is lazy-loaded with import(); dist files are single bundles
+    inlineDynamicImports: true,
     globals: { vue: 'Vue', quasar: 'Quasar' }
   })
 
