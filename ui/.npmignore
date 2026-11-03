@@ -19,3 +19,4 @@ yarn-error.log*
 .editorconfig
 .eslintignore
 .eslintrc.js
+/test
