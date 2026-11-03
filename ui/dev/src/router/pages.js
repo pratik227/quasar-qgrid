@@ -1,10 +1,10 @@
 /*
- * Export files list for /pages folder
+ * Every .vue file in /pages (except Index & Error404) becomes a test page
  */
 
 function kebabCase (str) {
   const result = str.replace(
-    /[A-Z\u00C0-\u00D6\u00D8-\u00DE]/g,
+    /[A-ZÀ-ÖØ-Þ]/g,
     match => '-' + match.toLowerCase()
   )
   return (str[0] === str[0].toUpperCase())
@@ -16,12 +16,14 @@ function slugify (str) {
   return encodeURIComponent(String(str).trim().replace(/\s+/g, '-'))
 }
 
-export default require.context('../pages', true, /^\.\/.*\.vue$/)
-  .keys()
-  .map(page => page.slice(2).replace('.vue', ''))
-  .filter(page => page !== 'Index' && page !== 'Error404')
+const modules = import.meta.glob('../pages/*.vue')
+
+export default Object.keys(modules)
+  .map(file => ({ file, name: file.replace('../pages/', '').replace('.vue', '') }))
+  .filter(page => page.name !== 'Index' && page.name !== 'Error404')
+  .sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
   .map(page => ({
-    file: page,
-    title: page + '.vue',
-    path: slugify(kebabCase(page))
+    component: modules[page.file],
+    title: page.name + '.vue',
+    path: slugify(kebabCase(page.name))
   }))

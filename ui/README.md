@@ -63,37 +63,26 @@ npm run bench     # filtering benchmark vs. v1.0.31 (pass a row count: node test
 
 # Setup
 ```bash
-$ yarn
+$ npm install
+$ cd dev && npm install
 ```
 
 # Developing
 ```bash
-# start dev in SPA mode
-$ yarn dev
+# start the playground (dev/, Quasar CLI app-vite v3)
+$ npm run dev
 
-# start dev in UMD mode
-$ yarn dev:umd
-
-# start dev in SSR mode
-$ yarn dev:ssr
-
-# start dev in Cordova iOS mode
-$ yarn dev:ios
-
-# start dev in Cordova Android mode
-$ yarn dev:android
-
-# start dev in Electron mode
-$ yarn dev:electron
+# build and open the UMD test page
+$ npm run dev:umd
 ```
 
 # Building package
 ```bash
-$ yarn build
+$ npm run build
 ```
 
 # Adding Testing Components
-in the `ui/dev/src/pages` you can add Vue files to test your component/directive. When using `yarn dev` to build the UI, any pages in that location will automatically be picked up by dynamic routing and added to the test page.
+in the `ui/dev/src/pages` you can add Vue files to test your component/directive. When using `npm run dev` to build the UI, any pages in that location will automatically be picked up by dynamic routing and added to the test page.
 
 # Adding Assets
 If you have a component that has assets, like language or icon-sets, you will need to provide these for UMD. In the `ui/build/script.javascript.js` file, you will find a couple of commented out commands that call `addAssets`. Uncomment what you need and add your assets to have them be built and put into the `ui/dist` folder.
