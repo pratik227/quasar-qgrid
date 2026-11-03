@@ -19,6 +19,16 @@
     </table>
     <p>See the full list in the <router-link to="/docs/api#column-definition">API reference</router-link>.</p>
 
+    <h2>Pinning &amp; resizing</h2>
+    <p>
+      Freeze columns with <code>pinned: 'left'</code> or <code>pinned: 'right'</code>; they stay visible while the table scrolls sideways
+      (users can also pin/unpin from the <router-link to="/docs/interaction">context menu</router-link>). With <code>resizable_columns</code>,
+      drag a header edge to resize and double-click it to fit the content. Give columns an initial <code>width</code> in px.
+      Widths and pins are saved by <code>state_key</code>.
+    </p>
+    <doc-example file="ColumnPinning" />
+    <callout-note type="note">Pinning applies to the default header and body. With a custom <code>#body</code> slot, add the classes yourself or keep pinned columns in the default rendering.</callout-note>
+
     <h2>Styling columns</h2>
     <doc-example file="CustomColumn" />
 

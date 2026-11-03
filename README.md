@@ -12,7 +12,8 @@ and adds the features business tables need — each one is a single prop.
 | **Filtering** | Text, select, date-range & number-range column filters · Excel-like searchable header filters · global search |
 | **Data** | Grouping · footer totals (sum / avg / min / max / count / custom) · master/detail rows · inline editing with validation |
 | **Export** | Real **.xlsx** (typed cells, no dependency) and CSV — exactly what is on screen |
-| **Layout** | Drag & drop rows and columns · column chooser · virtual scroll (50k+ rows) · sticky header · fullscreen |
+| **Layout** | Column pinning (freeze left/right) & resizing · drag & drop rows and columns · column chooser · pinned rows · virtual scroll (50k+ rows) · sticky header |
+| **Interaction** | Multi-column sort (Shift + click) · right-click context menu · Ctrl/⌘ + C copy into Excel · status bar with selection totals |
 | **Advanced** | Save & restore state · server-side pagination, sort & column filters · cell/header-cell/detail slots · i18n labels |
 
 📖 **Docs & live examples:** https://next-quasar-qgrid.netlify.app
@@ -62,7 +63,7 @@ const rows = [
 ```
 
 See the [API reference](https://next-quasar-qgrid.netlify.app/docs/api) (or run `quasar describe QGrid`)
-and [what's new in 1.1](https://next-quasar-qgrid.netlify.app/docs/whats-new).
+and [what's new in 1.2](https://next-quasar-qgrid.netlify.app/docs/whats-new).
 
 ## Repository
 

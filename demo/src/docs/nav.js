@@ -11,22 +11,26 @@ export const examples = [
   { slug: 'filter-customization', file: 'FilterCustomization', title: 'Filter styling', group: 'Filtering', desc: 'Restyle every filter input with filter_input_props and hide the filter row.' },
   { slug: 'array-field', file: 'ArrayField', title: 'Array values (tags)', group: 'Filtering', desc: 'Fields holding arrays get one select option per value.' },
   { slug: 'grouping', file: 'Grouping', title: 'Grouping', group: 'Data', desc: 'Group rows by any column marked grouping: true.' },
-  { slug: 'aggregation', file: 'Aggregation', title: 'Totals & aggregation', group: 'Data', desc: 'Sum, average, min, max, count or custom footer totals that follow the filters.', isNew: true },
-  { slug: 'master-detail', file: 'MasterDetail', title: 'Master / detail', group: 'Data', desc: 'Expandable detail rows with the #detail slot.', isNew: true },
-  { slug: 'inline-editing', file: 'InlineEditing', title: 'Inline editing', group: 'Data', desc: 'Edit cells in place, with typed editors and validation.', isNew: true },
-  { slug: 'export', file: 'ExcelExport', title: 'Excel & CSV export', group: 'Data', desc: 'Real .xlsx and CSV export of exactly what is on screen.', isNew: true },
+  { slug: 'aggregation', file: 'Aggregation', title: 'Totals & aggregation', group: 'Data', desc: 'Sum, average, min, max, count or custom footer totals that follow the filters.' },
+  { slug: 'master-detail', file: 'MasterDetail', title: 'Master / detail', group: 'Data', desc: 'Expandable detail rows with the #detail slot.' },
+  { slug: 'inline-editing', file: 'InlineEditing', title: 'Inline editing', group: 'Data', desc: 'Edit cells in place, with typed editors and validation.' },
+  { slug: 'export', file: 'ExcelExport', title: 'Excel & CSV export', group: 'Data', desc: 'Real .xlsx and CSV export of exactly what is on screen.' },
   { slug: 'draggable-rows', file: 'DraggableRows', title: 'Draggable rows', group: 'Drag & drop', desc: 'Reorder rows with drag & drop.' },
   { slug: 'draggable-columns', file: 'DraggableColumnsDemo', title: 'Draggable columns', group: 'Drag & drop', desc: 'Reorder columns with drag & drop.' },
   { slug: 'draggable-columns-slot', file: 'DraggableColumnsSlotDemo', title: 'Draggable columns + slot', group: 'Drag & drop', desc: 'Column drag & drop together with a custom body slot.' },
-  { slug: 'column-chooser', file: 'ColumnChooser', title: 'Column chooser', group: 'Layout', desc: 'Let users show and hide columns.', isNew: true },
-  { slug: 'virtual-scroll', file: 'VirtualScroll', title: 'Virtual scroll (50k rows)', group: 'Layout', desc: 'Render only what is visible, with a sticky header.', isNew: true },
+  { slug: 'column-pinning', file: 'ColumnPinning', title: 'Pinning & resizing', group: 'Layout', desc: 'Freeze columns left or right, resize them by dragging, auto-size with a double-click.', isNew: true },
+  { slug: 'multi-sort', file: 'MultiSort', title: 'Multi-column sort', group: 'Data', desc: 'Shift + click headers to sort by several columns at once.', isNew: true },
+  { slug: 'context-menu', file: 'ContextMenu', title: 'Context menu & clipboard', group: 'Advanced', desc: 'Right-click actions, Ctrl/⌘ + C copy and a status bar with selection totals.', isNew: true },
+  { slug: 'row-pinning', file: 'RowPinning', title: 'Pinned rows', group: 'Layout', desc: 'Keep rows at the top or bottom, whatever the filters, sort or page.', isNew: true },
+  { slug: 'column-chooser', file: 'ColumnChooser', title: 'Column chooser', group: 'Layout', desc: 'Let users show and hide columns.' },
+  { slug: 'virtual-scroll', file: 'VirtualScroll', title: 'Virtual scroll (50k rows)', group: 'Layout', desc: 'Render only what is visible, with a sticky header.' },
   { slug: 'custom-column', file: 'CustomColumn', title: 'Column styling', group: 'Layout', desc: 'Per-column classes, styles and header classes.' },
-  { slug: 'custom-cells', file: 'CustomCells', title: 'Custom cells', group: 'Slots', desc: 'Override single cells with #body-cell-[name], keep everything else.', isNew: true },
+  { slug: 'custom-cells', file: 'CustomCells', title: 'Custom cells', group: 'Slots', desc: 'Override single cells with #body-cell-[name], keep everything else.' },
   { slug: 'slot-demo', file: 'SlotDemo', title: 'Body slot', group: 'Slots', desc: 'Render whole rows yourself with the #body slot.' },
   { slug: 'selection-slot-demo', file: 'SelectionSlotDemo', title: 'Body slot + selection', group: 'Slots', desc: 'Custom rows with a selection checkbox.' },
   { slug: 'header-slot-demo', file: 'HeaderSlotDemo', title: 'Header slot', group: 'Slots', desc: 'Render the header row yourself with the #header slot.' },
-  { slug: 'state-persistence', file: 'StatePersistence', title: 'Save & restore state', group: 'Advanced', desc: 'Persist filters, sort, columns and grouping with state_key.', isNew: true },
-  { slug: 'server-side', file: 'ServerSide', title: 'Server-side data', group: 'Advanced', desc: 'Server pagination, sorting and column filters via @OnRequest.', isNew: true }
+  { slug: 'state-persistence', file: 'StatePersistence', title: 'Save & restore state', group: 'Advanced', desc: 'Persist filters, sort, columns and grouping with state_key.' },
+  { slug: 'server-side', file: 'ServerSide', title: 'Server-side data', group: 'Advanced', desc: 'Server pagination, sorting and column filters via @OnRequest.' }
 ]
 
 export const guides = [
@@ -36,7 +40,7 @@ export const guides = [
       { title: 'Introduction', to: '/docs' },
       { title: 'Installation', to: '/docs/installation' },
       { title: 'Quickstart', to: '/docs/quickstart' },
-      { title: "What's new in 1.1", to: '/docs/whats-new', isNew: true }
+      { title: "What's new in 1.2", to: '/docs/whats-new', isNew: true }
     ]
   },
   {
@@ -44,11 +48,13 @@ export const guides = [
     items: [
       { title: 'Columns', to: '/docs/columns' },
       { title: 'Filtering', to: '/docs/filtering' },
+      { title: 'Sorting', to: '/docs/sorting', isNew: true },
       { title: 'Grouping & totals', to: '/docs/grouping' },
       { title: 'Export', to: '/docs/export' },
       { title: 'Editing', to: '/docs/editing' },
       { title: 'Drag & drop', to: '/docs/drag-and-drop' },
       { title: 'Large & server-side data', to: '/docs/large-data' },
+      { title: 'Interaction', to: '/docs/interaction', isNew: true },
       { title: 'Slots & customization', to: '/docs/customization' }
     ]
   },
