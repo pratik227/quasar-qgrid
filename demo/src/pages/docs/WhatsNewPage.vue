@@ -1,13 +1,29 @@
 <template>
-  <doc-page title="What's new in 1.1" lead="A faster QGrid, the latest Quasar CLIs, and a batch of features usually found in paid grids." is-new>
-    <h2>Compatibility</h2>
+  <doc-page title="What's new in 1.2" lead="Column pinning & resizing, multi-column sort, context menu, clipboard, pinned rows and a status bar." is-new>
+    <h2>1.2</h2>
+    <table class="doc-table">
+      <thead><tr><th>Feature</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>Column pinning (freeze left / right)</td><td>column <code>pinned</code>, context menu, <code>setColumnPin()</code></td></tr>
+        <tr><td>Column resizing + auto-size</td><td><code>resizable_columns</code>, column <code>width</code>, <code>@column-resize</code></td></tr>
+        <tr><td>Multi-column sort</td><td><code>multi_sort</code> (Shift + click), <code>@sort-change</code>, <code>sort_model</code> in <code>@OnRequest</code></td></tr>
+        <tr><td>Context menu</td><td><code>context_menu</code> (built-in actions + your items)</td></tr>
+        <tr><td>Clipboard copy</td><td><code>copy_selection</code> (Ctrl/⌘ + C), <code>copyRows()</code></td></tr>
+        <tr><td>Pinned rows</td><td><code>pinned_top_rows</code>, <code>pinned_bottom_rows</code> (v-model)</td></tr>
+        <tr><td>Status bar with selection totals</td><td><code>status_bar</code></td></tr>
+        <tr><td>Accessibility</td><td><code>aria-sort</code> on headers, labelled resize handles</td></tr>
+      </tbody>
+    </table>
+    <p>Column widths, pins and the sort model are part of <code>getState()</code> / <code>state_key</code>. Everything is opt-in; nothing changes for existing grids.</p>
+
+    <h2>1.1 · Compatibility</h2>
     <ul>
       <li>The App Extension now runs on <b>@quasar/app-vite v3</b> (it used to stop the build there), as well as app-vite v1/v2 and app-webpack v3/v4.</li>
       <li>No more deprecated <code>quasar/wrappers</code> import; <code>quasar describe QGrid</code> is registered.</li>
       <li><code>moment</code> is no longer a dependency, and build tools no longer get installed into your app.</li>
     </ul>
 
-    <h2>Performance</h2>
+    <h2>1.1 · Performance</h2>
     <ul>
       <li>Filters are compiled once per change and evaluated with tight loops; no filter = no work.</li>
       <li>Select / header filter values are computed once per data change instead of several times per render
@@ -16,7 +32,7 @@
     </ul>
     <code-block lang="bash" title="ui/ · npm run bench (50,000 rows)" :code="bench" />
 
-    <h2>New features</h2>
+    <h2>1.1 · New features</h2>
     <table class="doc-table">
       <thead><tr><th>Feature</th><th>How</th></tr></thead>
       <tbody>
@@ -35,7 +51,7 @@
       </tbody>
     </table>
 
-    <h2>Fixes</h2>
+    <h2>1.1 · Fixes</h2>
     <ul>
       <li>Global search / default rendering / export crashed on date columns declared with <code>format: 'DD/MM/YYYY'</code>.</li>
       <li>A <code>null</code> value in any column made a row bypass every filter.</li>
@@ -46,7 +62,7 @@
       <li>Boolean props now work as plain attributes (<code>&lt;q-grid global_search&gt;</code>).</li>
     </ul>
 
-    <h2>Upgrading</h2>
+    <h2>Upgrading from 1.0</h2>
     <p>No API was removed. Two behaviours changed for the better:</p>
     <ul>
       <li>Exports contain the filtered/sorted rows and visible columns — call <code>exportTable()</code> on unfiltered data if you need everything.</li>

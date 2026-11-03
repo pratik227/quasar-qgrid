@@ -1,5 +1,11 @@
 <template>
-  <div class="qgrid" :class="rootClass">
+  <div
+    class="qgrid"
+    :class="rootClass"
+    :tabindex="copy_selection ? 0 : void 0"
+    @keydown="onKeydown"
+    @contextmenu.capture="onContextCapture"
+  >
     <q-table
       ref="tableRef"
       :id="uuid"
@@ -23,8 +29,8 @@
     >
       <!-- ============================== header ============================== -->
       <template #header="props">
-        <q-tr v-if="!hasHeaderSlot" key="qgrid-header" :props="props" class="qgrid__header-row">
-          <q-th v-if="selectionMode !== 'none'" auto-width class="ignore-elements">
+        <q-tr v-if="!hasHeaderSlot" key="qgrid-header" :props="props" class="qgrid__header-row" @click.capture="onHeaderClickCapture">
+          <q-th v-if="selectionMode !== 'none'" auto-width class="ignore-elements" :class="leadClass" :style="leadStyle(0)">
             <q-checkbox
               v-if="selectionMode === 'multiple'"
               v-model="props.selected"
@@ -33,17 +39,23 @@
               :aria-label="mergedLabels.selectAll"
             />
           </q-th>
-          <q-th v-if="hasDetailSlot && !isGrouped" auto-width class="ignore-elements" />
+          <q-th v-if="hasDetailSlot && !isGrouped" auto-width class="ignore-elements" :class="leadClass" :style="leadStyle(1)" />
           <q-th
             v-for="(col, colIndex) in props.cols"
             :key="col.name"
             :props="props"
             :data-col="col.name"
-            :class="isIgnoredCol(colIndex) ? 'ignore-elements' : ''"
+            :class="[isIgnoredCol(colIndex) ? 'ignore-elements' : '', cellClass(col)]"
+            :style="cellStyle(col)"
+            :aria-sort="ariaSort(col)"
           >
             <slot :name="'header-cell-' + col.name" :col="col" :cols="props.cols" :sort="props.sort">
               <span class="qgrid__label">{{ col.label }}</span>
             </slot>
+
+            <span v-if="sortIndex(col) !== -1 && sortModelActive" class="qgrid__sort-badge">
+              <q-icon v-if="sortIndex(col) > 0" :name="isSortDesc(col) ? mergedIcons.sortDesc : mergedIcons.sortAsc" size="13px" />{{ sortIndex(col) + 1 }}
+            </span>
 
             <q-btn
               v-if="header_filter && col.show_filter && !isGrouped"
@@ -121,15 +133,26 @@
                 </div>
               </q-menu>
             </q-btn>
+
+            <span
+              v-if="isResizable(col)"
+              class="qgrid__resizer"
+              role="separator"
+              aria-orientation="vertical"
+              :aria-label="mergedLabels.resize + ': ' + col.label"
+              @pointerdown.stop.prevent="startResize($event, col)"
+              @click.stop
+              @dblclick.stop="autoSize(col)"
+            />
           </q-th>
         </q-tr>
         <slot-proxy v-else key="qgrid-header-slot" :render="$slots.header" :scope="props" />
 
         <!-- column filters row -->
         <q-tr v-if="columns_filter && showFilterRow" key="qgrid-filters" :props="props" class="ignore-elements qgrid__filter-row">
-          <q-th v-if="selectionMode !== 'none'" auto-width />
-          <q-th v-if="hasDetailSlot && !isGrouped" auto-width />
-          <q-th v-for="col in props.cols" :key="col.name" class="qgrid__filter-cell">
+          <q-th v-if="selectionMode !== 'none'" auto-width :class="leadClass" :style="leadStyle(0)" />
+          <q-th v-if="hasDetailSlot && !isGrouped" auto-width :class="leadClass" :style="leadStyle(1)" />
+          <q-th v-for="col in props.cols" :key="col.name" class="qgrid__filter-cell" :class="cellClass(col)" :style="cellStyle(col)">
             <q-select
               v-if="filterTypeOf(col) === 'select'"
               v-model="column_options_selected[filterKey(col)]"
@@ -407,12 +430,13 @@
           :props="props"
           class="qgrid__row"
           :class="rowClass(props.row)"
+          :data-qgrid-row="props.pageIndex"
           @click="rowClick(props.row, $event, props.pageIndex)"
         >
-          <q-td v-if="selectionMode !== 'none'" auto-width>
+          <q-td v-if="selectionMode !== 'none'" auto-width :class="leadClass" :style="leadStyle(0)">
             <q-checkbox v-model="props.selected" color="primary" :dense="dense" />
           </q-td>
-          <q-td v-if="hasDetailSlot && !isGrouped" auto-width>
+          <q-td v-if="hasDetailSlot && !isGrouped" auto-width :class="leadClass" :style="leadStyle(1)">
             <q-btn
               flat round dense size="sm"
               :icon="props.expand ? mergedIcons.detailOpen : mergedIcons.detailClosed"
@@ -421,7 +445,14 @@
               @click.stop="props.expand = !props.expand"
             />
           </q-td>
-          <q-td v-for="(col, colIndex) in props.cols" :key="col.name" :props="props">
+          <q-td
+            v-for="(col, colIndex) in props.cols"
+            :key="col.name"
+            :props="props"
+            :data-col="col.name"
+            :class="cellClass(col)"
+            :style="cellStyle(col)"
+          >
             <template v-if="isGrouped && colIndex === 0">
               <q-btn
                 size="sm" color="accent" round dense
@@ -509,12 +540,53 @@
         </q-tr>
       </template>
 
+      <!-- ============================== pinned rows ============================== -->
+      <template #top-row="props" v-if="pinnedTop.length > 0 && !isGrouped && !$slots['top-row']">
+        <q-tr
+          v-for="(row, i) in pinnedTop"
+          :key="'pin-top-' + i"
+          class="qgrid__static-row qgrid__pinned-row qgrid__pinned-row--top ignore-elements"
+          :data-qgrid-pinned="'top:' + i"
+        >
+          <q-td v-if="selectionMode !== 'none'" auto-width :class="leadClass" :style="leadStyle(0)" />
+          <q-td v-if="hasDetailSlot" auto-width :class="leadClass" :style="leadStyle(1)" />
+          <q-td
+            v-for="col in props.cols"
+            :key="col.name"
+            :data-col="col.name"
+            :class="['text-' + (col.align || 'right'), cellClass(col)]"
+            :style="cellStyle(col)"
+          >{{ cellText(getCellValue(row, col)) }}</q-td>
+        </q-tr>
+      </template>
+
       <!-- ============================== aggregates ============================== -->
-      <template #bottom-row="props" v-if="hasAggregates && !isGrouped && !$slots['bottom-row']">
-        <q-tr class="qgrid__static-row qgrid__aggregate-row ignore-elements">
-          <q-td v-if="selectionMode !== 'none'" auto-width />
-          <q-td v-if="hasDetailSlot && !isGrouped" auto-width />
-          <q-td v-for="col in props.cols" :key="col.name" :class="'text-' + (col.align || 'right')">
+      <template #bottom-row="props" v-if="(hasAggregates || pinnedBottom.length > 0) && !isGrouped && !$slots['bottom-row']">
+        <q-tr
+          v-for="(row, i) in pinnedBottom"
+          :key="'pin-bottom-' + i"
+          class="qgrid__static-row qgrid__pinned-row qgrid__pinned-row--bottom ignore-elements"
+          :data-qgrid-pinned="'bottom:' + i"
+        >
+          <q-td v-if="selectionMode !== 'none'" auto-width :class="leadClass" :style="leadStyle(0)" />
+          <q-td v-if="hasDetailSlot" auto-width :class="leadClass" :style="leadStyle(1)" />
+          <q-td
+            v-for="col in props.cols"
+            :key="col.name"
+            :data-col="col.name"
+            :class="['text-' + (col.align || 'right'), cellClass(col)]"
+            :style="cellStyle(col)"
+          >{{ cellText(getCellValue(row, col)) }}</q-td>
+        </q-tr>
+        <q-tr v-if="hasAggregates" key="qgrid-aggregates" class="qgrid__static-row qgrid__aggregate-row ignore-elements">
+          <q-td v-if="selectionMode !== 'none'" auto-width :class="leadClass" :style="leadStyle(0)" />
+          <q-td v-if="hasDetailSlot && !isGrouped" auto-width :class="leadClass" :style="leadStyle(1)" />
+          <q-td
+            v-for="col in props.cols"
+            :key="col.name"
+            :class="['text-' + (col.align || 'right'), cellClass(col)]"
+            :style="cellStyle(col)"
+          >
             <template v-if="col.aggregate !== void 0">
               <span class="qgrid__agg-label">{{ aggregateLabel(col) }}</span>
               <span class="qgrid__agg-value">{{ aggregateText(col) }}</span>
@@ -532,20 +604,46 @@
         <slot :name="name" v-bind="scope || {}" />
       </template>
     </q-table>
+
+    <!-- ============================== status bar ============================== -->
+    <div v-if="status_bar" class="qgrid__status" :class="{ 'qgrid__status--dark': isDark }" role="status" aria-live="polite">
+      <span>{{ mergedLabels.statusRows }} <b>{{ formatCount(totalCount) }}</b></span>
+      <span v-if="shownCount !== totalCount">{{ mergedLabels.statusFiltered }} <b>{{ formatCount(shownCount) }}</b></span>
+      <span v-if="selectionMode !== 'none'">{{ mergedLabels.statusSelected }} <b>{{ formatCount(selected_prop.length) }}</b></span>
+      <span v-for="agg in selectionAggregates" :key="agg.name" class="qgrid__status-agg">
+        {{ agg.label }} <span class="qgrid__agg-label">{{ agg.type }}</span><b>{{ agg.text }}</b>
+      </span>
+    </div>
+
+    <!-- ============================== context menu ============================== -->
+    <q-menu v-if="context_menu" context-menu touch-position :dark="dark" @hide="ctx = null">
+      <q-list dense class="qgrid__menu qgrid__context-menu">
+        <template v-for="(item, i) in contextItems" :key="i">
+          <q-separator v-if="item.separator" :dark="dark" />
+          <q-item v-else clickable v-close-popup :disable="item.disable === true" @click="runContextItem(item)">
+            <q-item-section side class="qgrid__context-icon">
+              <q-icon v-if="item.icon" :name="item.icon" size="18px" />
+            </q-item-section>
+            <q-item-section>{{ item.label }}</q-item-section>
+          </q-item>
+        </template>
+      </q-list>
+    </q-menu>
   </div>
 </template>
 
 <script>
 import {
   defineComponent, ref, reactive, computed, watch, effectScope,
-  onMounted, onBeforeUnmount, onUpdated, nextTick
+  onMounted, onBeforeUnmount, onUpdated, nextTick, toRaw
 } from 'vue'
-import { uid, exportFile, useQuasar } from 'quasar'
+import { uid, exportFile, copyToClipboard, useQuasar } from 'quasar'
 
 import {
   GROUP_FILTER_KEY, fieldKey, getRawValue, filterTypeOf, normalizeColumn, buildOptions,
   normalizeDateRange, isFilterValueActive, compileColumnFilters, compileSelectFilters,
-  applyPredicates, groupRows, aggregate, formatAggregate, moveItem, toCsv, toNumber
+  applyPredicates, groupRows, aggregate, formatAggregate, moveItem, toCsv, toNumber,
+  getCellValue, sortRows, toggleSortModel, partitionPinned, pinOffsets, parseWidth, toTsv
 } from './qgrid-utils.js'
 import { toXlsx, XLSX_MIME } from './qgrid-xlsx.js'
 import ICONS from './qgrid-icons.js'
@@ -578,13 +676,30 @@ const DEFAULT_LABELS = {
   min: 'Min',
   max: 'Max',
   count: 'Count',
-  total: 'Total'
+  total: 'Total',
+  resize: 'Resize column',
+  copyCell: 'Copy cell',
+  copyRow: 'Copy row',
+  copySelected: 'Copy selected rows ({n})',
+  copied: 'Copied to clipboard',
+  pinLeft: 'Pin column left',
+  pinRight: 'Pin column right',
+  unpinColumn: 'Unpin column',
+  hideColumn: 'Hide column',
+  autoSize: 'Auto-size column',
+  pinRowTop: 'Pin row to top',
+  pinRowBottom: 'Pin row to bottom',
+  unpinRow: 'Unpin row',
+  statusRows: 'Rows',
+  statusFiltered: 'Filtered',
+  statusSelected: 'Selected'
 }
 
 const STATE_VERSION = 1
+const MIN_COL_WIDTH = 48
 
 // QTable slots QGrid renders itself (everything else is forwarded as-is)
-const OWN_SLOTS = ['header', 'body', 'top_right', 'top-right', 'loading', 'detail', 'bottom-row']
+const OWN_SLOTS = ['header', 'body', 'top_right', 'top-right', 'loading', 'detail']
 
 // renders a slot with the *original* QTable scope object, so getters/setters
 // like `props.selected` / `props.expand` keep working inside user slots
@@ -640,13 +755,22 @@ export default defineComponent({
     height: String,
     state_key: String,
     labels: Object,
-    icons: Object
+    icons: Object,
+    // v1.2+
+    multi_sort: Boolean,
+    resizable_columns: Boolean,
+    status_bar: Boolean,
+    copy_selection: Boolean,
+    context_menu: [Boolean, Array],
+    pinned_top_rows: Array,
+    pinned_bottom_rows: Array
   },
 
   emits: [
     'selected-val', 'update:selected', 'dragged_column', 'dragged_row', 'row-click',
     'OnRequest', 'FilteredData', 'update:pagination', 'update:visible_columns',
-    'cell-edit', 'state-change'
+    'cell-edit', 'state-change', 'sort-change', 'column-resize', 'column-pin', 'copy',
+    'context-action', 'update:pinned_top_rows', 'update:pinned_bottom_rows'
   ],
 
   setup (props, { slots, emit, attrs }) {
@@ -692,6 +816,22 @@ export default defineComponent({
       return out
     })
 
+    // runtime pin overrides (context menu / setState): name -> 'left' | 'right' | null
+    const pinState = reactive({})
+    const pinOf = col => {
+      const side = col.name in pinState ? pinState[col.name] : col.pinned
+      return side === 'left' || side === 'right' ? side : null
+    }
+
+    // pinned left, unpinned, pinned right
+    const displayColumns = computed(() => partitionPinned(orderedColumns.value, pinOf))
+
+    const columnsByName = computed(() => {
+      const map = Object.create(null)
+      orderedColumns.value.forEach(col => { map[col.name] = col })
+      return map
+    })
+
     const columnsByKey = computed(() => {
       const map = Object.create(null)
       orderedColumns.value.forEach(col => { map[fieldKey(col)] = col })
@@ -732,10 +872,10 @@ export default defineComponent({
     }))
 
     // the columns handed to QTable (name kept for backwards compatibility)
-    const final_column = computed(() => isGrouped.value ? [groupedColumnDef.value] : orderedColumns.value)
+    const final_column = computed(() => isGrouped.value ? [groupedColumnDef.value] : displayColumns.value)
 
     const subColumns = computed(() =>
-      orderedColumns.value.filter(col => col.field !== groupField.value && isColumnVisible(col))
+      displayColumns.value.filter(col => col.field !== groupField.value && isColumnVisible(col))
     )
 
     function setGroupBy (field) {
@@ -917,12 +1057,53 @@ export default defineComponent({
       return dataVersion.value > 0 && rows === props.data ? rows.slice() : rows
     })
 
+    /* ------------------------------------------------------- pinned rows */
+
+    const innerPinnedTop = ref(null)
+    const innerPinnedBottom = ref(null)
+    watch(() => props.pinned_top_rows, () => { innerPinnedTop.value = null })
+    watch(() => props.pinned_bottom_rows, () => { innerPinnedBottom.value = null })
+
+    const pinnedTop = computed(() => innerPinnedTop.value || props.pinned_top_rows || [])
+    const pinnedBottom = computed(() => innerPinnedBottom.value || props.pinned_bottom_rows || [])
+    // rows may arrive as reactive proxies (e.g. from a ref) or raw objects: compare raw
+    const pinnedRowSet = computed(() =>
+      pinnedTop.value.length + pinnedBottom.value.length === 0
+        ? null
+        : new Set(pinnedTop.value.concat(pinnedBottom.value).map(row => toRaw(row)))
+    )
+
+    const sameRow = (a, b) => toRaw(a) === toRaw(b)
+
+    function rowPinSide (row) {
+      if (pinnedTop.value.some(r => sameRow(r, row))) return 'top'
+      if (pinnedBottom.value.some(r => sameRow(r, row))) return 'bottom'
+      return null
+    }
+
+    function pinRow (row, side) {
+      const top = pinnedTop.value.filter(r => sameRow(r, row) === false)
+      const bottom = pinnedBottom.value.filter(r => sameRow(r, row) === false)
+      if (side === 'top') top.push(row)
+      else if (side === 'bottom') bottom.push(row)
+      innerPinnedTop.value = top
+      innerPinnedBottom.value = bottom
+      emit('update:pinned_top_rows', top)
+      emit('update:pinned_bottom_rows', bottom)
+    }
+
+    // pinned rows are shown above/below the body, so they are left out of it (and of the totals)
+    const bodyRows = computed(() => {
+      const set = pinnedRowSet.value
+      return set === null ? getFilteredValuesData.value : getFilteredValuesData.value.filter(row => set.has(toRaw(row)) === false)
+    })
+
     const groups = computed(() =>
-      isGrouped.value ? groupRows(getFilteredValuesData.value, groupColumn.value) : null
+      isGrouped.value ? groupRows(bodyRows.value, groupColumn.value) : null
     )
 
     const tableRows = computed(() => {
-      if (groups.value === null) return getFilteredValuesData.value
+      if (groups.value === null) return bodyRows.value
       const needle = String(filter_data[GROUP_FILTER_KEY] || '').toLowerCase()
       const out = []
       groups.value.forEach((rows, name) => {
@@ -986,7 +1167,7 @@ export default defineComponent({
     const ignoredRowSet = computed(() => {
       const list = props.ignore_rows
       if (!list || list.length === 0) return null
-      const rows = getFilteredValuesData.value
+      const rows = bodyRows.value
       const set = new Set()
       list.forEach(i => { if (rows[i] !== void 0) set.add(rows[i]) })
       return set
@@ -1023,7 +1204,7 @@ export default defineComponent({
     }
 
     function toggleColumn (col) {
-      const current = effectiveVisibleColumns.value || orderedColumns.value.map(c => c.name)
+      const current = effectiveVisibleColumns.value || displayColumns.value.map(c => c.name)
       setVisibleColumns(current.indexOf(col.name) !== -1
         ? current.filter(name => name !== col.name)
         : current.concat(col.name))
@@ -1045,7 +1226,71 @@ export default defineComponent({
 
     function onPaginationUpdate (val) {
       if (props.ssr_pagination !== true) innerPagination.value = val
+      // a plain (non shift) header click: back to a single-column sort
+      const primary = sortModel.value[0]
+      const sortBy = val.sortBy || null
+      if ((primary ? primary.name : null) !== sortBy || (primary !== void 0 && primary.descending !== (val.descending === true))) {
+        sortModel.value = sortBy === null ? [] : [{ name: sortBy, descending: val.descending === true }]
+        emit('sort-change', sortModel.value)
+      }
       emit('update:pagination', val)
+    }
+
+    /* ------------------------------------------------------- multi sort */
+
+    const initialSort = props.pagination && props.pagination.sortBy
+    const sortModel = ref(initialSort ? [{ name: initialSort, descending: props.pagination.descending === true }] : [])
+    const sortModelActive = computed(() => props.multi_sort === true && sortModel.value.length > 1)
+    const sortIndex = col => sortModel.value.findIndex(s => s.name === col.name)
+    const isSortDesc = col => {
+      const spec = sortModel.value.find(s => s.name === col.name)
+      return spec !== void 0 && spec.descending === true
+    }
+
+    function ariaSort (col) {
+      if (col.sortable !== true) return void 0
+      const spec = sortModel.value.find(s => s.name === col.name)
+      return spec === void 0 ? 'none' : (spec.descending ? 'descending' : 'ascending')
+    }
+
+    function applySortModel (model) {
+      sortModel.value = model
+      const primary = model[0]
+      const patch = primary !== void 0
+        ? { sortBy: primary.name, descending: primary.descending }
+        : { sortBy: null, descending: false }
+      if (props.ssr_pagination === true) {
+        const table = tableRef.value
+        if (table !== null) {
+          table.requestServerInteraction({ pagination: Object.assign({}, props.pagination, patch, { page: 1 }) })
+        }
+      }
+      else {
+        innerPagination.value = Object.assign({}, innerPagination.value, patch)
+      }
+      emit('sort-change', model)
+    }
+
+    // Shift + click on a sortable header adds / toggles a secondary sort
+    function onHeaderClickCapture (evt) {
+      if (props.multi_sort !== true || evt.shiftKey !== true || isGrouped.value) return
+      const target = evt.target
+      if (!target || typeof target.closest !== 'function' || target.closest('.qgrid__resizer, .q-btn, .q-checkbox, .q-field')) return
+      const th = target.closest('th[data-col]')
+      if (th === null) return
+      const col = columnsByName.value[th.getAttribute('data-col')]
+      if (col === void 0 || col.sortable !== true) return
+      evt.stopPropagation()
+      evt.preventDefault()
+      applySortModel(toggleSortModel(sortModel.value, col.name))
+    }
+
+    function multiSortMethod (rows, sortBy, descending) {
+      let model = sortModel.value
+      if (model.length === 0 || model[0].name !== sortBy || model[0].descending !== descending) {
+        model = [{ name: sortBy, descending }]
+      }
+      return sortRows(rows, model, columnsByName.value)
     }
 
     // all $attrs are forwarded to QTable, so any QTable prop / event works on QGrid
@@ -1063,12 +1308,20 @@ export default defineComponent({
       if (props.height) {
         bindings.style = [attrs.style, { height: props.height }]
       }
+      if (props.multi_sort === true && attrs['sort-method'] === void 0 && attrs.sortMethod === void 0) {
+        bindings.sortMethod = multiSortMethod
+      }
       return bindings
     }
 
+    const isDark = computed(() => props.dark === true || (props.dark === null && $q.dark.isActive === true))
+
     const rootClass = computed(() => ({
       'qgrid--sticky-header': props.sticky_header === true || props.virtual_scroll === true,
-      'qgrid--dense': props.dense === true
+      'qgrid--dense': props.dense === true,
+      'qgrid--dark': isDark.value,
+      'qgrid--resizing': resizing.value === true,
+      'qgrid--copyable': props.copy_selection === true
     }))
 
     const hasTopRight = computed(() =>
@@ -1093,7 +1346,11 @@ export default defineComponent({
     }
 
     function onRequest (data) {
-      emit('OnRequest', Object.assign({}, data, { filters: getFilterModel() }))
+      const sortBy = data.pagination && data.pagination.sortBy
+      const model = sortModel.value.length > 0 && sortModel.value[0].name === sortBy
+        ? sortModel.value.slice()
+        : (sortBy ? [{ name: sortBy, descending: data.pagination.descending === true }] : [])
+      emit('OnRequest', Object.assign({}, data, { filters: getFilterModel(), sort_model: model }))
     }
 
     if (props.server_side_filters === true) {
@@ -1119,7 +1376,7 @@ export default defineComponent({
     function aggregateRows () {
       const table = tableRef.value
       if (isGrouped.value || table === null || table.filteredSortedRows === void 0) {
-        return getFilteredValuesData.value
+        return bodyRows.value
       }
       return table.filteredSortedRows
     }
@@ -1162,11 +1419,327 @@ export default defineComponent({
       emit('cell-edit', { row, column: col, field: col.field, value: val, old_value: initial })
     }
 
+    /* ------------------------------------------- column widths & pinning */
+
+    const colWidths = reactive({}) // user resized: name -> px
+    const measuredWidths = reactive({}) // rendered: name -> px
+    const leadWidths = ref([]) // selection / expand cells
+    const resizing = ref(false)
+
+    const fixedWidthOf = col => colWidths[col.name] || parseWidth(col.width)
+    const widthOf = col => fixedWidthOf(col) || measuredWidths[col.name] || 100
+
+    const visibleDisplayColumns = computed(() => displayColumns.value.filter(isColumnVisible))
+    const hasPinnedColumns = computed(() => isGrouped.value === false && visibleDisplayColumns.value.some(col => pinOf(col) !== null))
+
+    const offsets = computed(() => {
+      if (hasPinnedColumns.value === false) return {}
+      const lead = leadWidths.value.reduce((a, b) => a + b, 0)
+      return pinOffsets(visibleDisplayColumns.value, pinOf, widthOf, lead)
+    })
+
+    const hasLeftPins = computed(() => Object.keys(offsets.value).some(name => offsets.value[name].side === 'left'))
+    const leadClass = computed(() => hasLeftPins.value ? 'qgrid__pin qgrid__pin--left' : '')
+
+    function leadStyle (index) {
+      if (hasLeftPins.value === false) return null
+      let left = 0
+      for (let i = 0; i < index && i < leadWidths.value.length; i++) left += leadWidths.value[i]
+      return { left: left + 'px' }
+    }
+
+    function cellClass (col) {
+      if (isGrouped.value) return ''
+      const pin = offsets.value[col.name]
+      const sized = fixedWidthOf(col) ? ' qgrid__sized' : ''
+      if (pin === void 0) return sized
+      return 'qgrid__pin qgrid__pin--' + pin.side + (pin.edge ? ' qgrid__pin--edge-' + pin.side : '') + sized
+    }
+
+    function cellStyle (col) {
+      if (isGrouped.value) return null
+      const style = {}
+      const width = fixedWidthOf(col)
+      if (width) {
+        style.width = style.minWidth = style.maxWidth = width + 'px'
+      }
+      const pin = offsets.value[col.name]
+      if (pin !== void 0) style[pin.side] = pin.offset + 'px'
+      return width || pin !== void 0 ? style : null
+    }
+
+    const isResizable = col => isGrouped.value === false && col.resizable !== false && (props.resizable_columns === true || col.resizable === true)
+
+    // sticky offsets depend on rendered widths: keep them measured
+    function measureColumns () {
+      const head = getTableParts().headRow
+      if (head === null) return
+      const leads = []
+      let seenColumn = false
+      for (let i = 0; i < head.children.length; i++) {
+        const th = head.children[i]
+        const name = th.getAttribute('data-col')
+        if (name === null) {
+          if (seenColumn === false) leads.push(th.offsetWidth)
+          continue
+        }
+        seenColumn = true
+        if (measuredWidths[name] !== th.offsetWidth) measuredWidths[name] = th.offsetWidth
+      }
+      if (leads.join() !== leadWidths.value.join()) leadWidths.value = leads
+    }
+
+    let resizeObserver = null
+    function syncMeasureObserver () {
+      if (unmounted || typeof ResizeObserver === 'undefined') return
+      if (hasPinnedColumns.value === false) {
+        if (resizeObserver !== null) {
+          resizeObserver.disconnect()
+          resizeObserver = null
+        }
+        return
+      }
+      const head = getTableParts().headRow
+      if (head === null) return
+      if (resizeObserver === null) resizeObserver = new ResizeObserver(measureColumns)
+      resizeObserver.disconnect()
+      for (let i = 0; i < head.children.length; i++) resizeObserver.observe(head.children[i])
+      measureColumns()
+    }
+
+    watch([hasPinnedColumns, visibleDisplayColumns], () => nextTick(syncMeasureObserver))
+
+    let stopResize = null
+    function startResize (evt, col) {
+      const th = evt.target.closest('th')
+      if (th === null) return
+      const startX = evt.clientX
+      const startWidth = th.offsetWidth
+      const rtl = $q.lang.rtl === true ? -1 : 1
+      resizing.value = true
+
+      const onMove = e => {
+        colWidths[col.name] = Math.max(MIN_COL_WIDTH, Math.round(startWidth + (e.clientX - startX) * rtl))
+      }
+      const onUp = () => {
+        cleanup()
+        emit('column-resize', { column: col, width: colWidths[col.name] })
+      }
+      const cleanup = () => {
+        window.removeEventListener('pointermove', onMove)
+        window.removeEventListener('pointerup', onUp)
+        resizing.value = false
+        stopResize = null
+      }
+      window.addEventListener('pointermove', onMove)
+      window.addEventListener('pointerup', onUp)
+      stopResize = cleanup
+    }
+
+    let measureCanvas = null
+    function autoSize (col) {
+      const table = tableRef.value
+      const el = table !== null ? table.$el : null
+      if (!el || typeof document === 'undefined') return
+      const sel = '[data-col="' + String(col.name).replace(/["\\]/g, '\\$&') + '"]'
+      const th = el.querySelector('thead tr.qgrid__header-row th' + sel)
+      if (th === null) return
+      if (measureCanvas === null) measureCanvas = document.createElement('canvas')
+      const ctx2d = measureCanvas.getContext('2d')
+      if (ctx2d === null) return
+
+      const measure = node => {
+        const cs = window.getComputedStyle(node)
+        ctx2d.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily
+        return ctx2d.measureText(node.innerText || '').width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+      }
+
+      // header: label + room for the sort icon / filter / resize handle
+      let max = measure(th.querySelector('.qgrid__label') || th) + 44
+      const cells = el.querySelectorAll('tbody td' + sel)
+      for (let i = 0; i < cells.length; i++) max = Math.max(max, measure(cells[i]) + 2)
+
+      colWidths[col.name] = Math.min(Math.max(Math.ceil(max), MIN_COL_WIDTH), 800)
+      emit('column-resize', { column: col, width: colWidths[col.name] })
+    }
+
+    function setColumnPin (col, side) {
+      pinState[col.name] = side === 'left' || side === 'right' ? side : null
+      emit('column-pin', { column: col, pinned: pinState[col.name] })
+    }
+
+    /* --------------------------------------------------------- clipboard */
+
+    function notify (message) {
+      if (typeof $q.notify === 'function') $q.notify({ message, timeout: 1200 })
+    }
+
+    function copyRows (rows, withHeader) {
+      const list = rows || (selected_prop.value.length > 0 ? selected_prop.value : aggregateRows())
+      const text = toTsv(list, visibleDisplayColumns.value, withHeader)
+      return copyToClipboard(text).then(() => {
+        emit('copy', { rows: list, text })
+        notify(mergedLabels.value.copied)
+        return text
+      })
+    }
+
+    function copyText (text) {
+      return copyToClipboard(text).then(() => {
+        emit('copy', { rows: [], text })
+        notify(mergedLabels.value.copied)
+        return text
+      })
+    }
+
+    function onKeydown (evt) {
+      if (props.copy_selection !== true) return
+      if ((evt.ctrlKey || evt.metaKey) !== true || String(evt.key).toLowerCase() !== 'c') return
+      const tag = evt.target && evt.target.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (evt.target && evt.target.isContentEditable)) return
+      const textSelection = typeof window !== 'undefined' && window.getSelection ? String(window.getSelection()) : ''
+      if (textSelection !== '' || selected_prop.value.length === 0) return
+      evt.preventDefault()
+      copyRows(selected_prop.value)
+    }
+
+    /* ------------------------------------------------------ context menu */
+
+    const ctx = ref(null)
+
+    function onContextCapture (evt) {
+      if (!props.context_menu) return
+      const target = evt.target
+      if (!target || typeof target.closest !== 'function') return
+      let row = null
+      const tr = target.closest('tr[data-qgrid-row]')
+      const pinnedTr = target.closest('tr[data-qgrid-pinned]')
+      if (tr !== null && isGrouped.value === false) {
+        const table = tableRef.value
+        const page = table !== null && table.computedRows !== void 0 ? table.computedRows : tableRows.value
+        row = page[parseInt(tr.getAttribute('data-qgrid-row'), 10)] || null
+      }
+      else if (pinnedTr !== null) {
+        const parts = pinnedTr.getAttribute('data-qgrid-pinned').split(':')
+        row = (parts[0] === 'top' ? pinnedTop.value : pinnedBottom.value)[parseInt(parts[1], 10)] || null
+      }
+      const cell = target.closest('td[data-col], th[data-col]')
+      const col = cell !== null ? (columnsByName.value[cell.getAttribute('data-col')] || null) : null
+      ctx.value = {
+        row,
+        col,
+        value: row !== null && col !== null ? getCellValue(row, col) : void 0,
+        area: tr !== null || pinnedTr !== null ? 'body' : (target.closest('thead') !== null ? 'header' : 'other')
+      }
+    }
+
+    const contextItems = computed(() => {
+      const c = ctx.value || {}
+      const L = mergedLabels.value
+      const I = mergedIcons.value
+      const items = []
+      const sep = { separator: true }
+
+      if (c.row && c.col) items.push({ action: 'copy-cell', label: L.copyCell, icon: I.copy })
+      if (c.row) items.push({ action: 'copy-row', label: L.copyRow, icon: I.copy })
+      if (selected_prop.value.length > 0) {
+        items.push({ action: 'copy-selected', label: L.copySelected.replace('{n}', selected_prop.value.length), icon: I.copy })
+      }
+
+      if (c.row && isGrouped.value === false) {
+        items.push(sep)
+        if (rowPinSide(c.row) !== null) items.push({ action: 'unpin-row', label: L.unpinRow, icon: I.unpin })
+        else {
+          items.push({ action: 'pin-row-top', label: L.pinRowTop, icon: I.pinTop })
+          items.push({ action: 'pin-row-bottom', label: L.pinRowBottom, icon: I.pinBottom })
+        }
+      }
+
+      if (c.col && isGrouped.value === false) {
+        items.push(sep)
+        const side = pinOf(c.col)
+        if (side !== 'left') items.push({ action: 'pin-left', label: L.pinLeft, icon: I.pin })
+        if (side !== 'right') items.push({ action: 'pin-right', label: L.pinRight, icon: I.pin })
+        if (side !== null) items.push({ action: 'unpin-column', label: L.unpinColumn, icon: I.unpin })
+        if (isResizable(c.col)) items.push({ action: 'auto-size', label: L.autoSize, icon: I.autoSize })
+        if (c.col.required !== true) items.push({ action: 'hide-column', label: L.hideColumn, icon: I.hide })
+      }
+
+      items.push(sep)
+      items.push({ action: 'export-csv', label: L.exportCsv, icon: I.csv })
+      items.push({ action: 'export-xlsx', label: L.exportExcel, icon: I.excel })
+
+      if (Array.isArray(props.context_menu)) {
+        items.push(sep)
+        props.context_menu.forEach(item => { items.push(item && item.separator ? sep : Object.assign({ custom: true }, item)) })
+      }
+
+      // drop leading, trailing and repeated separators
+      return items.filter((item, i, list) =>
+        item.separator !== true || (i > 0 && i < list.length - 1 && list[i - 1].separator !== true)
+      )
+    })
+
+    function runContextItem (item) {
+      const c = Object.assign({ row: null, col: null, value: void 0 }, ctx.value, { selected: selected_prop.value })
+      switch (item.action) {
+        case 'copy-cell': copyText(cellText(c.value) === '' ? '' : String(cellText(c.value))); break
+        case 'copy-row': copyRows([c.row], false); break
+        case 'copy-selected': copyRows(selected_prop.value); break
+        case 'pin-row-top': pinRow(c.row, 'top'); break
+        case 'pin-row-bottom': pinRow(c.row, 'bottom'); break
+        case 'unpin-row': pinRow(c.row, null); break
+        case 'pin-left': setColumnPin(c.col, 'left'); break
+        case 'pin-right': setColumnPin(c.col, 'right'); break
+        case 'unpin-column': setColumnPin(c.col, null); break
+        case 'auto-size': nextTick(() => autoSize(c.col)); break
+        case 'hide-column': toggleColumn(c.col); break
+        case 'export-csv': exportTable('csv'); break
+        case 'export-xlsx': exportTable('xlsx'); break
+        default:
+          if (typeof item.handler === 'function') item.handler(c)
+      }
+      emit('context-action', Object.assign({ action: item.action || item.label }, c))
+    }
+
+    /* -------------------------------------------------------- status bar */
+
+    const totalCount = computed(() => {
+      const p = props.pagination
+      if (props.ssr_pagination === true && p && typeof p.rowsNumber === 'number') return p.rowsNumber
+      return (props.data || []).length
+    })
+
+    const shownCount = computed(() => {
+      const table = tableRef.value
+      if (props.ssr_pagination === true) return totalCount.value
+      if (isGrouped.value || table === null || table.filteredSortedRows === void 0) return bodyRows.value.length
+      return table.filteredSortedRows.length
+    })
+
+    const selectionAggregates = computed(() => {
+      const rows = selected_prop.value
+      if (rows.length === 0 || isGrouped.value) return []
+      return visibleDisplayColumns.value
+        .filter(col => typeof col.aggregate === 'string')
+        .map(col => {
+          const value = aggregate(rows, col)
+          return {
+            name: col.name,
+            label: col.label,
+            type: aggregateLabel(col),
+            text: typeof col.aggregate_format === 'function' ? col.aggregate_format(value) : formatAggregate(value)
+          }
+        })
+    })
+
+    const formatCount = n => Number(n).toLocaleString()
+
     /* ----------------------------------------------------------- export */
 
     function exportTable (type) {
       const isExcel = type === 'xlsx' || type === 'excel'
-      const cols = orderedColumns.value.filter(isColumnVisible)
+      const cols = displayColumns.value.filter(isColumnVisible)
       const rows = aggregateRows()
       const name = props.file_name || 'table-export'
 
@@ -1244,7 +1817,7 @@ export default defineComponent({
       const oldIndex = evt.oldDraggableIndex, newIndex = evt.newDraggableIndex
       if (oldIndex === newIndex || isGrouped.value) return
 
-      const all = orderedColumns.value
+      const all = displayColumns.value
       const visible = all.filter(isColumnVisible)
       const dragged = visible[oldIndex], target = visible[newIndex]
       if (dragged === void 0 || target === void 0) return
@@ -1305,7 +1878,7 @@ export default defineComponent({
           colSortableEl = parts.headRow
           colSortable = Sortable.create(parts.headRow, {
             draggable: hasHeaderSlot.value ? 'th:not(.ignore-elements)' : 'th[data-col]',
-            filter: '.ignore-elements, .q-btn',
+            filter: '.ignore-elements, .q-btn, .qgrid__resizer',
             preventOnFilter: false,
             onStart: rememberAnchor,
             onMove: preventIgnored,
@@ -1332,7 +1905,10 @@ export default defineComponent({
         showFilterRow: showFilterRow.value,
         sortBy: pagination.sortBy === void 0 ? null : pagination.sortBy,
         descending: pagination.descending === true,
-        rowsPerPage: pagination.rowsPerPage
+        rowsPerPage: pagination.rowsPerPage,
+        sortModel: sortModel.value.slice(),
+        columnWidths: Object.assign({}, colWidths),
+        pinnedColumns: Object.assign({}, pinState)
       }
     }
 
@@ -1354,12 +1930,27 @@ export default defineComponent({
       if (Array.isArray(state.visibleColumns)) innerVisibleColumns.value = state.visibleColumns
       if (typeof state.groupBy === 'string') setGroupBy(state.groupBy)
       if (typeof state.showFilterRow === 'boolean') showFilterRow.value = state.showFilterRow
+      if (state.columnWidths && typeof state.columnWidths === 'object') {
+        Object.keys(state.columnWidths).forEach(name => {
+          const width = parseWidth(state.columnWidths[name])
+          if (width !== null) colWidths[name] = Math.max(MIN_COL_WIDTH, width)
+        })
+      }
+      if (state.pinnedColumns && typeof state.pinnedColumns === 'object') {
+        Object.keys(state.pinnedColumns).forEach(name => {
+          const side = state.pinnedColumns[name]
+          pinState[name] = side === 'left' || side === 'right' ? side : null
+        })
+      }
       if (props.ssr_pagination !== true) {
         const patch = {}
         if (state.sortBy !== void 0) patch.sortBy = state.sortBy
         if (typeof state.descending === 'boolean') patch.descending = state.descending
         if (typeof state.rowsPerPage === 'number') patch.rowsPerPage = state.rowsPerPage
         innerPagination.value = Object.assign({}, innerPagination.value, patch)
+      }
+      if (Array.isArray(state.sortModel) && state.sortModel.length > 0) {
+        sortModel.value = state.sortModel.filter(spec => spec && columnsByName.value[spec.name] !== void 0)
       }
     }
 
@@ -1382,6 +1973,12 @@ export default defineComponent({
       innerVisibleColumns.value = null
       setGroupBy('')
       showFilterRow.value = true
+      sortModel.value = []
+      if (props.ssr_pagination !== true) {
+        innerPagination.value = Object.assign({}, innerPagination.value, { sortBy: null, descending: false })
+      }
+      Object.keys(colWidths).forEach(name => { delete colWidths[name] })
+      Object.keys(pinState).forEach(name => { delete pinState[name] })
       if (props.state_key) {
         try { window.localStorage.removeItem(storageKey()) }
         catch (e) {}
@@ -1408,15 +2005,19 @@ export default defineComponent({
         if (state !== null) setState(state)
       }
       syncSortables()
+      nextTick(syncMeasureObserver)
     })
 
     onUpdated(() => {
       if (rowSortable !== null || colSortable !== null) syncSortables()
+      if (hasPinnedColumns.value) syncMeasureObserver()
     })
 
     onBeforeUnmount(() => {
       unmounted = true
       clearTimeout(stateTimer)
+      if (stopResize !== null) stopResize()
+      if (resizeObserver !== null) resizeObserver.disconnect()
       destroyRowSortable()
       destroyColSortable()
       scope.stop()
@@ -1505,7 +2106,41 @@ export default defineComponent({
       exportTable,
       getState,
       setState,
-      resetState
+      resetState,
+
+      // v1.2
+      isDark,
+      getCellValue,
+      displayColumns,
+      pinOf,
+      setColumnPin,
+      cellClass,
+      cellStyle,
+      leadClass,
+      leadStyle,
+      isResizable,
+      startResize,
+      autoSize,
+      sortModel,
+      sortModelActive,
+      sortIndex,
+      isSortDesc,
+      ariaSort,
+      applySortModel,
+      onHeaderClickCapture,
+      pinnedTop,
+      pinnedBottom,
+      pinRow,
+      copyRows,
+      onKeydown,
+      ctx,
+      contextItems,
+      onContextCapture,
+      runContextItem,
+      totalCount,
+      shownCount,
+      selectionAggregates,
+      formatCount
     }
   }
 })
@@ -1646,5 +2281,171 @@ export default defineComponent({
 
 .qgrid--sticky-header .q-table__middle {
   scroll-padding-top: 48px;
+}
+/* ---------------------------------------------------------------- v1.2 */
+
+.qgrid .q-table--dark,
+.qgrid--dark .q-table__middle {
+  color-scheme: dark;
+}
+
+.qgrid:focus {
+  outline: none;
+}
+
+.qgrid--copyable:focus-visible .q-table__container {
+  box-shadow: 0 0 0 2px var(--q-primary);
+}
+
+/* pinned (frozen) columns */
+.qgrid .q-table th.qgrid__pin,
+.qgrid .q-table td.qgrid__pin {
+  position: sticky;
+  z-index: 1;
+  background: var(--qgrid-pin-bg, #fff);
+}
+
+.qgrid .q-table thead th.qgrid__pin {
+  z-index: 3;
+}
+
+.qgrid .q-table--dark th.qgrid__pin,
+.qgrid .q-table--dark td.qgrid__pin {
+  background: var(--qgrid-pin-bg-dark, var(--q-dark, #1d1d1d));
+}
+
+.qgrid .q-table .qgrid__pin--edge-left {
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, .1), 6px 0 8px -6px rgba(0, 0, 0, .22);
+}
+
+.qgrid .q-table .qgrid__pin--edge-right {
+  box-shadow: inset 1px 0 0 rgba(0, 0, 0, .1), -6px 0 8px -6px rgba(0, 0, 0, .22);
+}
+
+.qgrid .q-table--dark .qgrid__pin--edge-left {
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, .14), 6px 0 8px -6px rgba(0, 0, 0, .6);
+}
+
+.qgrid .q-table--dark .qgrid__pin--edge-right {
+  box-shadow: inset 1px 0 0 rgba(255, 255, 255, .14), -6px 0 8px -6px rgba(0, 0, 0, .6);
+}
+
+/* fixed / resized widths */
+.qgrid .q-table td.qgrid__sized {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* resize handle */
+.qgrid__header-row th:not(.qgrid__pin) {
+  position: relative;
+}
+
+.qgrid__resizer {
+  position: absolute;
+  top: 0;
+  right: -5px;
+  z-index: 2;
+  width: 10px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.qgrid__resizer::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  bottom: 20%;
+  left: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  opacity: 0;
+  transition: opacity .15s;
+}
+
+.qgrid th:hover .qgrid__resizer::after {
+  opacity: .18;
+}
+
+.qgrid__resizer:hover::after,
+.qgrid--resizing .qgrid__resizer::after {
+  opacity: .6;
+  background: var(--q-primary);
+}
+
+.qgrid--resizing,
+.qgrid--resizing * {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+/* multi-sort priority */
+.qgrid__sort-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 2px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: .75;
+  vertical-align: middle;
+}
+
+/* pinned rows */
+.qgrid__pinned-row td {
+  font-weight: 500;
+  background: rgba(0, 0, 0, .025);
+}
+
+.q-table--dark .qgrid__pinned-row td {
+  background: rgba(255, 255, 255, .04);
+}
+
+.qgrid__pinned-row--top:last-child td {
+  border-bottom: 2px solid rgba(0, 0, 0, .12);
+}
+
+.q-table--dark .qgrid__pinned-row--top:last-child td {
+  border-bottom-color: rgba(255, 255, 255, .24);
+}
+
+/* status bar */
+.qgrid__status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 8px 16px;
+  font-size: 12px;
+  line-height: 18px;
+  color: rgba(0, 0, 0, .6);
+}
+
+.qgrid__status b {
+  margin-left: 4px;
+  font-weight: 600;
+  color: rgba(0, 0, 0, .87);
+}
+
+.qgrid__status--dark {
+  color: rgba(255, 255, 255, .6);
+}
+
+.qgrid__status--dark b {
+  color: rgba(255, 255, 255, .9);
+}
+
+.qgrid__status-agg .qgrid__agg-label {
+  margin: 0 0 0 4px;
+}
+
+.qgrid__context-menu {
+  min-width: 220px;
+}
+
+.qgrid__context-icon {
+  min-width: 28px;
+  padding-right: 8px;
 }
 </style>

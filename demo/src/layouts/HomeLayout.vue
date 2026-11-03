@@ -2,7 +2,7 @@
   <q-layout view="hhh lpr fff" class="home-layout">
     <div class="announce">
       <span class="badge-new">New</span>
-      <span>QGrid 1.1 — Excel export, totals, inline editing, virtual scroll and more.</span>
+      <span>QGrid 1.2 — column pinning & resizing, multi-sort, context menu and clipboard.</span>
       <router-link to="/docs/whats-new" class="pill pill--ghost announce__pill">See what's new</router-link>
     </div>
 

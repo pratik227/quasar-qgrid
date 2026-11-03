@@ -44,6 +44,9 @@ const columnKeys = [
   ['edit_type', "'text' | 'number' | 'select' | 'textarea'", "Editor used for inline editing. Default: 'text'."],
   ['edit_options', 'Array', "Options of the 'select' editor (defaults to the column's distinct values)."],
   ['validate', 'Function', '(value, row) => true | "error message". Blocks saving invalid values.'],
-  ['edit_buttons', 'Boolean', 'Show Set / Cancel buttons in the editor.']
+  ['edit_buttons', 'Boolean', 'Show Set / Cancel buttons in the editor.'],
+  ['pinned', "'left' | 'right'", 'Freeze the column at the left or right edge while scrolling sideways.'],
+  ['width', "Number | 'NNpx'", 'Initial width in px (also used by pinning and resizing).'],
+  ['resizable', 'Boolean', 'Allow (true) or forbid (false) resizing this column, overriding resizable_columns.']
 ]
 </script>

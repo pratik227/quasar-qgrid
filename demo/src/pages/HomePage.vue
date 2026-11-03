@@ -221,14 +221,17 @@ const stats = [
 
 const features = [
   { title: 'Column & header filters', desc: 'Text, select, date range and number range filters, plus searchable value lists in headers.', to: '/docs/filtering' },
-  { title: 'Grouping & totals', desc: 'Group by any column; sum, avg, min, max, count or custom footer totals.', to: '/docs/grouping', isNew: true },
-  { title: 'Excel & CSV export', desc: 'Real .xlsx with typed cells. Exports exactly what is on screen.', to: '/docs/export', isNew: true },
-  { title: 'Inline editing', desc: 'Text, number, select and textarea editors with validation.', to: '/docs/editing', isNew: true },
+  { title: 'Grouping & totals', desc: 'Group by any column; sum, avg, min, max, count or custom footer totals.', to: '/docs/grouping' },
+  { title: 'Excel & CSV export', desc: 'Real .xlsx with typed cells. Exports exactly what is on screen.', to: '/docs/export' },
+  { title: 'Inline editing', desc: 'Text, number, select and textarea editors with validation.', to: '/docs/editing' },
+  { title: 'Pinning & resizing', desc: 'Freeze columns left or right, drag to resize, double-click to auto-size.', to: '/docs/columns', isNew: true },
+  { title: 'Multi-column sort', desc: 'Shift + click to sort by several columns, sent to your server too.', to: '/docs/sorting', isNew: true },
+  { title: 'Context menu & clipboard', desc: 'Right-click actions, Ctrl/⌘ + C into Excel, pinned rows, status bar.', to: '/docs/interaction', isNew: true },
   { title: 'Drag & drop', desc: 'Reorder rows and columns, across pages, filters and slots.', to: '/docs/drag-and-drop' },
-  { title: 'Virtual scroll', desc: 'Tens of thousands of rows with a sticky header.', to: '/docs/large-data', isNew: true },
-  { title: 'Server-side ready', desc: 'Column filters, sort and pagination sent to your API.', to: '/docs/large-data', isNew: true },
-  { title: 'Master / detail', desc: 'Expandable rows with any content.', to: '/docs/customization', isNew: true },
-  { title: 'Save & restore', desc: 'Persist filters, sort, column order and visibility.', to: '/docs/large-data#save-and-restore-state', isNew: true }
+  { title: 'Virtual scroll', desc: 'Tens of thousands of rows with a sticky header.', to: '/docs/large-data' },
+  { title: 'Server-side ready', desc: 'Column filters, sort and pagination sent to your API.', to: '/docs/large-data' },
+  { title: 'Master / detail', desc: 'Expandable rows with any content.', to: '/docs/customization' },
+  { title: 'Save & restore', desc: 'Persist filters, sort, column order and visibility.', to: '/docs/large-data#save-and-restore-state' }
 ]
 
 const compare = [
@@ -237,6 +240,9 @@ const compare = [
   ['Row grouping', 'Paid / enterprise tier'],
   ['Master / detail rows', 'Paid / enterprise tier'],
   ['Searchable set (value) filter', 'Paid / enterprise tier'],
+  ['Clipboard copy into Excel', 'Paid / enterprise tier'],
+  ['Context menu', 'Paid / enterprise tier'],
+  ['Status bar with selection totals', 'Paid / enterprise tier'],
   ['Column chooser', 'Often paid']
 ]
 

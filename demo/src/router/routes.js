@@ -18,6 +18,8 @@ const routes = [
       { path: 'whats-new', component: page('WhatsNewPage'), meta: { section: 'Get started' } },
       { path: 'columns', component: page('ColumnsPage'), meta: { section: 'Guides' } },
       { path: 'filtering', component: page('FilteringPage'), meta: { section: 'Guides' } },
+      { path: 'sorting', component: page('SortingPage'), meta: { section: 'Guides' } },
+      { path: 'interaction', component: page('InteractionPage'), meta: { section: 'Guides' } },
       { path: 'grouping', component: page('GroupingPage'), meta: { section: 'Guides' } },
       { path: 'export', component: page('ExportPage'), meta: { section: 'Guides' } },
       { path: 'editing', component: page('EditingPage'), meta: { section: 'Guides' } },

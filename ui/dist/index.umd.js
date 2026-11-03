@@ -1,5 +1,5 @@
 /*!
- * quasar-ui-qgrid v1.1.0
+ * quasar-ui-qgrid v1.2.0
  * (c) 2026 pratikpatelpp802@gmail.com
  * Released under the MIT License.
  */
@@ -452,6 +452,143 @@
     return '﻿' + lines.join('\r\n')
   }
 
+  /* ------------------------------------------------------------------ sorting */
+
+  var sortCollator = typeof Intl !== 'undefined' && Intl.Collator
+    ? new Intl.Collator(void 0, { numeric: true, sensitivity: 'base' })
+    : null;
+
+  function compareByColumn (col, a, b) {
+    var A = getRawValue(a, col);
+    var B = getRawValue(b, col);
+
+    if (typeof col.rawSort === 'function') { return col.rawSort(A, B, a, b) }
+
+    var aEmpty = A === null || A === void 0;
+    var bEmpty = B === null || B === void 0;
+    if (aEmpty || bEmpty) { return aEmpty === bEmpty ? 0 : (aEmpty ? -1 : 1) }
+
+    if (typeof col.sort === 'function') { return col.sort(A, B, a, b) }
+    if (typeof A === 'number' && typeof B === 'number') { return A - B }
+    if (A instanceof Date && B instanceof Date) { return A.getTime() - B.getTime() }
+    if (typeof A === 'boolean' && typeof B === 'boolean') { return (A ? 1 : 0) - (B ? 1 : 0) }
+
+    var sa = String(A), sb = String(B);
+    if (sortCollator !== null) { return sortCollator.compare(sa, sb) }
+    var la = sa.toLowerCase(), lb = sb.toLowerCase();
+    return la < lb ? -1 : (la > lb ? 1 : 0)
+  }
+
+  /**
+   * Stable multi-column sort (in place).
+   * @param {Array} rows
+   * @param {Array} model  [{ name, descending }] - first entry has the highest priority
+   * @param {Object} columnsByName  name -> column definition
+   */
+  function sortRows (rows, model, columnsByName) {
+    var specs = [];
+    for (var i = 0; i < model.length; i++) {
+      var col = columnsByName[model[i].name];
+      if (col !== void 0) { specs.push({ col: col, dir: model[i].descending ? -1 : 1 }); }
+    }
+    if (specs.length === 0) { return rows }
+
+    // decorate with the original index so equal rows keep their order
+    var indexed = rows.map(function (row, index) { return ({ row: row, index: index }); });
+    indexed.sort(function (x, y) {
+      for (var i = 0; i < specs.length; i++) {
+        var res = compareByColumn(specs[i].col, x.row, y.row);
+        if (res !== 0) { return res * specs[i].dir }
+      }
+      return x.index - y.index
+    });
+    for (var i$1 = 0; i$1 < indexed.length; i$1++) { rows[i$1] = indexed[i$1].row; }
+    return rows
+  }
+
+  /** Cycles a column through: (none) -> asc -> desc -> (none), keeping the other sorts. */
+  function toggleSortModel (model, name) {
+    var index = model.findIndex(function (s) { return s.name === name; });
+    if (index === -1) { return model.concat({ name: name, descending: false }) }
+    if (model[index].descending === false) {
+      return model.map(function (s, i) { return i === index ? { name: name, descending: true } : s; })
+    }
+    return model.filter(function (s, i) { return i !== index; })
+  }
+
+  /* ------------------------------------------------------------------ pinning */
+
+  /** Reorders columns as: pinned left, unpinned, pinned right (stable inside each group). */
+  function partitionPinned (cols, pinOf) {
+    var left = [], middle = [], right = [];
+    for (var i = 0; i < cols.length; i++) {
+      var side = pinOf(cols[i]);
+      if (side === 'left') { left.push(cols[i]); }
+      else if (side === 'right') { right.push(cols[i]); }
+      else { middle.push(cols[i]); }
+    }
+    return left.concat(middle, right)
+  }
+
+  /**
+   * Sticky offsets for pinned columns.
+   * @param {Array} cols       visible columns, in display order
+   * @param {Function} pinOf   col -> 'left' | 'right' | null
+   * @param {Function} widthOf col -> px
+   * @param {Number} lead      width of the leading (selection / expand) cells
+   * @returns {Object} name -> { side, offset, edge }
+   */
+  function pinOffsets (cols, pinOf, widthOf, lead) {
+    var out = {};
+    var left = lead || 0;
+    var lastLeft = null;
+    for (var i = 0; i < cols.length; i++) {
+      if (pinOf(cols[i]) !== 'left') { continue }
+      out[cols[i].name] = { side: 'left', offset: left, edge: false };
+      left += widthOf(cols[i]);
+      lastLeft = cols[i].name;
+    }
+    if (lastLeft !== null) { out[lastLeft].edge = true; }
+
+    var right = 0;
+    var firstRight = null;
+    for (var i$1 = cols.length - 1; i$1 >= 0; i$1--) {
+      if (pinOf(cols[i$1]) !== 'right') { continue }
+      out[cols[i$1].name] = { side: 'right', offset: right, edge: false };
+      right += widthOf(cols[i$1]);
+      firstRight = cols[i$1].name;
+    }
+    if (firstRight !== null) { out[firstRight].edge = true; }
+    return out
+  }
+
+  /** '120px' | 120 -> 120 ; anything else -> null */
+  function parseWidth (val) {
+    if (typeof val === 'number' && isFinite(val)) { return val }
+    if (typeof val === 'string' && /^\d+(\.\d+)?(px)?$/.test(val.trim())) { return parseFloat(val) }
+    return null
+  }
+
+  /* ---------------------------------------------------------------- clipboard */
+
+  function tsvCell (val) {
+    var str = val === null || val === void 0 ? '' : (Array.isArray(val) ? val.join(', ') : String(val));
+    return str.replace(/[\t\r\n]+/g, ' ')
+  }
+
+  /** Tab separated values (pastes as cells into Excel / Sheets). */
+  function toTsv (rows, cols, withHeader) {
+    var lines = [];
+    if (withHeader !== false) { lines.push(cols.map(function (col) { return tsvCell(col.label !== void 0 ? col.label : col.name); }).join('\t')); }
+    var loop = function ( i ) {
+      var row = rows[i];
+      lines.push(cols.map(function (col) { return tsvCell(getCellValue(row, col)); }).join('\t'));
+    };
+
+    for (var i = 0; i < rows.length; i++) loop( i );
+    return lines.join('\n')
+  }
+
   /**
    * QGrid - tiny, dependency-free .xlsx (Office Open XML) writer.
    *
@@ -754,7 +891,16 @@
     detailClosed: 'M0 0h24v24H0z@@fill:none;&&M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z',
     columns: 'M0 0 H24 V24 H0 V0 z@@fill:none;&&M14.67,5v14H9.33V5H14.67z M15.67,19H21V5h-5.33V19z M8.33,19V5H3v14H8.33z',
     csv: 'M0 0h24v24H0z@@fill:none;&&M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
-    excel: 'M0 0h24v24H0z@@fill:none;&&M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z'
+    excel: 'M0 0h24v24H0z@@fill:none;&&M20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM8 20H4v-4h4v4zm0-6H4v-4h4v4zm0-6H4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4zm6 12h-4v-4h4v4zm0-6h-4v-4h4v4zm0-6h-4V4h4v4z',
+    copy: 'M0 0h24v24H0z@@fill:none;&&M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z',
+    pin: 'M0 0 H24 V24 H0 V0 z@@fill:none;&&M16,9V4l1,0c0.55,0,1-0.45,1-1v0c0-0.55-0.45-1-1-1H7C6.45,2,6,2.45,6,3v0 c0,0.55,0.45,1,1,1l1,0v5c0,1.66-1.34,3-3,3h0v2h5.97v7l1,1l1-1v-7H19v-2h0C17.34,12,16,10.66,16,9z@@fill-rule:evenodd;',
+    hide: 'M0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0zm0 0h24v24H0z@@fill:none;&&M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z',
+    sortAsc: 'M0 0h24v24H0V0z@@fill:none;&&M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z',
+    sortDesc: 'M0 0h24v24H0V0z@@fill:none;&&M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z',
+    pinTop: 'M0 0h24v24H0z@@fill:none;&&M8 11h3v10h2V11h3l-4-4-4 4zM4 3v2h16V3H4z',
+    pinBottom: 'M0 0h24v24H0z@@fill:none;&&M16 13h-3V3h-2v10H8l4 4 4-4zM4 19v2h16v-2H4z',
+    autoSize: 'M0 0h24v24H0z@@fill:none;&&M6.99 11L3 15l3.99 4v-3H14v-2H6.99v-3zM21 9l-3.99-4v3H10v2h7.01v3L21 9z',
+    unpin: 'M0 0 H24 V24 H0 V0 z@@fill:none;&&M14,10H3v2h11V10z M14,6H3v2h11V6z M3,16h7v-2H3V16z M14.41,22L17,19.41L19.59,22L21,20.59L18.41,18L21,15.41L19.59,14 L17,16.59L14.41,14L13,15.41L15.59,18L13,20.59L14.41,22z'
   };
 
   var DEFAULT_LABELS = {
@@ -785,13 +931,30 @@
     min: 'Min',
     max: 'Max',
     count: 'Count',
-    total: 'Total'
+    total: 'Total',
+    resize: 'Resize column',
+    copyCell: 'Copy cell',
+    copyRow: 'Copy row',
+    copySelected: 'Copy selected rows ({n})',
+    copied: 'Copied to clipboard',
+    pinLeft: 'Pin column left',
+    pinRight: 'Pin column right',
+    unpinColumn: 'Unpin column',
+    hideColumn: 'Hide column',
+    autoSize: 'Auto-size column',
+    pinRowTop: 'Pin row to top',
+    pinRowBottom: 'Pin row to bottom',
+    unpinRow: 'Unpin row',
+    statusRows: 'Rows',
+    statusFiltered: 'Filtered',
+    statusSelected: 'Selected'
   };
 
   var STATE_VERSION = 1;
+  var MIN_COL_WIDTH = 48;
 
   // QTable slots QGrid renders itself (everything else is forwarded as-is)
-  var OWN_SLOTS = ['header', 'body', 'top_right', 'top-right', 'loading', 'detail', 'bottom-row'];
+  var OWN_SLOTS = ['header', 'body', 'top_right', 'top-right', 'loading', 'detail'];
 
   // renders a slot with the *original* QTable scope object, so getters/setters
   // like `props.selected` / `props.expand` keep working inside user slots
@@ -847,13 +1010,22 @@
       height: String,
       state_key: String,
       labels: Object,
-      icons: Object
+      icons: Object,
+      // v1.2+
+      multi_sort: Boolean,
+      resizable_columns: Boolean,
+      status_bar: Boolean,
+      copy_selection: Boolean,
+      context_menu: [Boolean, Array],
+      pinned_top_rows: Array,
+      pinned_bottom_rows: Array
     },
 
     emits: [
       'selected-val', 'update:selected', 'dragged_column', 'dragged_row', 'row-click',
       'OnRequest', 'FilteredData', 'update:pagination', 'update:visible_columns',
-      'cell-edit', 'state-change'
+      'cell-edit', 'state-change', 'sort-change', 'column-resize', 'column-pin', 'copy',
+      'context-action', 'update:pinned_top_rows', 'update:pinned_bottom_rows'
     ],
 
     setup: function setup (props, ref$1) {
@@ -902,6 +1074,22 @@
         return out
       });
 
+      // runtime pin overrides (context menu / setState): name -> 'left' | 'right' | null
+      var pinState = vue.reactive({});
+      var pinOf = function (col) {
+        var side = col.name in pinState ? pinState[col.name] : col.pinned;
+        return side === 'left' || side === 'right' ? side : null
+      };
+
+      // pinned left, unpinned, pinned right
+      var displayColumns = vue.computed(function () { return partitionPinned(orderedColumns.value, pinOf); });
+
+      var columnsByName = vue.computed(function () {
+        var map = Object.create(null);
+        orderedColumns.value.forEach(function (col) { map[col.name] = col; });
+        return map
+      });
+
       var columnsByKey = vue.computed(function () {
         var map = Object.create(null);
         orderedColumns.value.forEach(function (col) { map[fieldKey(col)] = col; });
@@ -939,9 +1127,9 @@
       }); });
 
       // the columns handed to QTable (name kept for backwards compatibility)
-      var final_column = vue.computed(function () { return isGrouped.value ? [groupedColumnDef.value] : orderedColumns.value; });
+      var final_column = vue.computed(function () { return isGrouped.value ? [groupedColumnDef.value] : displayColumns.value; });
 
-      var subColumns = vue.computed(function () { return orderedColumns.value.filter(function (col) { return col.field !== groupField.value && isColumnVisible(col); }); }
+      var subColumns = vue.computed(function () { return displayColumns.value.filter(function (col) { return col.field !== groupField.value && isColumnVisible(col); }); }
       );
 
       function setGroupBy (field) {
@@ -1121,11 +1309,51 @@
         return dataVersion.value > 0 && rows === props.data ? rows.slice() : rows
       });
 
-      var groups = vue.computed(function () { return isGrouped.value ? groupRows(getFilteredValuesData.value, groupColumn.value) : null; }
+      /* ------------------------------------------------------- pinned rows */
+
+      var innerPinnedTop = vue.ref(null);
+      var innerPinnedBottom = vue.ref(null);
+      vue.watch(function () { return props.pinned_top_rows; }, function () { innerPinnedTop.value = null; });
+      vue.watch(function () { return props.pinned_bottom_rows; }, function () { innerPinnedBottom.value = null; });
+
+      var pinnedTop = vue.computed(function () { return innerPinnedTop.value || props.pinned_top_rows || []; });
+      var pinnedBottom = vue.computed(function () { return innerPinnedBottom.value || props.pinned_bottom_rows || []; });
+      // rows may arrive as reactive proxies (e.g. from a ref) or raw objects: compare raw
+      var pinnedRowSet = vue.computed(function () { return pinnedTop.value.length + pinnedBottom.value.length === 0
+          ? null
+          : new Set(pinnedTop.value.concat(pinnedBottom.value).map(function (row) { return vue.toRaw(row); })); }
+      );
+
+      var sameRow = function (a, b) { return vue.toRaw(a) === vue.toRaw(b); };
+
+      function rowPinSide (row) {
+        if (pinnedTop.value.some(function (r) { return sameRow(r, row); })) { return 'top' }
+        if (pinnedBottom.value.some(function (r) { return sameRow(r, row); })) { return 'bottom' }
+        return null
+      }
+
+      function pinRow (row, side) {
+        var top = pinnedTop.value.filter(function (r) { return sameRow(r, row) === false; });
+        var bottom = pinnedBottom.value.filter(function (r) { return sameRow(r, row) === false; });
+        if (side === 'top') { top.push(row); }
+        else if (side === 'bottom') { bottom.push(row); }
+        innerPinnedTop.value = top;
+        innerPinnedBottom.value = bottom;
+        emit('update:pinned_top_rows', top);
+        emit('update:pinned_bottom_rows', bottom);
+      }
+
+      // pinned rows are shown above/below the body, so they are left out of it (and of the totals)
+      var bodyRows = vue.computed(function () {
+        var set = pinnedRowSet.value;
+        return set === null ? getFilteredValuesData.value : getFilteredValuesData.value.filter(function (row) { return set.has(vue.toRaw(row)) === false; })
+      });
+
+      var groups = vue.computed(function () { return isGrouped.value ? groupRows(bodyRows.value, groupColumn.value) : null; }
       );
 
       var tableRows = vue.computed(function () {
-        if (groups.value === null) { return getFilteredValuesData.value }
+        if (groups.value === null) { return bodyRows.value }
         var needle = String(filter_data[GROUP_FILTER_KEY] || '').toLowerCase();
         var out = [];
         groups.value.forEach(function (rows, name) {
@@ -1188,7 +1416,7 @@
       var ignoredRowSet = vue.computed(function () {
         var list = props.ignore_rows;
         if (!list || list.length === 0) { return null }
-        var rows = getFilteredValuesData.value;
+        var rows = bodyRows.value;
         var set = new Set();
         list.forEach(function (i) { if (rows[i] !== void 0) { set.add(rows[i]); } });
         return set
@@ -1223,7 +1451,7 @@
       }
 
       function toggleColumn (col) {
-        var current = effectiveVisibleColumns.value || orderedColumns.value.map(function (c) { return c.name; });
+        var current = effectiveVisibleColumns.value || displayColumns.value.map(function (c) { return c.name; });
         setVisibleColumns(current.indexOf(col.name) !== -1
           ? current.filter(function (name) { return name !== col.name; })
           : current.concat(col.name));
@@ -1245,7 +1473,71 @@
 
       function onPaginationUpdate (val) {
         if (props.ssr_pagination !== true) { innerPagination.value = val; }
+        // a plain (non shift) header click: back to a single-column sort
+        var primary = sortModel.value[0];
+        var sortBy = val.sortBy || null;
+        if ((primary ? primary.name : null) !== sortBy || (primary !== void 0 && primary.descending !== (val.descending === true))) {
+          sortModel.value = sortBy === null ? [] : [{ name: sortBy, descending: val.descending === true }];
+          emit('sort-change', sortModel.value);
+        }
         emit('update:pagination', val);
+      }
+
+      /* ------------------------------------------------------- multi sort */
+
+      var initialSort = props.pagination && props.pagination.sortBy;
+      var sortModel = vue.ref(initialSort ? [{ name: initialSort, descending: props.pagination.descending === true }] : []);
+      var sortModelActive = vue.computed(function () { return props.multi_sort === true && sortModel.value.length > 1; });
+      var sortIndex = function (col) { return sortModel.value.findIndex(function (s) { return s.name === col.name; }); };
+      var isSortDesc = function (col) {
+        var spec = sortModel.value.find(function (s) { return s.name === col.name; });
+        return spec !== void 0 && spec.descending === true
+      };
+
+      function ariaSort (col) {
+        if (col.sortable !== true) { return void 0 }
+        var spec = sortModel.value.find(function (s) { return s.name === col.name; });
+        return spec === void 0 ? 'none' : (spec.descending ? 'descending' : 'ascending')
+      }
+
+      function applySortModel (model) {
+        sortModel.value = model;
+        var primary = model[0];
+        var patch = primary !== void 0
+          ? { sortBy: primary.name, descending: primary.descending }
+          : { sortBy: null, descending: false };
+        if (props.ssr_pagination === true) {
+          var table = tableRef.value;
+          if (table !== null) {
+            table.requestServerInteraction({ pagination: Object.assign({}, props.pagination, patch, { page: 1 }) });
+          }
+        }
+        else {
+          innerPagination.value = Object.assign({}, innerPagination.value, patch);
+        }
+        emit('sort-change', model);
+      }
+
+      // Shift + click on a sortable header adds / toggles a secondary sort
+      function onHeaderClickCapture (evt) {
+        if (props.multi_sort !== true || evt.shiftKey !== true || isGrouped.value) { return }
+        var target = evt.target;
+        if (!target || typeof target.closest !== 'function' || target.closest('.qgrid__resizer, .q-btn, .q-checkbox, .q-field')) { return }
+        var th = target.closest('th[data-col]');
+        if (th === null) { return }
+        var col = columnsByName.value[th.getAttribute('data-col')];
+        if (col === void 0 || col.sortable !== true) { return }
+        evt.stopPropagation();
+        evt.preventDefault();
+        applySortModel(toggleSortModel(sortModel.value, col.name));
+      }
+
+      function multiSortMethod (rows, sortBy, descending) {
+        var model = sortModel.value;
+        if (model.length === 0 || model[0].name !== sortBy || model[0].descending !== descending) {
+          model = [{ name: sortBy, descending: descending }];
+        }
+        return sortRows(rows, model, columnsByName.value)
       }
 
       // all $attrs are forwarded to QTable, so any QTable prop / event works on QGrid
@@ -1263,12 +1555,20 @@
         if (props.height) {
           bindings.style = [attrs.style, { height: props.height }];
         }
+        if (props.multi_sort === true && attrs['sort-method'] === void 0 && attrs.sortMethod === void 0) {
+          bindings.sortMethod = multiSortMethod;
+        }
         return bindings
       }
 
+      var isDark = vue.computed(function () { return props.dark === true || (props.dark === null && $q.dark.isActive === true); });
+
       var rootClass = vue.computed(function () { return ({
         'qgrid--sticky-header': props.sticky_header === true || props.virtual_scroll === true,
-        'qgrid--dense': props.dense === true
+        'qgrid--dense': props.dense === true,
+        'qgrid--dark': isDark.value,
+        'qgrid--resizing': resizing.value === true,
+        'qgrid--copyable': props.copy_selection === true
       }); });
 
       var hasTopRight = vue.computed(function () { return props.excel_download || props.csv_download || props.fullscreen || props.global_search ||
@@ -1292,7 +1592,11 @@
       }
 
       function onRequest (data) {
-        emit('OnRequest', Object.assign({}, data, { filters: getFilterModel() }));
+        var sortBy = data.pagination && data.pagination.sortBy;
+        var model = sortModel.value.length > 0 && sortModel.value[0].name === sortBy
+          ? sortModel.value.slice()
+          : (sortBy ? [{ name: sortBy, descending: data.pagination.descending === true }] : []);
+        emit('OnRequest', Object.assign({}, data, { filters: getFilterModel(), sort_model: model }));
       }
 
       if (props.server_side_filters === true) {
@@ -1318,7 +1622,7 @@
       function aggregateRows () {
         var table = tableRef.value;
         if (isGrouped.value || table === null || table.filteredSortedRows === void 0) {
-          return getFilteredValuesData.value
+          return bodyRows.value
         }
         return table.filteredSortedRows
       }
@@ -1361,11 +1665,326 @@
         emit('cell-edit', { row: row, column: col, field: col.field, value: val, old_value: initial });
       }
 
+      /* ------------------------------------------- column widths & pinning */
+
+      var colWidths = vue.reactive({}); // user resized: name -> px
+      var measuredWidths = vue.reactive({}); // rendered: name -> px
+      var leadWidths = vue.ref([]); // selection / expand cells
+      var resizing = vue.ref(false);
+
+      var fixedWidthOf = function (col) { return colWidths[col.name] || parseWidth(col.width); };
+      var widthOf = function (col) { return fixedWidthOf(col) || measuredWidths[col.name] || 100; };
+
+      var visibleDisplayColumns = vue.computed(function () { return displayColumns.value.filter(isColumnVisible); });
+      var hasPinnedColumns = vue.computed(function () { return isGrouped.value === false && visibleDisplayColumns.value.some(function (col) { return pinOf(col) !== null; }); });
+
+      var offsets = vue.computed(function () {
+        if (hasPinnedColumns.value === false) { return {} }
+        var lead = leadWidths.value.reduce(function (a, b) { return a + b; }, 0);
+        return pinOffsets(visibleDisplayColumns.value, pinOf, widthOf, lead)
+      });
+
+      var hasLeftPins = vue.computed(function () { return Object.keys(offsets.value).some(function (name) { return offsets.value[name].side === 'left'; }); });
+      var leadClass = vue.computed(function () { return hasLeftPins.value ? 'qgrid__pin qgrid__pin--left' : ''; });
+
+      function leadStyle (index) {
+        if (hasLeftPins.value === false) { return null }
+        var left = 0;
+        for (var i = 0; i < index && i < leadWidths.value.length; i++) { left += leadWidths.value[i]; }
+        return { left: left + 'px' }
+      }
+
+      function cellClass (col) {
+        if (isGrouped.value) { return '' }
+        var pin = offsets.value[col.name];
+        var sized = fixedWidthOf(col) ? ' qgrid__sized' : '';
+        if (pin === void 0) { return sized }
+        return 'qgrid__pin qgrid__pin--' + pin.side + (pin.edge ? ' qgrid__pin--edge-' + pin.side : '') + sized
+      }
+
+      function cellStyle (col) {
+        if (isGrouped.value) { return null }
+        var style = {};
+        var width = fixedWidthOf(col);
+        if (width) {
+          style.width = style.minWidth = style.maxWidth = width + 'px';
+        }
+        var pin = offsets.value[col.name];
+        if (pin !== void 0) { style[pin.side] = pin.offset + 'px'; }
+        return width || pin !== void 0 ? style : null
+      }
+
+      var isResizable = function (col) { return isGrouped.value === false && col.resizable !== false && (props.resizable_columns === true || col.resizable === true); };
+
+      // sticky offsets depend on rendered widths: keep them measured
+      function measureColumns () {
+        var head = getTableParts().headRow;
+        if (head === null) { return }
+        var leads = [];
+        var seenColumn = false;
+        for (var i = 0; i < head.children.length; i++) {
+          var th = head.children[i];
+          var name = th.getAttribute('data-col');
+          if (name === null) {
+            if (seenColumn === false) { leads.push(th.offsetWidth); }
+            continue
+          }
+          seenColumn = true;
+          if (measuredWidths[name] !== th.offsetWidth) { measuredWidths[name] = th.offsetWidth; }
+        }
+        if (leads.join() !== leadWidths.value.join()) { leadWidths.value = leads; }
+      }
+
+      var resizeObserver = null;
+      function syncMeasureObserver () {
+        if (unmounted || typeof ResizeObserver === 'undefined') { return }
+        if (hasPinnedColumns.value === false) {
+          if (resizeObserver !== null) {
+            resizeObserver.disconnect();
+            resizeObserver = null;
+          }
+          return
+        }
+        var head = getTableParts().headRow;
+        if (head === null) { return }
+        if (resizeObserver === null) { resizeObserver = new ResizeObserver(measureColumns); }
+        resizeObserver.disconnect();
+        for (var i = 0; i < head.children.length; i++) { resizeObserver.observe(head.children[i]); }
+        measureColumns();
+      }
+
+      vue.watch([hasPinnedColumns, visibleDisplayColumns], function () { return vue.nextTick(syncMeasureObserver); });
+
+      var stopResize = null;
+      function startResize (evt, col) {
+        var th = evt.target.closest('th');
+        if (th === null) { return }
+        var startX = evt.clientX;
+        var startWidth = th.offsetWidth;
+        var rtl = $q.lang.rtl === true ? -1 : 1;
+        resizing.value = true;
+
+        var onMove = function (e) {
+          colWidths[col.name] = Math.max(MIN_COL_WIDTH, Math.round(startWidth + (e.clientX - startX) * rtl));
+        };
+        var onUp = function () {
+          cleanup();
+          emit('column-resize', { column: col, width: colWidths[col.name] });
+        };
+        var cleanup = function () {
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+          resizing.value = false;
+          stopResize = null;
+        };
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
+        stopResize = cleanup;
+      }
+
+      var measureCanvas = null;
+      function autoSize (col) {
+        var table = tableRef.value;
+        var el = table !== null ? table.$el : null;
+        if (!el || typeof document === 'undefined') { return }
+        var sel = '[data-col="' + String(col.name).replace(/["\\]/g, '\\$&') + '"]';
+        var th = el.querySelector('thead tr.qgrid__header-row th' + sel);
+        if (th === null) { return }
+        if (measureCanvas === null) { measureCanvas = document.createElement('canvas'); }
+        var ctx2d = measureCanvas.getContext('2d');
+        if (ctx2d === null) { return }
+
+        var measure = function (node) {
+          var cs = window.getComputedStyle(node);
+          ctx2d.font = cs.fontWeight + ' ' + cs.fontSize + ' ' + cs.fontFamily;
+          return ctx2d.measureText(node.innerText || '').width + parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+        };
+
+        // header: label + room for the sort icon / filter / resize handle
+        var max = measure(th.querySelector('.qgrid__label') || th) + 44;
+        var cells = el.querySelectorAll('tbody td' + sel);
+        for (var i = 0; i < cells.length; i++) { max = Math.max(max, measure(cells[i]) + 2); }
+
+        colWidths[col.name] = Math.min(Math.max(Math.ceil(max), MIN_COL_WIDTH), 800);
+        emit('column-resize', { column: col, width: colWidths[col.name] });
+      }
+
+      function setColumnPin (col, side) {
+        pinState[col.name] = side === 'left' || side === 'right' ? side : null;
+        emit('column-pin', { column: col, pinned: pinState[col.name] });
+      }
+
+      /* --------------------------------------------------------- clipboard */
+
+      function notify (message) {
+        if (typeof $q.notify === 'function') { $q.notify({ message: message, timeout: 1200 }); }
+      }
+
+      function copyRows (rows, withHeader) {
+        var list = rows || (selected_prop.value.length > 0 ? selected_prop.value : aggregateRows());
+        var text = toTsv(list, visibleDisplayColumns.value, withHeader);
+        return quasar.copyToClipboard(text).then(function () {
+          emit('copy', { rows: list, text: text });
+          notify(mergedLabels.value.copied);
+          return text
+        })
+      }
+
+      function copyText (text) {
+        return quasar.copyToClipboard(text).then(function () {
+          emit('copy', { rows: [], text: text });
+          notify(mergedLabels.value.copied);
+          return text
+        })
+      }
+
+      function onKeydown (evt) {
+        if (props.copy_selection !== true) { return }
+        if ((evt.ctrlKey || evt.metaKey) !== true || String(evt.key).toLowerCase() !== 'c') { return }
+        var tag = evt.target && evt.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || (evt.target && evt.target.isContentEditable)) { return }
+        var textSelection = typeof window !== 'undefined' && window.getSelection ? String(window.getSelection()) : '';
+        if (textSelection !== '' || selected_prop.value.length === 0) { return }
+        evt.preventDefault();
+        copyRows(selected_prop.value);
+      }
+
+      /* ------------------------------------------------------ context menu */
+
+      var ctx = vue.ref(null);
+
+      function onContextCapture (evt) {
+        if (!props.context_menu) { return }
+        var target = evt.target;
+        if (!target || typeof target.closest !== 'function') { return }
+        var row = null;
+        var tr = target.closest('tr[data-qgrid-row]');
+        var pinnedTr = target.closest('tr[data-qgrid-pinned]');
+        if (tr !== null && isGrouped.value === false) {
+          var table = tableRef.value;
+          var page = table !== null && table.computedRows !== void 0 ? table.computedRows : tableRows.value;
+          row = page[parseInt(tr.getAttribute('data-qgrid-row'), 10)] || null;
+        }
+        else if (pinnedTr !== null) {
+          var parts = pinnedTr.getAttribute('data-qgrid-pinned').split(':');
+          row = (parts[0] === 'top' ? pinnedTop.value : pinnedBottom.value)[parseInt(parts[1], 10)] || null;
+        }
+        var cell = target.closest('td[data-col], th[data-col]');
+        var col = cell !== null ? (columnsByName.value[cell.getAttribute('data-col')] || null) : null;
+        ctx.value = {
+          row: row,
+          col: col,
+          value: row !== null && col !== null ? getCellValue(row, col) : void 0,
+          area: tr !== null || pinnedTr !== null ? 'body' : (target.closest('thead') !== null ? 'header' : 'other')
+        };
+      }
+
+      var contextItems = vue.computed(function () {
+        var c = ctx.value || {};
+        var L = mergedLabels.value;
+        var I = mergedIcons.value;
+        var items = [];
+        var sep = { separator: true };
+
+        if (c.row && c.col) { items.push({ action: 'copy-cell', label: L.copyCell, icon: I.copy }); }
+        if (c.row) { items.push({ action: 'copy-row', label: L.copyRow, icon: I.copy }); }
+        if (selected_prop.value.length > 0) {
+          items.push({ action: 'copy-selected', label: L.copySelected.replace('{n}', selected_prop.value.length), icon: I.copy });
+        }
+
+        if (c.row && isGrouped.value === false) {
+          items.push(sep);
+          if (rowPinSide(c.row) !== null) { items.push({ action: 'unpin-row', label: L.unpinRow, icon: I.unpin }); }
+          else {
+            items.push({ action: 'pin-row-top', label: L.pinRowTop, icon: I.pinTop });
+            items.push({ action: 'pin-row-bottom', label: L.pinRowBottom, icon: I.pinBottom });
+          }
+        }
+
+        if (c.col && isGrouped.value === false) {
+          items.push(sep);
+          var side = pinOf(c.col);
+          if (side !== 'left') { items.push({ action: 'pin-left', label: L.pinLeft, icon: I.pin }); }
+          if (side !== 'right') { items.push({ action: 'pin-right', label: L.pinRight, icon: I.pin }); }
+          if (side !== null) { items.push({ action: 'unpin-column', label: L.unpinColumn, icon: I.unpin }); }
+          if (isResizable(c.col)) { items.push({ action: 'auto-size', label: L.autoSize, icon: I.autoSize }); }
+          if (c.col.required !== true) { items.push({ action: 'hide-column', label: L.hideColumn, icon: I.hide }); }
+        }
+
+        items.push(sep);
+        items.push({ action: 'export-csv', label: L.exportCsv, icon: I.csv });
+        items.push({ action: 'export-xlsx', label: L.exportExcel, icon: I.excel });
+
+        if (Array.isArray(props.context_menu)) {
+          items.push(sep);
+          props.context_menu.forEach(function (item) { items.push(item && item.separator ? sep : Object.assign({ custom: true }, item)); });
+        }
+
+        // drop leading, trailing and repeated separators
+        return items.filter(function (item, i, list) { return item.separator !== true || (i > 0 && i < list.length - 1 && list[i - 1].separator !== true); }
+        )
+      });
+
+      function runContextItem (item) {
+        var c = Object.assign({ row: null, col: null, value: void 0 }, ctx.value, { selected: selected_prop.value });
+        switch (item.action) {
+          case 'copy-cell': copyText(cellText(c.value) === '' ? '' : String(cellText(c.value))); break
+          case 'copy-row': copyRows([c.row], false); break
+          case 'copy-selected': copyRows(selected_prop.value); break
+          case 'pin-row-top': pinRow(c.row, 'top'); break
+          case 'pin-row-bottom': pinRow(c.row, 'bottom'); break
+          case 'unpin-row': pinRow(c.row, null); break
+          case 'pin-left': setColumnPin(c.col, 'left'); break
+          case 'pin-right': setColumnPin(c.col, 'right'); break
+          case 'unpin-column': setColumnPin(c.col, null); break
+          case 'auto-size': vue.nextTick(function () { return autoSize(c.col); }); break
+          case 'hide-column': toggleColumn(c.col); break
+          case 'export-csv': exportTable('csv'); break
+          case 'export-xlsx': exportTable('xlsx'); break
+          default:
+            if (typeof item.handler === 'function') { item.handler(c); }
+        }
+        emit('context-action', Object.assign({ action: item.action || item.label }, c));
+      }
+
+      /* -------------------------------------------------------- status bar */
+
+      var totalCount = vue.computed(function () {
+        var p = props.pagination;
+        if (props.ssr_pagination === true && p && typeof p.rowsNumber === 'number') { return p.rowsNumber }
+        return (props.data || []).length
+      });
+
+      var shownCount = vue.computed(function () {
+        var table = tableRef.value;
+        if (props.ssr_pagination === true) { return totalCount.value }
+        if (isGrouped.value || table === null || table.filteredSortedRows === void 0) { return bodyRows.value.length }
+        return table.filteredSortedRows.length
+      });
+
+      var selectionAggregates = vue.computed(function () {
+        var rows = selected_prop.value;
+        if (rows.length === 0 || isGrouped.value) { return [] }
+        return visibleDisplayColumns.value
+          .filter(function (col) { return typeof col.aggregate === 'string'; })
+          .map(function (col) {
+            var value = aggregate(rows, col);
+            return {
+              name: col.name,
+              label: col.label,
+              type: aggregateLabel(col),
+              text: typeof col.aggregate_format === 'function' ? col.aggregate_format(value) : formatAggregate(value)
+            }
+          })
+      });
+
+      var formatCount = function (n) { return Number(n).toLocaleString(); };
+
       /* ----------------------------------------------------------- export */
 
       function exportTable (type) {
         var isExcel = type === 'xlsx' || type === 'excel';
-        var cols = orderedColumns.value.filter(isColumnVisible);
+        var cols = displayColumns.value.filter(isColumnVisible);
         var rows = aggregateRows();
         var name = props.file_name || 'table-export';
 
@@ -1443,7 +2062,7 @@
         var oldIndex = evt.oldDraggableIndex, newIndex = evt.newDraggableIndex;
         if (oldIndex === newIndex || isGrouped.value) { return }
 
-        var all = orderedColumns.value;
+        var all = displayColumns.value;
         var visible = all.filter(isColumnVisible);
         var dragged = visible[oldIndex], target = visible[newIndex];
         if (dragged === void 0 || target === void 0) { return }
@@ -1504,7 +2123,7 @@
             colSortableEl = parts.headRow;
             colSortable = Sortable.create(parts.headRow, {
               draggable: hasHeaderSlot.value ? 'th:not(.ignore-elements)' : 'th[data-col]',
-              filter: '.ignore-elements, .q-btn',
+              filter: '.ignore-elements, .q-btn, .qgrid__resizer',
               preventOnFilter: false,
               onStart: rememberAnchor,
               onMove: preventIgnored,
@@ -1531,7 +2150,10 @@
           showFilterRow: showFilterRow.value,
           sortBy: pagination.sortBy === void 0 ? null : pagination.sortBy,
           descending: pagination.descending === true,
-          rowsPerPage: pagination.rowsPerPage
+          rowsPerPage: pagination.rowsPerPage,
+          sortModel: sortModel.value.slice(),
+          columnWidths: Object.assign({}, colWidths),
+          pinnedColumns: Object.assign({}, pinState)
         }
       }
 
@@ -1553,12 +2175,27 @@
         if (Array.isArray(state.visibleColumns)) { innerVisibleColumns.value = state.visibleColumns; }
         if (typeof state.groupBy === 'string') { setGroupBy(state.groupBy); }
         if (typeof state.showFilterRow === 'boolean') { showFilterRow.value = state.showFilterRow; }
+        if (state.columnWidths && typeof state.columnWidths === 'object') {
+          Object.keys(state.columnWidths).forEach(function (name) {
+            var width = parseWidth(state.columnWidths[name]);
+            if (width !== null) { colWidths[name] = Math.max(MIN_COL_WIDTH, width); }
+          });
+        }
+        if (state.pinnedColumns && typeof state.pinnedColumns === 'object') {
+          Object.keys(state.pinnedColumns).forEach(function (name) {
+            var side = state.pinnedColumns[name];
+            pinState[name] = side === 'left' || side === 'right' ? side : null;
+          });
+        }
         if (props.ssr_pagination !== true) {
           var patch = {};
           if (state.sortBy !== void 0) { patch.sortBy = state.sortBy; }
           if (typeof state.descending === 'boolean') { patch.descending = state.descending; }
           if (typeof state.rowsPerPage === 'number') { patch.rowsPerPage = state.rowsPerPage; }
           innerPagination.value = Object.assign({}, innerPagination.value, patch);
+        }
+        if (Array.isArray(state.sortModel) && state.sortModel.length > 0) {
+          sortModel.value = state.sortModel.filter(function (spec) { return spec && columnsByName.value[spec.name] !== void 0; });
         }
       }
 
@@ -1581,6 +2218,12 @@
         innerVisibleColumns.value = null;
         setGroupBy('');
         showFilterRow.value = true;
+        sortModel.value = [];
+        if (props.ssr_pagination !== true) {
+          innerPagination.value = Object.assign({}, innerPagination.value, { sortBy: null, descending: false });
+        }
+        Object.keys(colWidths).forEach(function (name) { delete colWidths[name]; });
+        Object.keys(pinState).forEach(function (name) { delete pinState[name]; });
         if (props.state_key) {
           try { window.localStorage.removeItem(storageKey()); }
           catch (e) {}
@@ -1607,15 +2250,19 @@
           if (state !== null) { setState(state); }
         }
         syncSortables();
+        vue.nextTick(syncMeasureObserver);
       });
 
       vue.onUpdated(function () {
         if (rowSortable !== null || colSortable !== null) { syncSortables(); }
+        if (hasPinnedColumns.value) { syncMeasureObserver(); }
       });
 
       vue.onBeforeUnmount(function () {
         unmounted = true;
         clearTimeout(stateTimer);
+        if (stopResize !== null) { stopResize(); }
+        if (resizeObserver !== null) { resizeObserver.disconnect(); }
         destroyRowSortable();
         destroyColSortable();
         scope.stop();
@@ -1704,36 +2351,79 @@
         exportTable: exportTable,
         getState: getState,
         setState: setState,
-        resetState: resetState
+        resetState: resetState,
+
+        // v1.2
+        isDark: isDark,
+        getCellValue: getCellValue,
+        displayColumns: displayColumns,
+        pinOf: pinOf,
+        setColumnPin: setColumnPin,
+        cellClass: cellClass,
+        cellStyle: cellStyle,
+        leadClass: leadClass,
+        leadStyle: leadStyle,
+        isResizable: isResizable,
+        startResize: startResize,
+        autoSize: autoSize,
+        sortModel: sortModel,
+        sortModelActive: sortModelActive,
+        sortIndex: sortIndex,
+        isSortDesc: isSortDesc,
+        ariaSort: ariaSort,
+        applySortModel: applySortModel,
+        onHeaderClickCapture: onHeaderClickCapture,
+        pinnedTop: pinnedTop,
+        pinnedBottom: pinnedBottom,
+        pinRow: pinRow,
+        copyRows: copyRows,
+        onKeydown: onKeydown,
+        ctx: ctx,
+        contextItems: contextItems,
+        onContextCapture: onContextCapture,
+        runContextItem: runContextItem,
+        totalCount: totalCount,
+        shownCount: shownCount,
+        selectionAggregates: selectionAggregates,
+        formatCount: formatCount
       }
     }
   });
 
-  var _hoisted_1 = { class: "qgrid__label" };
-  var _hoisted_2 = { class: "row items-center no-wrap q-pl-md q-pr-xs q-pt-xs" };
-  var _hoisted_3 = { class: "qgrid__menu-title ellipsis" };
-  var _hoisted_4 = { class: "q-px-sm q-pb-xs" };
-  var _hoisted_5 = {
+  var _hoisted_1 = ["tabindex"];
+  var _hoisted_2 = { class: "qgrid__label" };
+  var _hoisted_3 = {
+    key: 0,
+    class: "qgrid__sort-badge"
+  };
+  var _hoisted_4 = { class: "row items-center no-wrap q-pl-md q-pr-xs q-pt-xs" };
+  var _hoisted_5 = { class: "qgrid__menu-title ellipsis" };
+  var _hoisted_6 = { class: "q-px-sm q-pb-xs" };
+  var _hoisted_7 = {
     key: 1,
     class: "qgrid__menu-empty"
   };
-  var _hoisted_6 = { class: "row justify-end q-pa-xs" };
-  var _hoisted_7 = { class: "row items-center justify-end" };
-  var _hoisted_8 = {
+  var _hoisted_8 = { class: "row justify-end q-pa-xs" };
+  var _hoisted_9 = ["aria-label", "onPointerdown", "onDblclick"];
+  var _hoisted_10 = { class: "row items-center justify-end" };
+  var _hoisted_11 = {
     key: 1,
     class: "qgrid__toolbar row items-center no-wrap"
   };
-  var _hoisted_9 = { class: "qgrid__group-name" };
-  var _hoisted_10 = { class: "qgrid__agg-label" };
-  var _hoisted_11 = { class: "qgrid__agg-value" };
+  var _hoisted_12 = { class: "qgrid__group-name" };
+  var _hoisted_13 = { class: "qgrid__agg-label" };
+  var _hoisted_14 = { class: "qgrid__agg-value" };
+  var _hoisted_15 = { key: 0 };
+  var _hoisted_16 = { key: 1 };
+  var _hoisted_17 = { class: "qgrid__agg-label" };
 
   function render(_ctx, _cache, $props, $setup, $data, $options) {
     var _component_q_checkbox = vue.resolveComponent("q-checkbox");
     var _component_q_th = vue.resolveComponent("q-th");
+    var _component_q_icon = vue.resolveComponent("q-icon");
     var _component_q_badge = vue.resolveComponent("q-badge");
     var _component_q_space = vue.resolveComponent("q-space");
     var _component_q_btn = vue.resolveComponent("q-btn");
-    var _component_q_icon = vue.resolveComponent("q-icon");
     var _component_q_input = vue.resolveComponent("q-input");
     var _component_q_item_section = vue.resolveComponent("q-item-section");
     var _component_q_item = vue.resolveComponent("q-item");
@@ -1754,7 +2444,20 @@
     var _directive_close_popup = vue.resolveDirective("close-popup");
 
     return (vue.openBlock(), vue.createElementBlock("div", {
-      class: vue.normalizeClass(["qgrid", _ctx.rootClass])
+      class: vue.normalizeClass(["qgrid", _ctx.rootClass]),
+      tabindex: _ctx.copy_selection ? 0 : void 0,
+      onKeydown: _cache[10] || (_cache[10] = function () {
+        var args = [], len = arguments.length;
+        while ( len-- ) args[ len ] = arguments[ len ];
+
+        return (_ctx.onKeydown && _ctx.onKeydown.apply(_ctx, args));
+    }),
+      onContextmenuCapture: _cache[11] || (_cache[11] = function () {
+        var args = [], len = arguments.length;
+        while ( len-- ) args[ len ] = arguments[ len ];
+
+        return (_ctx.onContextCapture && _ctx.onContextCapture.apply(_ctx, args));
+    })
     }, [
       vue.createVNode(_component_q_table, vue.mergeProps({
         ref: "tableRef",
@@ -1774,7 +2477,7 @@
         square: _ctx.square,
         selection: _ctx.selectionMode,
         selected: _ctx.selected_prop,
-        "onUpdate:selected": _cache[7] || (_cache[7] = function ($event) { return ((_ctx.selected_prop) = $event); }),
+        "onUpdate:selected": _cache[8] || (_cache[8] = function ($event) { return ((_ctx.selected_prop) = $event); }),
         filter: _ctx.global_filter || _ctx.filter,
         onRequest: _ctx.onRequest
       }), vue.createSlots({
@@ -1783,14 +2486,16 @@
             ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
                 key: "qgrid-header",
                 props: props,
-                class: "qgrid__header-row"
+                class: "qgrid__header-row",
+                onClickCapture: _ctx.onHeaderClickCapture
               }, {
                 default: vue.withCtx(function () { return [
                   (_ctx.selectionMode !== 'none')
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 0,
                         "auto-width": "",
-                        class: "ignore-elements"
+                        class: vue.normalizeClass(["ignore-elements", _ctx.leadClass]),
+                        style: vue.normalizeStyle(_ctx.leadStyle(0))
                       }, {
                         default: vue.withCtx(function () { return [
                           (_ctx.selectionMode === 'multiple')
@@ -1805,21 +2510,24 @@
                             : vue.createCommentVNode("", true)
                         ]; }),
                         _: 2
-                      }, 1024))
+                      }, 1032, ["class", "style"]))
                     : vue.createCommentVNode("", true),
                   (_ctx.hasDetailSlot && !_ctx.isGrouped)
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 1,
                         "auto-width": "",
-                        class: "ignore-elements"
-                      }))
+                        class: vue.normalizeClass(["ignore-elements", _ctx.leadClass]),
+                        style: vue.normalizeStyle(_ctx.leadStyle(1))
+                      }, null, 8, ["class", "style"]))
                     : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, colIndex) {
                     return (vue.openBlock(), vue.createBlock(_component_q_th, {
                       key: col.name,
                       props: props,
                       "data-col": col.name,
-                      class: vue.normalizeClass(_ctx.isIgnoredCol(colIndex) ? 'ignore-elements' : '')
+                      class: vue.normalizeClass([_ctx.isIgnoredCol(colIndex) ? 'ignore-elements' : '', _ctx.cellClass(col)]),
+                      style: vue.normalizeStyle(_ctx.cellStyle(col)),
+                      "aria-sort": _ctx.ariaSort(col)
                     }, {
                       default: vue.withCtx(function () { return [
                         vue.renderSlot(_ctx.$slots, 'header-cell-' + col.name, {
@@ -1827,11 +2535,23 @@
                           cols: props.cols,
                           sort: props.sort
                         }, function () { return [
-                          vue.createElementVNode("span", _hoisted_1, vue.toDisplayString(col.label), 1)
+                          vue.createElementVNode("span", _hoisted_2, vue.toDisplayString(col.label), 1)
                         ]; }),
+                        (_ctx.sortIndex(col) !== -1 && _ctx.sortModelActive)
+                          ? (vue.openBlock(), vue.createElementBlock("span", _hoisted_3, [
+                              (_ctx.sortIndex(col) > 0)
+                                ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                    key: 0,
+                                    name: _ctx.isSortDesc(col) ? _ctx.mergedIcons.sortDesc : _ctx.mergedIcons.sortAsc,
+                                    size: "13px"
+                                  }, null, 8, ["name"]))
+                                : vue.createCommentVNode("", true),
+                              vue.createTextVNode(vue.toDisplayString(_ctx.sortIndex(col) + 1), 1)
+                            ]))
+                          : vue.createCommentVNode("", true),
                         (_ctx.header_filter && col.show_filter && !_ctx.isGrouped)
                           ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
-                              key: 0,
+                              key: 1,
                               flat: "",
                               round: "",
                               dense: "",
@@ -1862,8 +2582,8 @@
                                       class: "qgrid__menu",
                                       onClick: _cache[0] || (_cache[0] = vue.withModifiers(function () {}, ["stop"]))
                                     }, [
-                                      vue.createElementVNode("div", _hoisted_2, [
-                                        vue.createElementVNode("div", _hoisted_3, vue.toDisplayString(col.label), 1),
+                                      vue.createElementVNode("div", _hoisted_4, [
+                                        vue.createElementVNode("div", _hoisted_5, vue.toDisplayString(col.label), 1),
                                         vue.createVNode(_component_q_space),
                                         vue.withDirectives(vue.createVNode(_component_q_btn, {
                                           flat: "",
@@ -1876,7 +2596,7 @@
                                           [_directive_close_popup]
                                         ])
                                       ]),
-                                      vue.createElementVNode("div", _hoisted_4, [
+                                      vue.createElementVNode("div", _hoisted_6, [
                                         vue.createVNode(_component_q_input, {
                                           modelValue: _ctx.headerSearch[_ctx.filterKey(col)],
                                           "onUpdate:modelValue": function ($event) { return ((_ctx.headerSearch[_ctx.filterKey(col)]) = $event); },
@@ -1965,9 +2685,9 @@
                                     }),
                                             _: 2
                                           }, 1032, ["items"]))
-                                        : (vue.openBlock(), vue.createElementBlock("div", _hoisted_5, vue.toDisplayString(_ctx.mergedLabels.noValues), 1)),
+                                        : (vue.openBlock(), vue.createElementBlock("div", _hoisted_7, vue.toDisplayString(_ctx.mergedLabels.noValues), 1)),
                                       vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8, ["dark"]),
-                                      vue.createElementVNode("div", _hoisted_6, [
+                                      vue.createElementVNode("div", _hoisted_8, [
                                         vue.withDirectives(vue.createVNode(_component_q_btn, {
                                           flat: "",
                                           dense: "",
@@ -1987,14 +2707,26 @@
                               ]; }),
                               _: 2
                             }, 1032, ["class", "icon", "aria-label"]))
+                          : vue.createCommentVNode("", true),
+                        (_ctx.isResizable(col))
+                          ? (vue.openBlock(), vue.createElementBlock("span", {
+                              key: 2,
+                              class: "qgrid__resizer",
+                              role: "separator",
+                              "aria-orientation": "vertical",
+                              "aria-label": _ctx.mergedLabels.resize + ': ' + col.label,
+                              onPointerdown: vue.withModifiers(function ($event) { return (_ctx.startResize($event, col)); }, ["stop","prevent"]),
+                              onClick: _cache[2] || (_cache[2] = vue.withModifiers(function () {}, ["stop"])),
+                              onDblclick: vue.withModifiers(function ($event) { return (_ctx.autoSize(col)); }, ["stop"])
+                            }, null, 40, _hoisted_9))
                           : vue.createCommentVNode("", true)
                       ]; }),
                       _: 2
-                    }, 1032, ["props", "data-col", "class"]))
+                    }, 1032, ["props", "data-col", "class", "style", "aria-sort"]))
                   }), 128))
                 ]; }),
                 _: 2
-              }, 1032, ["props"]))
+              }, 1032, ["props", "onClickCapture"]))
             : (vue.openBlock(), vue.createBlock(_component_slot_proxy, {
                 key: "qgrid-header-slot",
                 render: _ctx.$slots.header,
@@ -2010,19 +2742,24 @@
                   (_ctx.selectionMode !== 'none')
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 0,
-                        "auto-width": ""
-                      }))
+                        "auto-width": "",
+                        class: vue.normalizeClass(_ctx.leadClass),
+                        style: vue.normalizeStyle(_ctx.leadStyle(0))
+                      }, null, 8, ["class", "style"]))
                     : vue.createCommentVNode("", true),
                   (_ctx.hasDetailSlot && !_ctx.isGrouped)
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 1,
-                        "auto-width": ""
-                      }))
+                        "auto-width": "",
+                        class: vue.normalizeClass(_ctx.leadClass),
+                        style: vue.normalizeStyle(_ctx.leadStyle(1))
+                      }, null, 8, ["class", "style"]))
                     : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
                     return (vue.openBlock(), vue.createBlock(_component_q_th, {
                       key: col.name,
-                      class: "qgrid__filter-cell"
+                      class: vue.normalizeClass(["qgrid__filter-cell", _ctx.cellClass(col)]),
+                      style: vue.normalizeStyle(_ctx.cellStyle(col))
                     }, {
                       default: vue.withCtx(function () { return [
                         (_ctx.filterTypeOf(col) === 'select')
@@ -2137,7 +2874,7 @@
                                             "onUpdate:modelValue": function (val) { return _ctx.setDateFilter(_ctx.filterKey(col), val); }
                                           }, {
                                             default: vue.withCtx(function () { return [
-                                              vue.createElementVNode("div", _hoisted_7, [
+                                              vue.createElementVNode("div", _hoisted_10, [
                                                 vue.withDirectives(vue.createVNode(_component_q_btn, {
                                                   label: _ctx.mergedLabels.close,
                                                   "no-caps": "",
@@ -2237,7 +2974,7 @@
                                 ]), 1040, ["modelValue", "onUpdate:modelValue", "debounce", "aria-label"]))
                       ]; }),
                       _: 2
-                    }, 1024))
+                    }, 1032, ["class", "style"]))
                   }), 128))
                 ]; }),
                 _: 2
@@ -2250,13 +2987,16 @@
                 key: props.key + ':row',
                 props: props,
                 class: vue.normalizeClass(["qgrid__row", _ctx.rowClass(props.row)]),
+                "data-qgrid-row": props.pageIndex,
                 onClick: function ($event) { return (_ctx.rowClick(props.row, $event, props.pageIndex)); }
               }, {
                 default: vue.withCtx(function () { return [
                   (_ctx.selectionMode !== 'none')
                     ? (vue.openBlock(), vue.createBlock(_component_q_td, {
                         key: 0,
-                        "auto-width": ""
+                        "auto-width": "",
+                        class: vue.normalizeClass(_ctx.leadClass),
+                        style: vue.normalizeStyle(_ctx.leadStyle(0))
                       }, {
                         default: vue.withCtx(function () { return [
                           vue.createVNode(_component_q_checkbox, {
@@ -2267,12 +3007,14 @@
                           }, null, 8, ["modelValue", "onUpdate:modelValue", "dense"])
                         ]; }),
                         _: 2
-                      }, 1024))
+                      }, 1032, ["class", "style"]))
                     : vue.createCommentVNode("", true),
                   (_ctx.hasDetailSlot && !_ctx.isGrouped)
                     ? (vue.openBlock(), vue.createBlock(_component_q_td, {
                         key: 1,
-                        "auto-width": ""
+                        "auto-width": "",
+                        class: vue.normalizeClass(_ctx.leadClass),
+                        style: vue.normalizeStyle(_ctx.leadStyle(1))
                       }, {
                         default: vue.withCtx(function () { return [
                           vue.createVNode(_component_q_btn, {
@@ -2287,12 +3029,15 @@
                           }, null, 8, ["icon", "aria-label", "aria-expanded", "onClick"])
                         ]; }),
                         _: 2
-                      }, 1024))
+                      }, 1032, ["class", "style"]))
                     : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, colIndex) {
                     return (vue.openBlock(), vue.createBlock(_component_q_td, {
                       key: col.name,
-                      props: props
+                      props: props,
+                      "data-col": col.name,
+                      class: vue.normalizeClass(_ctx.cellClass(col)),
+                      style: vue.normalizeStyle(_ctx.cellStyle(col))
                     }, {
                       default: vue.withCtx(function () { return [
                         (_ctx.isGrouped && colIndex === 0)
@@ -2307,7 +3052,7 @@
                                 "aria-label": props.expand ? _ctx.mergedLabels.collapse : _ctx.mergedLabels.expand,
                                 onClick: vue.withModifiers(function ($event) { return (props.expand = !props.expand); }, ["stop"])
                               }, null, 8, ["icon", "aria-label", "onClick"]),
-                              vue.createElementVNode("span", _hoisted_9, vue.toDisplayString(props.row.name === '' ? '—' : props.row.name), 1),
+                              vue.createElementVNode("span", _hoisted_12, vue.toDisplayString(props.row.name === '' ? '—' : props.row.name), 1),
                               vue.createVNode(_component_q_badge, {
                                 rounded: "",
                                 class: "qgrid__group-count q-ml-sm",
@@ -2330,7 +3075,7 @@
                               validate: function (val) { return _ctx.validateCell(col, val, props.row); },
                               buttons: col.edit_buttons === true,
                               onSave: function (val, initial) { return _ctx.onCellSave(props.row, col, val, initial); },
-                              onHide: _cache[6] || (_cache[6] = function ($event) { return (_ctx.editError = ''); })
+                              onHide: _cache[7] || (_cache[7] = function ($event) { return (_ctx.editError = ''); })
                             }, {
                               default: vue.withCtx(function (scope) { return [
                                 (col.edit_type === 'select')
@@ -2377,11 +3122,11 @@
                           : vue.createCommentVNode("", true)
                       ]; }),
                       _: 2
-                    }, 1032, ["props"]))
+                    }, 1032, ["props", "data-col", "class", "style"]))
                   }), 128))
                 ]; }),
                 _: 2
-              }, 1032, ["props", "class", "onClick"]))
+              }, 1032, ["props", "class", "data-qgrid-row", "onClick"]))
             : (vue.openBlock(), vue.createBlock(_component_slot_proxy, {
                 key: props.key + ':slot',
                 render: _ctx.$slots.body,
@@ -2477,12 +3222,12 @@
                       visible_columns: _ctx.effectiveVisibleColumns,
                       toggle_column: _ctx.toggleColumn
                     }, undefined, undefined, 0)
-                  : (vue.openBlock(), vue.createElementBlock("div", _hoisted_8, [
+                  : (vue.openBlock(), vue.createElementBlock("div", _hoisted_11, [
                       (_ctx.global_search)
                         ? (vue.openBlock(), vue.createBlock(_component_q_input, {
                             key: 0,
                             modelValue: _ctx.filter,
-                            "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) { return ((_ctx.filter) = $event); }),
+                            "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) { return ((_ctx.filter) = $event); }),
                             filled: "",
                             borderless: "",
                             dense: "",
@@ -2504,7 +3249,7 @@
                         ? (vue.openBlock(), vue.createBlock(_component_q_select, {
                             key: 1,
                             modelValue: _ctx.selected_group_by_filed,
-                            "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) { return ((_ctx.selected_group_by_filed) = $event); }),
+                            "onUpdate:modelValue": _cache[4] || (_cache[4] = function ($event) { return ((_ctx.selected_group_by_filed) = $event); }),
                             outlined: "",
                             dense: "",
                             "options-dense": "",
@@ -2535,7 +3280,7 @@
                             class: "qgrid__export-btn bg-grey-2 text-grey-9 q-mr-sm",
                             icon: _ctx.mergedIcons.excel,
                             "aria-label": _ctx.mergedLabels.exportExcel,
-                            onClick: _cache[4] || (_cache[4] = function ($event) { return (_ctx.exportTable('xlsx')); })
+                            onClick: _cache[5] || (_cache[5] = function ($event) { return (_ctx.exportTable('xlsx')); })
                           }, {
                             default: vue.withCtx(function () { return [
                               vue.createVNode(_component_q_tooltip, {
@@ -2559,7 +3304,7 @@
                             class: "qgrid__export-btn bg-primary text-white",
                             icon: _ctx.mergedIcons.csv,
                             "aria-label": _ctx.mergedLabels.exportCsv,
-                            onClick: _cache[5] || (_cache[5] = function ($event) { return (_ctx.exportTable('csv')); })
+                            onClick: _cache[6] || (_cache[6] = function ($event) { return (_ctx.exportTable('csv')); })
                           }, {
                             default: vue.withCtx(function () { return [
                               vue.createVNode(_component_q_tooltip, {
@@ -2727,45 +3472,143 @@
               key: "0"
             }
           : undefined,
-        (_ctx.hasAggregates && !_ctx.isGrouped && !_ctx.$slots['bottom-row'])
+        (_ctx.pinnedTop.length > 0 && !_ctx.isGrouped && !_ctx.$slots['top-row'])
+          ? {
+              name: "top-row",
+              fn: vue.withCtx(function (props) { return [
+                (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(_ctx.pinnedTop, function (row, i) {
+                  return (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 'pin-top-' + i,
+                    class: "qgrid__static-row qgrid__pinned-row qgrid__pinned-row--top ignore-elements",
+                    "data-qgrid-pinned": 'top:' + i
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      (_ctx.selectionMode !== 'none')
+                        ? (vue.openBlock(), vue.createBlock(_component_q_td, {
+                            key: 0,
+                            "auto-width": "",
+                            class: vue.normalizeClass(_ctx.leadClass),
+                            style: vue.normalizeStyle(_ctx.leadStyle(0))
+                          }, null, 8, ["class", "style"]))
+                        : vue.createCommentVNode("", true),
+                      (_ctx.hasDetailSlot)
+                        ? (vue.openBlock(), vue.createBlock(_component_q_td, {
+                            key: 1,
+                            "auto-width": "",
+                            class: vue.normalizeClass(_ctx.leadClass),
+                            style: vue.normalizeStyle(_ctx.leadStyle(1))
+                          }, null, 8, ["class", "style"]))
+                        : vue.createCommentVNode("", true),
+                      (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
+                        return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                          key: col.name,
+                          "data-col": col.name,
+                          class: vue.normalizeClass(['text-' + (col.align || 'right'), _ctx.cellClass(col)]),
+                          style: vue.normalizeStyle(_ctx.cellStyle(col))
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            vue.createTextVNode(vue.toDisplayString(_ctx.cellText(_ctx.getCellValue(row, col))), 1)
+                          ]; }),
+                          _: 2
+                        }, 1032, ["data-col", "class", "style"]))
+                      }), 128))
+                    ]; }),
+                    _: 2
+                  }, 1032, ["data-qgrid-pinned"]))
+                }), 128))
+              ]; }),
+              key: "1"
+            }
+          : undefined,
+        ((_ctx.hasAggregates || _ctx.pinnedBottom.length > 0) && !_ctx.isGrouped && !_ctx.$slots['bottom-row'])
           ? {
               name: "bottom-row",
               fn: vue.withCtx(function (props) { return [
-                vue.createVNode(_component_q_tr, { class: "qgrid__static-row qgrid__aggregate-row ignore-elements" }, {
-                  default: vue.withCtx(function () { return [
-                    (_ctx.selectionMode !== 'none')
-                      ? (vue.openBlock(), vue.createBlock(_component_q_td, {
-                          key: 0,
-                          "auto-width": ""
-                        }))
-                      : vue.createCommentVNode("", true),
-                    (_ctx.hasDetailSlot && !_ctx.isGrouped)
-                      ? (vue.openBlock(), vue.createBlock(_component_q_td, {
-                          key: 1,
-                          "auto-width": ""
-                        }))
-                      : vue.createCommentVNode("", true),
-                    (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
-                      return (vue.openBlock(), vue.createBlock(_component_q_td, {
-                        key: col.name,
-                        class: vue.normalizeClass('text-' + (col.align || 'right'))
-                      }, {
-                        default: vue.withCtx(function () { return [
-                          (col.aggregate !== void 0)
-                            ? (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: 0 }, [
-                                vue.createElementVNode("span", _hoisted_10, vue.toDisplayString(_ctx.aggregateLabel(col)), 1),
-                                vue.createElementVNode("span", _hoisted_11, vue.toDisplayString(_ctx.aggregateText(col)), 1)
-                              ], 64))
-                            : vue.createCommentVNode("", true)
-                        ]; }),
-                        _: 2
-                      }, 1032, ["class"]))
-                    }), 128))
-                  ]; }),
-                  _: 2
-                }, 1024)
+                (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(_ctx.pinnedBottom, function (row, i) {
+                  return (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                    key: 'pin-bottom-' + i,
+                    class: "qgrid__static-row qgrid__pinned-row qgrid__pinned-row--bottom ignore-elements",
+                    "data-qgrid-pinned": 'bottom:' + i
+                  }, {
+                    default: vue.withCtx(function () { return [
+                      (_ctx.selectionMode !== 'none')
+                        ? (vue.openBlock(), vue.createBlock(_component_q_td, {
+                            key: 0,
+                            "auto-width": "",
+                            class: vue.normalizeClass(_ctx.leadClass),
+                            style: vue.normalizeStyle(_ctx.leadStyle(0))
+                          }, null, 8, ["class", "style"]))
+                        : vue.createCommentVNode("", true),
+                      (_ctx.hasDetailSlot)
+                        ? (vue.openBlock(), vue.createBlock(_component_q_td, {
+                            key: 1,
+                            "auto-width": "",
+                            class: vue.normalizeClass(_ctx.leadClass),
+                            style: vue.normalizeStyle(_ctx.leadStyle(1))
+                          }, null, 8, ["class", "style"]))
+                        : vue.createCommentVNode("", true),
+                      (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
+                        return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                          key: col.name,
+                          "data-col": col.name,
+                          class: vue.normalizeClass(['text-' + (col.align || 'right'), _ctx.cellClass(col)]),
+                          style: vue.normalizeStyle(_ctx.cellStyle(col))
+                        }, {
+                          default: vue.withCtx(function () { return [
+                            vue.createTextVNode(vue.toDisplayString(_ctx.cellText(_ctx.getCellValue(row, col))), 1)
+                          ]; }),
+                          _: 2
+                        }, 1032, ["data-col", "class", "style"]))
+                      }), 128))
+                    ]; }),
+                    _: 2
+                  }, 1032, ["data-qgrid-pinned"]))
+                }), 128)),
+                (_ctx.hasAggregates)
+                  ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
+                      key: "qgrid-aggregates",
+                      class: "qgrid__static-row qgrid__aggregate-row ignore-elements"
+                    }, {
+                      default: vue.withCtx(function () { return [
+                        (_ctx.selectionMode !== 'none')
+                          ? (vue.openBlock(), vue.createBlock(_component_q_td, {
+                              key: 0,
+                              "auto-width": "",
+                              class: vue.normalizeClass(_ctx.leadClass),
+                              style: vue.normalizeStyle(_ctx.leadStyle(0))
+                            }, null, 8, ["class", "style"]))
+                          : vue.createCommentVNode("", true),
+                        (_ctx.hasDetailSlot && !_ctx.isGrouped)
+                          ? (vue.openBlock(), vue.createBlock(_component_q_td, {
+                              key: 1,
+                              "auto-width": "",
+                              class: vue.normalizeClass(_ctx.leadClass),
+                              style: vue.normalizeStyle(_ctx.leadStyle(1))
+                            }, null, 8, ["class", "style"]))
+                          : vue.createCommentVNode("", true),
+                        (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
+                          return (vue.openBlock(), vue.createBlock(_component_q_td, {
+                            key: col.name,
+                            class: vue.normalizeClass(['text-' + (col.align || 'right'), _ctx.cellClass(col)]),
+                            style: vue.normalizeStyle(_ctx.cellStyle(col))
+                          }, {
+                            default: vue.withCtx(function () { return [
+                              (col.aggregate !== void 0)
+                                ? (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: 0 }, [
+                                    vue.createElementVNode("span", _hoisted_13, vue.toDisplayString(_ctx.aggregateLabel(col)), 1),
+                                    vue.createElementVNode("span", _hoisted_14, vue.toDisplayString(_ctx.aggregateText(col)), 1)
+                                  ], 64))
+                                : vue.createCommentVNode("", true)
+                            ]; }),
+                            _: 2
+                          }, 1032, ["class", "style"]))
+                        }), 128))
+                      ]; }),
+                      _: 2
+                    }, 1024))
+                  : vue.createCommentVNode("", true)
               ]; }),
-              key: "1"
+              key: "2"
             }
           : undefined,
         (_ctx.$slots.loading)
@@ -2774,7 +3617,7 @@
               fn: vue.withCtx(function () { return [
                 vue.renderSlot(_ctx.$slots, "loading")
               ]; }),
-              key: "2"
+              key: "3"
             }
           : undefined,
         vue.renderList(_ctx.forwardedSlots, function (name) {
@@ -2785,14 +3628,112 @@
             ]; })
           }
         })
-      ]), 1040, ["id", "loading", "rows", "columns", "row-key", "class", "visible-columns", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter", "onRequest"])
-    ], 2))
+      ]), 1040, ["id", "loading", "rows", "columns", "row-key", "class", "visible-columns", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter", "onRequest"]),
+      (_ctx.status_bar)
+        ? (vue.openBlock(), vue.createElementBlock("div", {
+            key: 0,
+            class: vue.normalizeClass(["qgrid__status", { 'qgrid__status--dark': _ctx.isDark }]),
+            role: "status",
+            "aria-live": "polite"
+          }, [
+            vue.createElementVNode("span", null, [
+              vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.statusRows) + " ", 1),
+              vue.createElementVNode("b", null, vue.toDisplayString(_ctx.formatCount(_ctx.totalCount)), 1)
+            ]),
+            (_ctx.shownCount !== _ctx.totalCount)
+              ? (vue.openBlock(), vue.createElementBlock("span", _hoisted_15, [
+                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.statusFiltered) + " ", 1),
+                  vue.createElementVNode("b", null, vue.toDisplayString(_ctx.formatCount(_ctx.shownCount)), 1)
+                ]))
+              : vue.createCommentVNode("", true),
+            (_ctx.selectionMode !== 'none')
+              ? (vue.openBlock(), vue.createElementBlock("span", _hoisted_16, [
+                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.statusSelected) + " ", 1),
+                  vue.createElementVNode("b", null, vue.toDisplayString(_ctx.formatCount(_ctx.selected_prop.length)), 1)
+                ]))
+              : vue.createCommentVNode("", true),
+            (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(_ctx.selectionAggregates, function (agg) {
+              return (vue.openBlock(), vue.createElementBlock("span", {
+                key: agg.name,
+                class: "qgrid__status-agg"
+              }, [
+                vue.createTextVNode(vue.toDisplayString(agg.label) + " ", 1),
+                vue.createElementVNode("span", _hoisted_17, vue.toDisplayString(agg.type), 1),
+                vue.createElementVNode("b", null, vue.toDisplayString(agg.text), 1)
+              ]))
+            }), 128))
+          ], 2))
+        : vue.createCommentVNode("", true),
+      (_ctx.context_menu)
+        ? (vue.openBlock(), vue.createBlock(_component_q_menu, {
+            key: 1,
+            "context-menu": "",
+            "touch-position": "",
+            dark: _ctx.dark,
+            onHide: _cache[9] || (_cache[9] = function ($event) { return (_ctx.ctx = null); })
+          }, {
+            default: vue.withCtx(function () { return [
+              vue.createVNode(_component_q_list, {
+                dense: "",
+                class: "qgrid__menu qgrid__context-menu"
+              }, {
+                default: vue.withCtx(function () { return [
+                  (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(_ctx.contextItems, function (item, i) {
+                    return (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: i }, [
+                      (item.separator)
+                        ? (vue.openBlock(), vue.createBlock(_component_q_separator, {
+                            key: 0,
+                            dark: _ctx.dark
+                          }, null, 8, ["dark"]))
+                        : vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_item, {
+                            key: 1,
+                            clickable: "",
+                            disable: item.disable === true,
+                            onClick: function ($event) { return (_ctx.runContextItem(item)); }
+                          }, {
+                            default: vue.withCtx(function () { return [
+                              vue.createVNode(_component_q_item_section, {
+                                side: "",
+                                class: "qgrid__context-icon"
+                              }, {
+                                default: vue.withCtx(function () { return [
+                                  (item.icon)
+                                    ? (vue.openBlock(), vue.createBlock(_component_q_icon, {
+                                        key: 0,
+                                        name: item.icon,
+                                        size: "18px"
+                                      }, null, 8, ["name"]))
+                                    : vue.createCommentVNode("", true)
+                                ]; }),
+                                _: 2
+                              }, 1024),
+                              vue.createVNode(_component_q_item_section, null, {
+                                default: vue.withCtx(function () { return [
+                                  vue.createTextVNode(vue.toDisplayString(item.label), 1)
+                                ]; }),
+                                _: 2
+                              }, 1024)
+                            ]; }),
+                            _: 2
+                          }, 1032, ["disable", "onClick"])), [
+                            [_directive_close_popup]
+                          ])
+                    ], 64))
+                  }), 128))
+                ]; }),
+                _: 1
+              })
+            ]; }),
+            _: 1
+          }, 8, ["dark"]))
+        : vue.createCommentVNode("", true)
+    ], 42, _hoisted_1))
   }
 
   script.render = render;
 
   var name = "quasar-ui-qgrid";
-  var version$2 = "1.1.0";
+  var version$2 = "1.2.0";
   var author = "pratikpatelpp802@gmail.com";
   var description = "QGrid - a feature-rich data grid for Quasar (Vue 3): column & header filters, grouping, aggregation, drag & drop, inline editing, CSV/Excel export, virtual scroll and more.";
   var license = "MIT";

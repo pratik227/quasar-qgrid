@@ -9,11 +9,13 @@
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/whats-new</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/columns</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/filtering</loc></url>
+  <url><loc>https://next-quasar-qgrid.netlify.app/docs/sorting</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/grouping</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/export</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/editing</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/drag-and-drop</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/large-data</loc></url>
+  <url><loc>https://next-quasar-qgrid.netlify.app/docs/interaction</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/customization</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/sponsor</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/basic</loc></url>
@@ -32,6 +34,10 @@
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/draggable-rows</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/draggable-columns</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/draggable-columns-slot</loc></url>
+  <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/column-pinning</loc></url>
+  <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/multi-sort</loc></url>
+  <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/context-menu</loc></url>
+  <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/row-pinning</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/column-chooser</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/virtual-scroll</loc></url>
   <url><loc>https://next-quasar-qgrid.netlify.app/docs/examples/custom-column</loc></url>
