@@ -1801,19 +1801,19 @@
                                 "indeterminate-value": "some",
                                 dense: _ctx.dense,
                                 "aria-label": _ctx.mergedLabels.selectAll
-                              }, null, 8 /* PROPS */, ["modelValue", "onUpdate:modelValue", "dense", "aria-label"]))
-                            : vue.createCommentVNode("v-if", true)
+                              }, null, 8, ["modelValue", "onUpdate:modelValue", "dense", "aria-label"]))
+                            : vue.createCommentVNode("", true)
                         ]; }),
-                        _: 2 /* DYNAMIC */
-                      }, 1024 /* DYNAMIC_SLOTS */))
-                    : vue.createCommentVNode("v-if", true),
+                        _: 2
+                      }, 1024))
+                    : vue.createCommentVNode("", true),
                   (_ctx.hasDetailSlot && !_ctx.isGrouped)
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 1,
                         "auto-width": "",
                         class: "ignore-elements"
                       }))
-                    : vue.createCommentVNode("v-if", true),
+                    : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, colIndex) {
                     return (vue.openBlock(), vue.createBlock(_component_q_th, {
                       key: col.name,
@@ -1827,7 +1827,7 @@
                           cols: props.cols,
                           sort: props.sort
                         }, function () { return [
-                          vue.createElementVNode("span", _hoisted_1, vue.toDisplayString(col.label), 1 /* TEXT */)
+                          vue.createElementVNode("span", _hoisted_1, vue.toDisplayString(col.label), 1)
                         ]; }),
                         (_ctx.header_filter && col.show_filter && !_ctx.isGrouped)
                           ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
@@ -1850,8 +1850,8 @@
                                       color: "negative",
                                       class: "qgrid__badge",
                                       label: _ctx.selectionCount(_ctx.filterKey(col))
-                                    }, null, 8 /* PROPS */, ["label"]))
-                                  : vue.createCommentVNode("v-if", true),
+                                    }, null, 8, ["label"]))
+                                  : vue.createCommentVNode("", true),
                                 vue.createVNode(_component_q_menu, {
                                   anchor: "bottom right",
                                   self: "top right",
@@ -1863,7 +1863,7 @@
                                       onClick: _cache[0] || (_cache[0] = vue.withModifiers(function () {}, ["stop"]))
                                     }, [
                                       vue.createElementVNode("div", _hoisted_2, [
-                                        vue.createElementVNode("div", _hoisted_3, vue.toDisplayString(col.label), 1 /* TEXT */),
+                                        vue.createElementVNode("div", _hoisted_3, vue.toDisplayString(col.label), 1),
                                         vue.createVNode(_component_q_space),
                                         vue.withDirectives(vue.createVNode(_component_q_btn, {
                                           flat: "",
@@ -1872,7 +1872,7 @@
                                           size: "sm",
                                           icon: _ctx.mergedIcons.close,
                                           "aria-label": _ctx.mergedLabels.close
-                                        }, null, 8 /* PROPS */, ["icon", "aria-label"]), [
+                                        }, null, 8, ["icon", "aria-label"]), [
                                           [_directive_close_popup]
                                         ])
                                       ]),
@@ -1891,10 +1891,10 @@
                                             vue.createVNode(_component_q_icon, {
                                               name: _ctx.mergedIcons.search,
                                               size: "18px"
-                                            }, null, 8 /* PROPS */, ["name"])
+                                            }, null, 8, ["name"])
                                           ]; }),
-                                          _: 1 /* STABLE */
-                                        }, 8 /* PROPS */, ["modelValue", "onUpdate:modelValue", "placeholder", "dark"])
+                                          _: 1
+                                        }, 8, ["modelValue", "onUpdate:modelValue", "placeholder", "dark"])
                                       ]),
                                       vue.createVNode(_component_q_item, {
                                         tag: "label",
@@ -1909,20 +1909,20 @@
                                                 dense: "",
                                                 "model-value": _ctx.selectAllState(_ctx.filterKey(col), _ctx.headerOptions(col)),
                                                 "onUpdate:modelValue": function ($event) { return (_ctx.toggleAll(_ctx.filterKey(col), _ctx.headerOptions(col))); }
-                                              }, null, 8 /* PROPS */, ["model-value", "onUpdate:modelValue"])
+                                              }, null, 8, ["model-value", "onUpdate:modelValue"])
                                             ]; }),
-                                            _: 2 /* DYNAMIC */
-                                          }, 1024 /* DYNAMIC_SLOTS */),
+                                            _: 2
+                                          }, 1024),
                                           vue.createVNode(_component_q_item_section, { class: "text-weight-medium" }, {
                                             default: vue.withCtx(function () { return [
-                                              vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.selectAll), 1 /* TEXT */)
+                                              vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.selectAll), 1)
                                             ]; }),
-                                            _: 1 /* STABLE */
+                                            _: 1
                                           })
                                         ]; }),
-                                        _: 2 /* DYNAMIC */
-                                      }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["dark"]),
-                                      vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8 /* PROPS */, ["dark"]),
+                                        _: 2
+                                      }, 1032, ["dark"]),
+                                      vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8, ["dark"]),
                                       (_ctx.headerOptions(col).length > 0)
                                         ? (vue.openBlock(), vue.createBlock(_component_q_virtual_scroll, {
                                             key: 0,
@@ -1948,25 +1948,25 @@
                                                         dense: "",
                                                         "model-value": _ctx.isOptionSelected(_ctx.filterKey(col), item.value),
                                                         "onUpdate:modelValue": function ($event) { return (_ctx.toggleOption(_ctx.filterKey(col), item.value)); }
-                                                      }, null, 8 /* PROPS */, ["model-value", "onUpdate:modelValue"])
+                                                      }, null, 8, ["model-value", "onUpdate:modelValue"])
                                                     ]; }),
-                                                    _: 2 /* DYNAMIC */
-                                                  }, 1024 /* DYNAMIC_SLOTS */),
+                                                    _: 2
+                                                  }, 1024),
                                                   vue.createVNode(_component_q_item_section, { class: "ellipsis" }, {
                                                     default: vue.withCtx(function () { return [
-                                                      vue.createTextVNode(vue.toDisplayString(item.label), 1 /* TEXT */)
+                                                      vue.createTextVNode(vue.toDisplayString(item.label), 1)
                                                     ]; }),
-                                                    _: 2 /* DYNAMIC */
-                                                  }, 1024 /* DYNAMIC_SLOTS */)
+                                                    _: 2
+                                                  }, 1024)
                                                 ]; }),
-                                                _: 2 /* DYNAMIC */
-                                              }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["dark"]))
+                                                _: 2
+                                              }, 1032, ["dark"]))
                                             ];
                                     }),
-                                            _: 2 /* DYNAMIC */
-                                          }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["items"]))
-                                        : (vue.openBlock(), vue.createElementBlock("div", _hoisted_5, vue.toDisplayString(_ctx.mergedLabels.noValues), 1 /* TEXT */)),
-                                      vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8 /* PROPS */, ["dark"]),
+                                            _: 2
+                                          }, 1032, ["items"]))
+                                        : (vue.openBlock(), vue.createElementBlock("div", _hoisted_5, vue.toDisplayString(_ctx.mergedLabels.noValues), 1)),
+                                      vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8, ["dark"]),
                                       vue.createElementVNode("div", _hoisted_6, [
                                         vue.withDirectives(vue.createVNode(_component_q_btn, {
                                           flat: "",
@@ -1976,31 +1976,30 @@
                                           color: "primary",
                                           label: _ctx.mergedLabels.clear,
                                           onClick: function ($event) { return (_ctx.clearSelection(_ctx.filterKey(col))); }
-                                        }, null, 8 /* PROPS */, ["label", "onClick"]), [
+                                        }, null, 8, ["label", "onClick"]), [
                                           [_directive_close_popup]
                                         ])
                                       ])
                                     ])
                                   ]; }),
-                                  _: 2 /* DYNAMIC */
-                                }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["onHide"])
+                                  _: 2
+                                }, 1032, ["onHide"])
                               ]; }),
-                              _: 2 /* DYNAMIC */
-                            }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["class", "icon", "aria-label"]))
-                          : vue.createCommentVNode("v-if", true)
+                              _: 2
+                            }, 1032, ["class", "icon", "aria-label"]))
+                          : vue.createCommentVNode("", true)
                       ]; }),
-                      _: 2 /* DYNAMIC */
-                    }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props", "data-col", "class"]))
-                  }), 128 /* KEYED_FRAGMENT */))
+                      _: 2
+                    }, 1032, ["props", "data-col", "class"]))
+                  }), 128))
                 ]; }),
-                _: 2 /* DYNAMIC */
-              }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props"]))
+                _: 2
+              }, 1032, ["props"]))
             : (vue.openBlock(), vue.createBlock(_component_slot_proxy, {
                 key: "qgrid-header-slot",
                 render: _ctx.$slots.header,
                 scope: props
-              }, null, 8 /* PROPS */, ["render", "scope"])),
-          vue.createCommentVNode(" column filters row "),
+              }, null, 8, ["render", "scope"])),
           (_ctx.columns_filter && _ctx.showFilterRow)
             ? (vue.openBlock(), vue.createBlock(_component_q_tr, {
                 key: "qgrid-filters",
@@ -2013,13 +2012,13 @@
                         key: 0,
                         "auto-width": ""
                       }))
-                    : vue.createCommentVNode("v-if", true),
+                    : vue.createCommentVNode("", true),
                   (_ctx.hasDetailSlot && !_ctx.isGrouped)
                     ? (vue.openBlock(), vue.createBlock(_component_q_th, {
                         key: 1,
                         "auto-width": ""
                       }))
-                    : vue.createCommentVNode("v-if", true),
+                    : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
                     return (vue.openBlock(), vue.createBlock(_component_q_th, {
                       key: col.name,
@@ -2047,8 +2046,8 @@
                                       name: _ctx.mergedIcons.cancel,
                                       class: "cursor-pointer",
                                       onClick: vue.withModifiers(function ($event) { return (_ctx.clearSelection(_ctx.filterKey(col))); }, ["stop"])
-                                    }, null, 8 /* PROPS */, ["name", "onClick"]))
-                                  : vue.createCommentVNode("v-if", true)
+                                    }, null, 8, ["name", "onClick"]))
+                                  : vue.createCommentVNode("", true)
                               ]; }),
                               "before-options": vue.withCtx(function () { return [
                                 vue.createVNode(_component_q_item, {
@@ -2063,19 +2062,19 @@
                                           dense: "",
                                           "model-value": _ctx.selectAllState(_ctx.filterKey(col), _ctx.getColumnOptions(_ctx.filterKey(col))),
                                           "onUpdate:modelValue": function ($event) { return (_ctx.toggleAll(_ctx.filterKey(col), _ctx.getColumnOptions(_ctx.filterKey(col)))); }
-                                        }, null, 8 /* PROPS */, ["model-value", "onUpdate:modelValue"])
+                                        }, null, 8, ["model-value", "onUpdate:modelValue"])
                                       ]; }),
-                                      _: 2 /* DYNAMIC */
-                                    }, 1024 /* DYNAMIC_SLOTS */),
+                                      _: 2
+                                    }, 1024),
                                     vue.createVNode(_component_q_item_section, null, {
                                       default: vue.withCtx(function () { return [
-                                        vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.selectAll), 1 /* TEXT */)
+                                        vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.selectAll), 1)
                                       ]; }),
-                                      _: 1 /* STABLE */
+                                      _: 1
                                     })
                                   ]; }),
-                                  _: 2 /* DYNAMIC */
-                                }, 1024 /* DYNAMIC_SLOTS */)
+                                  _: 2
+                                }, 1024)
                               ]; }),
                               option: vue.withCtx(function (scope) { return [
                                 vue.createVNode(_component_q_item, vue.mergeProps({ ref_for: true }, scope.itemProps, { dense: "" }), {
@@ -2086,22 +2085,22 @@
                                           dense: "",
                                           "model-value": scope.selected,
                                           "onUpdate:modelValue": function ($event) { return (scope.toggleOption(scope.opt)); }
-                                        }, null, 8 /* PROPS */, ["model-value", "onUpdate:modelValue"])
+                                        }, null, 8, ["model-value", "onUpdate:modelValue"])
                                       ]; }),
-                                      _: 2 /* DYNAMIC */
-                                    }, 1024 /* DYNAMIC_SLOTS */),
+                                      _: 2
+                                    }, 1024),
                                     vue.createVNode(_component_q_item_section, null, {
                                       default: vue.withCtx(function () { return [
-                                        vue.createTextVNode(vue.toDisplayString(scope.opt.label), 1 /* TEXT */)
+                                        vue.createTextVNode(vue.toDisplayString(scope.opt.label), 1)
                                       ]; }),
-                                      _: 2 /* DYNAMIC */
-                                    }, 1024 /* DYNAMIC_SLOTS */)
+                                      _: 2
+                                    }, 1024)
                                   ]; }),
-                                  _: 2 /* DYNAMIC */
-                                }, 1040 /* FULL_PROPS, DYNAMIC_SLOTS */)
+                                  _: 2
+                                }, 1040)
                               ]; }),
-                              _: 2 /* DYNAMIC */
-                            }, 1040 /* FULL_PROPS, DYNAMIC_SLOTS */, ["modelValue", "onUpdate:modelValue", "options", "aria-label"]))
+                              _: 2
+                            }, 1040, ["modelValue", "onUpdate:modelValue", "options", "aria-label"]))
                           : (_ctx.filterTypeOf(col) === 'date')
                             ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                 key: 1,
@@ -2118,8 +2117,8 @@
                                         name: _ctx.mergedIcons.cancel,
                                         class: "cursor-pointer",
                                         onClick: vue.withModifiers(function ($event) { return (_ctx.resetFilter(col)); }, ["stop"])
-                                      }, null, 8 /* PROPS */, ["name", "onClick"]))
-                                    : vue.createCommentVNode("v-if", true),
+                                      }, null, 8, ["name", "onClick"]))
+                                    : vue.createCommentVNode("", true),
                                   vue.createVNode(_component_q_icon, {
                                     name: _ctx.mergedIcons.date,
                                     class: "cursor-pointer"
@@ -2144,22 +2143,22 @@
                                                   "no-caps": "",
                                                   color: "primary",
                                                   flat: ""
-                                                }, null, 8 /* PROPS */, ["label"]), [
+                                                }, null, 8, ["label"]), [
                                                   [_directive_close_popup]
                                                 ])
                                               ])
                                             ]; }),
-                                            _: 1 /* STABLE */
-                                          }, 8 /* PROPS */, ["model-value", "dark", "onUpdate:modelValue"])
+                                            _: 1
+                                          }, 8, ["model-value", "dark", "onUpdate:modelValue"])
                                         ]; }),
-                                        _: 2 /* DYNAMIC */
-                                      }, 1024 /* DYNAMIC_SLOTS */)
+                                        _: 2
+                                      }, 1024)
                                     ]; }),
-                                    _: 2 /* DYNAMIC */
-                                  }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["name"])
+                                    _: 2
+                                  }, 1032, ["name"])
                                 ]; }),
-                                _: 2 /* DYNAMIC */
-                              }, 1040 /* FULL_PROPS, DYNAMIC_SLOTS */, ["model-value", "aria-label"]))
+                                _: 2
+                              }, 1040, ["model-value", "aria-label"]))
                             : (_ctx.filterTypeOf(col) === 'number_range')
                               ? (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 2,
@@ -2176,8 +2175,8 @@
                                           name: _ctx.mergedIcons.cancel,
                                           class: "cursor-pointer",
                                           onClick: vue.withModifiers(function ($event) { return (_ctx.resetFilter(col)); }, ["stop"])
-                                        }, null, 8 /* PROPS */, ["name", "onClick"]))
-                                      : vue.createCommentVNode("v-if", true),
+                                        }, null, 8, ["name", "onClick"]))
+                                      : vue.createCommentVNode("", true),
                                     vue.createVNode(_component_q_icon, {
                                       name: _ctx.mergedIcons.numberRange,
                                       class: "cursor-pointer"
@@ -2196,23 +2195,23 @@
                                               modelModifiers: { number: true },
                                               type: "number",
                                               label: _ctx.mergedLabels.from
-                                            }, { ref_for: true }, _ctx.filterInputPropsComputed), null, 16 /* FULL_PROPS */, ["modelValue", "onUpdate:modelValue", "label"]),
+                                            }, { ref_for: true }, _ctx.filterInputPropsComputed), null, 16, ["modelValue", "onUpdate:modelValue", "label"]),
                                             vue.createVNode(_component_q_input, vue.mergeProps({
                                               modelValue: _ctx.filter_data[_ctx.filterKey(col)].to,
                                               "onUpdate:modelValue": function ($event) { return ((_ctx.filter_data[_ctx.filterKey(col)].to) = $event); },
                                               modelModifiers: { number: true },
                                               type: "number",
                                               label: _ctx.mergedLabels.to
-                                            }, { ref_for: true }, _ctx.filterInputPropsComputed), null, 16 /* FULL_PROPS */, ["modelValue", "onUpdate:modelValue", "label"])
+                                            }, { ref_for: true }, _ctx.filterInputPropsComputed), null, 16, ["modelValue", "onUpdate:modelValue", "label"])
                                           ]; }),
-                                          _: 2 /* DYNAMIC */
-                                        }, 1024 /* DYNAMIC_SLOTS */)
+                                          _: 2
+                                        }, 1024)
                                       ]; }),
-                                      _: 2 /* DYNAMIC */
-                                    }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["name"])
+                                      _: 2
+                                    }, 1032, ["name"])
                                   ]; }),
-                                  _: 2 /* DYNAMIC */
-                                }, 1040 /* FULL_PROPS, DYNAMIC_SLOTS */, ["model-value", "aria-label"]))
+                                  _: 2
+                                }, 1040, ["model-value", "aria-label"]))
                               : (vue.openBlock(), vue.createBlock(_component_q_input, vue.mergeProps({
                                   key: 3,
                                   modelValue: _ctx.filter_data[_ctx.filterKey(col)],
@@ -2221,7 +2220,7 @@
                                 }, { ref_for: true }, _ctx.filterInputPropsComputed, {
                                   debounce: _ctx.filter_debounce,
                                   "aria-label": col.label
-                                }), vue.createSlots({ _: 2 /* DYNAMIC */ }, [
+                                }), vue.createSlots({ _: 2 }, [
                                   (_ctx.filter_data[_ctx.filterKey(col)])
                                     ? {
                                         name: "append",
@@ -2230,20 +2229,20 @@
                                             name: _ctx.mergedIcons.cancel,
                                             class: "cursor-pointer",
                                             onClick: vue.withModifiers(function ($event) { return (_ctx.filter_data[_ctx.filterKey(col)] = ''); }, ["stop"])
-                                          }, null, 8 /* PROPS */, ["name", "onClick"])
+                                          }, null, 8, ["name", "onClick"])
                                         ]; }),
                                         key: "0"
                                       }
                                     : undefined
-                                ]), 1040 /* FULL_PROPS, DYNAMIC_SLOTS */, ["modelValue", "onUpdate:modelValue", "debounce", "aria-label"]))
+                                ]), 1040, ["modelValue", "onUpdate:modelValue", "debounce", "aria-label"]))
                       ]; }),
-                      _: 2 /* DYNAMIC */
-                    }, 1024 /* DYNAMIC_SLOTS */))
-                  }), 128 /* KEYED_FRAGMENT */))
+                      _: 2
+                    }, 1024))
+                  }), 128))
                 ]; }),
-                _: 2 /* DYNAMIC */
-              }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props"]))
-            : vue.createCommentVNode("v-if", true)
+                _: 2
+              }, 1032, ["props"]))
+            : vue.createCommentVNode("", true)
         ]; }),
         body: vue.withCtx(function (props) { return [
           (!_ctx.hasDefaultSlot)
@@ -2265,11 +2264,11 @@
                             "onUpdate:modelValue": function ($event) { return ((props.selected) = $event); },
                             color: "primary",
                             dense: _ctx.dense
-                          }, null, 8 /* PROPS */, ["modelValue", "onUpdate:modelValue", "dense"])
+                          }, null, 8, ["modelValue", "onUpdate:modelValue", "dense"])
                         ]; }),
-                        _: 2 /* DYNAMIC */
-                      }, 1024 /* DYNAMIC_SLOTS */))
-                    : vue.createCommentVNode("v-if", true),
+                        _: 2
+                      }, 1024))
+                    : vue.createCommentVNode("", true),
                   (_ctx.hasDetailSlot && !_ctx.isGrouped)
                     ? (vue.openBlock(), vue.createBlock(_component_q_td, {
                         key: 1,
@@ -2285,11 +2284,11 @@
                             "aria-label": props.expand ? _ctx.mergedLabels.collapse : _ctx.mergedLabels.expand,
                             "aria-expanded": props.expand ? 'true' : 'false',
                             onClick: vue.withModifiers(function ($event) { return (props.expand = !props.expand); }, ["stop"])
-                          }, null, 8 /* PROPS */, ["icon", "aria-label", "aria-expanded", "onClick"])
+                          }, null, 8, ["icon", "aria-label", "aria-expanded", "onClick"])
                         ]; }),
-                        _: 2 /* DYNAMIC */
-                      }, 1024 /* DYNAMIC_SLOTS */))
-                    : vue.createCommentVNode("v-if", true),
+                        _: 2
+                      }, 1024))
+                    : vue.createCommentVNode("", true),
                   (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col, colIndex) {
                     return (vue.openBlock(), vue.createBlock(_component_q_td, {
                       key: col.name,
@@ -2307,14 +2306,14 @@
                                 icon: props.expand ? _ctx.mergedIcons.collapse : _ctx.mergedIcons.expand,
                                 "aria-label": props.expand ? _ctx.mergedLabels.collapse : _ctx.mergedLabels.expand,
                                 onClick: vue.withModifiers(function ($event) { return (props.expand = !props.expand); }, ["stop"])
-                              }, null, 8 /* PROPS */, ["icon", "aria-label", "onClick"]),
-                              vue.createElementVNode("span", _hoisted_9, vue.toDisplayString(props.row.name === '' ? '—' : props.row.name), 1 /* TEXT */),
+                              }, null, 8, ["icon", "aria-label", "onClick"]),
+                              vue.createElementVNode("span", _hoisted_9, vue.toDisplayString(props.row.name === '' ? '—' : props.row.name), 1),
                               vue.createVNode(_component_q_badge, {
                                 rounded: "",
                                 class: "qgrid__group-count q-ml-sm",
                                 label: props.row.__qgrid_count
-                              }, null, 8 /* PROPS */, ["label"])
-                            ], 64 /* STABLE_FRAGMENT */))
+                              }, null, 8, ["label"])
+                            ], 64))
                           : vue.renderSlot(_ctx.$slots, 'body-cell-' + col.name, {
                               row: props.row,
                               col: col,
@@ -2322,7 +2321,7 @@
                               keyValue: props.key,
                               pageIndex: props.pageIndex
                             }, function () { return [
-                              vue.createTextVNode(vue.toDisplayString(_ctx.cellText(col.value)), 1 /* TEXT */)
+                              vue.createTextVNode(vue.toDisplayString(_ctx.cellText(col.value)), 1)
                             ]; }, undefined, 1),
                         (col.editable && !_ctx.isGrouped)
                           ? (vue.openBlock(), vue.createBlock(_component_q_popup_edit, {
@@ -2347,7 +2346,7 @@
                                       "map-options": "",
                                       error: _ctx.editError !== '',
                                       "error-message": _ctx.editError
-                                    }, null, 8 /* PROPS */, ["modelValue", "onUpdate:modelValue", "options", "error", "error-message"]))
+                                    }, null, 8, ["modelValue", "onUpdate:modelValue", "options", "error", "error-message"]))
                                   : (col.edit_type === 'number')
                                     ? (vue.openBlock(), vue.createBlock(_component_q_input, {
                                         key: 1,
@@ -2360,7 +2359,7 @@
                                         error: _ctx.editError !== '',
                                         "error-message": _ctx.editError,
                                         onKeyup: vue.withKeys(scope.set, ["enter"])
-                                      }, null, 8 /* PROPS */, ["modelValue", "onUpdate:modelValue", "error", "error-message", "onKeyup"]))
+                                      }, null, 8, ["modelValue", "onUpdate:modelValue", "error", "error-message", "onKeyup"]))
                                     : (vue.openBlock(), vue.createBlock(_component_q_input, {
                                         key: 2,
                                         modelValue: scope.value,
@@ -2371,24 +2370,23 @@
                                         error: _ctx.editError !== '',
                                         "error-message": _ctx.editError,
                                         onKeyup: vue.withKeys(vue.withModifiers(function ($event) { return (col.edit_type === 'textarea' ? void 0 : scope.set()); }, ["stop"]), ["enter"])
-                                      }, null, 8 /* PROPS */, ["modelValue", "onUpdate:modelValue", "type", "error", "error-message", "onKeyup"]))
+                                      }, null, 8, ["modelValue", "onUpdate:modelValue", "type", "error", "error-message", "onKeyup"]))
                               ]; }),
-                              _: 2 /* DYNAMIC */
-                            }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["model-value", "validate", "buttons", "onSave"]))
-                          : vue.createCommentVNode("v-if", true)
+                              _: 2
+                            }, 1032, ["model-value", "validate", "buttons", "onSave"]))
+                          : vue.createCommentVNode("", true)
                       ]; }),
-                      _: 2 /* DYNAMIC */
-                    }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props"]))
-                  }), 128 /* KEYED_FRAGMENT */))
+                      _: 2
+                    }, 1032, ["props"]))
+                  }), 128))
                 ]; }),
-                _: 2 /* DYNAMIC */
-              }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props", "class", "onClick"]))
+                _: 2
+              }, 1032, ["props", "class", "onClick"]))
             : (vue.openBlock(), vue.createBlock(_component_slot_proxy, {
                 key: props.key + ':slot',
                 render: _ctx.$slots.body,
                 scope: props
-              }, null, 8 /* PROPS */, ["render", "scope"])),
-          vue.createCommentVNode(" grouped rows "),
+              }, null, 8, ["render", "scope"])),
           (_ctx.isGrouped)
             ? vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tr, {
                 key: props.key + ':group',
@@ -2412,49 +2410,46 @@
                             columns: _ctx.subColumns,
                             "row-key": _ctx.row_key || 'name',
                             pagination: _ctx.group_pagination
-                          }, null, 8 /* PROPS */, ["dense", "dark", "rows", "columns", "row-key", "pagination"]))
-                        : vue.createCommentVNode("v-if", true)
+                          }, null, 8, ["dense", "dark", "rows", "columns", "row-key", "pagination"]))
+                        : vue.createCommentVNode("", true)
                     ]; }),
-                    _: 2 /* DYNAMIC */
-                  }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["colspan"])
+                    _: 2
+                  }, 1032, ["colspan"])
                 ]; }),
-                _: 2 /* DYNAMIC */
-              }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props"])), [
+                _: 2
+              }, 1032, ["props"])), [
                 [vue.vShow, props.expand]
               ])
             : (_ctx.hasDetailSlot)
-              ? (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: 3 }, [
-                  vue.createCommentVNode(" master / detail "),
-                  vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tr, {
-                    key: props.key + ':detail',
-                    props: props,
-                    class: "qgrid__static-row qgrid__detail-row ignore-elements"
-                  }, {
-                    default: vue.withCtx(function () { return [
-                      vue.createVNode(_component_q_td, {
-                        colspan: _ctx.fullColspan(props.cols)
-                      }, {
-                        default: vue.withCtx(function () { return [
-                          (props.expand)
-                            ? vue.renderSlot(_ctx.$slots, "detail", {
-                                row: props.row,
-                                cols: props.cols,
-                                keyValue: props.key,
-                                pageIndex: props.pageIndex
-                              }, undefined, undefined, 0)
-                            : vue.createCommentVNode("v-if", true)
-                        ]; }),
-                        _: 2 /* DYNAMIC */
-                      }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["colspan"])
-                    ]; }),
-                    _: 2 /* DYNAMIC */
-                  }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["props"])), [
-                    [vue.vShow, props.expand]
-                  ])
-                ], 2112 /* STABLE_FRAGMENT, DEV_ROOT_FRAGMENT */))
-              : vue.createCommentVNode("v-if", true)
+              ? vue.withDirectives((vue.openBlock(), vue.createBlock(_component_q_tr, {
+                  key: props.key + ':detail',
+                  props: props,
+                  class: "qgrid__static-row qgrid__detail-row ignore-elements"
+                }, {
+                  default: vue.withCtx(function () { return [
+                    vue.createVNode(_component_q_td, {
+                      colspan: _ctx.fullColspan(props.cols)
+                    }, {
+                      default: vue.withCtx(function () { return [
+                        (props.expand)
+                          ? vue.renderSlot(_ctx.$slots, "detail", {
+                              row: props.row,
+                              cols: props.cols,
+                              keyValue: props.key,
+                              pageIndex: props.pageIndex
+                            }, undefined, undefined, 0)
+                          : vue.createCommentVNode("", true)
+                      ]; }),
+                      _: 2
+                    }, 1032, ["colspan"])
+                  ]; }),
+                  _: 2
+                }, 1032, ["props"])), [
+                  [vue.vShow, props.expand]
+                ])
+              : vue.createCommentVNode("", true)
         ]; }),
-        _: 2 /* DYNAMIC */
+        _: 2
       }, [
         (_ctx.hasTopRight)
           ? {
@@ -2500,11 +2495,11 @@
                             append: vue.withCtx(function () { return [
                               vue.createVNode(_component_q_icon, {
                                 name: _ctx.mergedIcons.search
-                              }, null, 8 /* PROPS */, ["name"])
+                              }, null, 8, ["name"])
                             ]; }),
-                            _: 1 /* STABLE */
-                          }, 8 /* PROPS */, ["modelValue", "placeholder", "dark", "aria-label"]))
-                        : vue.createCommentVNode("v-if", true),
+                            _: 1
+                          }, 8, ["modelValue", "placeholder", "dark", "aria-label"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.groupby_filter)
                         ? (vue.openBlock(), vue.createBlock(_component_q_select, {
                             key: 1,
@@ -2516,8 +2511,8 @@
                             class: "qgrid__group-select q-mr-sm",
                             options: _ctx.gorupby_option,
                             dark: _ctx.dark
-                          }, null, 8 /* PROPS */, ["modelValue", "options", "dark"]))
-                        : vue.createCommentVNode("v-if", true),
+                          }, null, 8, ["modelValue", "options", "dark"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.clear_filters && _ctx.filtersActive)
                         ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
                             key: 2,
@@ -2529,8 +2524,8 @@
                             label: _ctx.$q.screen.gt.xs ? _ctx.mergedLabels.clearFilters : void 0,
                             "aria-label": _ctx.mergedLabels.clearFilters,
                             onClick: _ctx.clearFilters
-                          }, null, 8 /* PROPS */, ["icon", "label", "aria-label", "onClick"]))
-                        : vue.createCommentVNode("v-if", true),
+                          }, null, 8, ["icon", "label", "aria-label", "onClick"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.excel_download)
                         ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
                             key: 3,
@@ -2547,14 +2542,14 @@
                                 disable: _ctx.$q.platform.is.mobile
                               }, {
                                 default: vue.withCtx(function () { return [
-                                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.exportExcel), 1 /* TEXT */)
+                                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.exportExcel), 1)
                                 ]; }),
-                                _: 1 /* STABLE */
-                              }, 8 /* PROPS */, ["disable"])
+                                _: 1
+                              }, 8, ["disable"])
                             ]; }),
-                            _: 1 /* STABLE */
-                          }, 8 /* PROPS */, ["icon", "aria-label"]))
-                        : vue.createCommentVNode("v-if", true),
+                            _: 1
+                          }, 8, ["icon", "aria-label"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.csv_download)
                         ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
                             key: 4,
@@ -2571,14 +2566,14 @@
                                 disable: _ctx.$q.platform.is.mobile
                               }, {
                                 default: vue.withCtx(function () { return [
-                                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.exportCsv), 1 /* TEXT */)
+                                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.exportCsv), 1)
                                 ]; }),
-                                _: 1 /* STABLE */
-                              }, 8 /* PROPS */, ["disable"])
+                                _: 1
+                              }, 8, ["disable"])
                             ]; }),
-                            _: 1 /* STABLE */
-                          }, 8 /* PROPS */, ["icon", "aria-label"]))
-                        : vue.createCommentVNode("v-if", true),
+                            _: 1
+                          }, 8, ["icon", "aria-label"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.column_chooser)
                         ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
                             key: 5,
@@ -2594,10 +2589,10 @@
                                 disable: _ctx.$q.platform.is.mobile
                               }, {
                                 default: vue.withCtx(function () { return [
-                                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.columns), 1 /* TEXT */)
+                                  vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.columns), 1)
                                 ]; }),
-                                _: 1 /* STABLE */
-                              }, 8 /* PROPS */, ["disable"]),
+                                _: 1
+                              }, 8, ["disable"]),
                               vue.createVNode(_component_q_menu, {
                                 anchor: "bottom right",
                                 self: "top right"
@@ -2614,9 +2609,9 @@
                                         class: "qgrid__menu-title"
                                       }, {
                                         default: vue.withCtx(function () { return [
-                                          vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.columns), 1 /* TEXT */)
+                                          vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.columns), 1)
                                         ]; }),
-                                        _: 1 /* STABLE */
+                                        _: 1
                                       }),
                                       (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(_ctx.orderedColumns, function (col) {
                                         return (vue.openBlock(), vue.createBlock(_component_q_item, {
@@ -2634,21 +2629,21 @@
                                                   "model-value": _ctx.isColumnVisible(col),
                                                   disable: col.required === true,
                                                   "onUpdate:modelValue": function ($event) { return (_ctx.toggleColumn(col)); }
-                                                }, null, 8 /* PROPS */, ["model-value", "disable", "onUpdate:modelValue"])
+                                                }, null, 8, ["model-value", "disable", "onUpdate:modelValue"])
                                               ]; }),
-                                              _: 2 /* DYNAMIC */
-                                            }, 1024 /* DYNAMIC_SLOTS */),
+                                              _: 2
+                                            }, 1024),
                                             vue.createVNode(_component_q_item_section, null, {
                                               default: vue.withCtx(function () { return [
-                                                vue.createTextVNode(vue.toDisplayString(col.label), 1 /* TEXT */)
+                                                vue.createTextVNode(vue.toDisplayString(col.label), 1)
                                               ]; }),
-                                              _: 2 /* DYNAMIC */
-                                            }, 1024 /* DYNAMIC_SLOTS */)
+                                              _: 2
+                                            }, 1024)
                                           ]; }),
-                                          _: 2 /* DYNAMIC */
-                                        }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["disable"]))
-                                      }), 128 /* KEYED_FRAGMENT */)),
-                                      vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8 /* PROPS */, ["dark"]),
+                                          _: 2
+                                        }, 1032, ["disable"]))
+                                      }), 128)),
+                                      vue.createVNode(_component_q_separator, { dark: _ctx.dark }, null, 8, ["dark"]),
                                       vue.createVNode(_component_q_item, {
                                         clickable: "",
                                         dense: "",
@@ -2658,23 +2653,23 @@
                                         default: vue.withCtx(function () { return [
                                           vue.createVNode(_component_q_item_section, null, {
                                             default: vue.withCtx(function () { return [
-                                              vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.showAllColumns), 1 /* TEXT */)
+                                              vue.createTextVNode(vue.toDisplayString(_ctx.mergedLabels.showAllColumns), 1)
                                             ]; }),
-                                            _: 1 /* STABLE */
+                                            _: 1
                                           })
                                         ]; }),
-                                        _: 1 /* STABLE */
-                                      }, 8 /* PROPS */, ["onClick"])
+                                        _: 1
+                                      }, 8, ["onClick"])
                                     ]; }),
-                                    _: 1 /* STABLE */
-                                  }, 8 /* PROPS */, ["dark"])
+                                    _: 1
+                                  }, 8, ["dark"])
                                 ]; }),
-                                _: 1 /* STABLE */
+                                _: 1
                               })
                             ]; }),
-                            _: 1 /* STABLE */
-                          }, 8 /* PROPS */, ["icon", "aria-label"]))
-                        : vue.createCommentVNode("v-if", true),
+                            _: 1
+                          }, 8, ["icon", "aria-label"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.fullscreen)
                         ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
                             key: 6,
@@ -2691,16 +2686,16 @@
                                 disable: _ctx.$q.platform.is.mobile
                               }, {
                                 default: vue.withCtx(function () { return [
-                                  vue.createTextVNode(vue.toDisplayString(props.inFullscreen ? _ctx.mergedLabels.exitFullscreen : _ctx.mergedLabels.fullscreen), 1 /* TEXT */)
+                                  vue.createTextVNode(vue.toDisplayString(props.inFullscreen ? _ctx.mergedLabels.exitFullscreen : _ctx.mergedLabels.fullscreen), 1)
                                 ]; }),
-                                _: 2 /* DYNAMIC */
-                              }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["disable"])), [
+                                _: 2
+                              }, 1032, ["disable"])), [
                                 [_directive_close_popup]
                               ])
                             ]; }),
-                            _: 2 /* DYNAMIC */
-                          }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["icon", "aria-label", "onClick"]))
-                        : vue.createCommentVNode("v-if", true),
+                            _: 2
+                          }, 1032, ["icon", "aria-label", "onClick"]))
+                        : vue.createCommentVNode("", true),
                       (_ctx.columns_filter && _ctx.columns_filter_toggle)
                         ? (vue.openBlock(), vue.createBlock(_component_q_btn, {
                             key: 7,
@@ -2717,16 +2712,16 @@
                                 disable: _ctx.$q.platform.is.mobile
                               }, {
                                 default: vue.withCtx(function () { return [
-                                  vue.createTextVNode(vue.toDisplayString(_ctx.showFilterRow ? _ctx.mergedLabels.hideFilters : _ctx.mergedLabels.showFilters), 1 /* TEXT */)
+                                  vue.createTextVNode(vue.toDisplayString(_ctx.showFilterRow ? _ctx.mergedLabels.hideFilters : _ctx.mergedLabels.showFilters), 1)
                                 ]; }),
-                                _: 1 /* STABLE */
-                              }, 8 /* PROPS */, ["disable"])), [
+                                _: 1
+                              }, 8, ["disable"])), [
                                 [_directive_close_popup]
                               ])
                             ]; }),
-                            _: 1 /* STABLE */
-                          }, 8 /* PROPS */, ["icon", "aria-label", "onClick"]))
-                        : vue.createCommentVNode("v-if", true)
+                            _: 1
+                          }, 8, ["icon", "aria-label", "onClick"]))
+                        : vue.createCommentVNode("", true)
                     ]))
               ]; }),
               key: "0"
@@ -2743,13 +2738,13 @@
                           key: 0,
                           "auto-width": ""
                         }))
-                      : vue.createCommentVNode("v-if", true),
+                      : vue.createCommentVNode("", true),
                     (_ctx.hasDetailSlot && !_ctx.isGrouped)
                       ? (vue.openBlock(), vue.createBlock(_component_q_td, {
                           key: 1,
                           "auto-width": ""
                         }))
-                      : vue.createCommentVNode("v-if", true),
+                      : vue.createCommentVNode("", true),
                     (vue.openBlock(true), vue.createElementBlock(vue.Fragment, null, vue.renderList(props.cols, function (col) {
                       return (vue.openBlock(), vue.createBlock(_component_q_td, {
                         key: col.name,
@@ -2758,17 +2753,17 @@
                         default: vue.withCtx(function () { return [
                           (col.aggregate !== void 0)
                             ? (vue.openBlock(), vue.createElementBlock(vue.Fragment, { key: 0 }, [
-                                vue.createElementVNode("span", _hoisted_10, vue.toDisplayString(_ctx.aggregateLabel(col)), 1 /* TEXT */),
-                                vue.createElementVNode("span", _hoisted_11, vue.toDisplayString(_ctx.aggregateText(col)), 1 /* TEXT */)
-                              ], 64 /* STABLE_FRAGMENT */))
-                            : vue.createCommentVNode("v-if", true)
+                                vue.createElementVNode("span", _hoisted_10, vue.toDisplayString(_ctx.aggregateLabel(col)), 1),
+                                vue.createElementVNode("span", _hoisted_11, vue.toDisplayString(_ctx.aggregateText(col)), 1)
+                              ], 64))
+                            : vue.createCommentVNode("", true)
                         ]; }),
-                        _: 2 /* DYNAMIC */
-                      }, 1032 /* PROPS, DYNAMIC_SLOTS */, ["class"]))
-                    }), 128 /* KEYED_FRAGMENT */))
+                        _: 2
+                      }, 1032, ["class"]))
+                    }), 128))
                   ]; }),
-                  _: 2 /* DYNAMIC */
-                }, 1024 /* DYNAMIC_SLOTS */)
+                  _: 2
+                }, 1024)
               ]; }),
               key: "1"
             }
@@ -2790,12 +2785,11 @@
             ]; })
           }
         })
-      ]), 1040 /* FULL_PROPS, DYNAMIC_SLOTS */, ["id", "loading", "rows", "columns", "row-key", "class", "visible-columns", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter", "onRequest"])
-    ], 2 /* CLASS */))
+      ]), 1040, ["id", "loading", "rows", "columns", "row-key", "class", "visible-columns", "separator", "dense", "dark", "flat", "bordered", "square", "selection", "selected", "filter", "onRequest"])
+    ], 2))
   }
 
   script.render = render;
-  script.__file = "src/components/QGrid.vue";
 
   var name = "quasar-ui-qgrid";
   var version$2 = "1.0.31";
@@ -2832,17 +2826,16 @@
   var homepage = "https://next-quasar-qgrid.netlify.app";
   var devDependencies = {
   	"@rollup/plugin-buble": "^0.21.3",
-  	"@rollup/plugin-commonjs": "^19.0.2",
+  	"@rollup/plugin-commonjs": "^29.0.3",
   	"@rollup/plugin-json": "^4.0.0",
-  	"@rollup/plugin-node-resolve": "^11.2.1",
+  	"@rollup/plugin-node-resolve": "^16.0.3",
   	"@rollup/plugin-replace": "^2.4.2",
   	"@vue/compiler-sfc": "^3.4.0",
   	chalk: "^4.1.0",
   	"fs-extra": "^8.1.0",
   	open: "^7.3.0",
   	quasar: "^2.6.6",
-  	rimraf: "^3.0.0",
-  	rollup: "^2.45.0",
+  	rollup: "^2.80.0",
   	"rollup-plugin-vue": "^6.0.0",
   	"uglify-js": "^3.13.3"
   };
