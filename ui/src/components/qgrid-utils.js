@@ -433,3 +433,138 @@ export function toCsv (rows, cols) {
   }
   return '﻿' + lines.join('\r\n')
 }
+
+/* ------------------------------------------------------------------ sorting */
+
+const sortCollator = typeof Intl !== 'undefined' && Intl.Collator
+  ? new Intl.Collator(void 0, { numeric: true, sensitivity: 'base' })
+  : null
+
+function compareByColumn (col, a, b) {
+  const A = getRawValue(a, col)
+  const B = getRawValue(b, col)
+
+  if (typeof col.rawSort === 'function') return col.rawSort(A, B, a, b)
+
+  const aEmpty = A === null || A === void 0
+  const bEmpty = B === null || B === void 0
+  if (aEmpty || bEmpty) return aEmpty === bEmpty ? 0 : (aEmpty ? -1 : 1)
+
+  if (typeof col.sort === 'function') return col.sort(A, B, a, b)
+  if (typeof A === 'number' && typeof B === 'number') return A - B
+  if (A instanceof Date && B instanceof Date) return A.getTime() - B.getTime()
+  if (typeof A === 'boolean' && typeof B === 'boolean') return (A ? 1 : 0) - (B ? 1 : 0)
+
+  const sa = String(A), sb = String(B)
+  if (sortCollator !== null) return sortCollator.compare(sa, sb)
+  const la = sa.toLowerCase(), lb = sb.toLowerCase()
+  return la < lb ? -1 : (la > lb ? 1 : 0)
+}
+
+/**
+ * Stable multi-column sort (in place).
+ * @param {Array} rows
+ * @param {Array} model  [{ name, descending }] - first entry has the highest priority
+ * @param {Object} columnsByName  name -> column definition
+ */
+export function sortRows (rows, model, columnsByName) {
+  const specs = []
+  for (let i = 0; i < model.length; i++) {
+    const col = columnsByName[model[i].name]
+    if (col !== void 0) specs.push({ col, dir: model[i].descending ? -1 : 1 })
+  }
+  if (specs.length === 0) return rows
+
+  // decorate with the original index so equal rows keep their order
+  const indexed = rows.map((row, index) => ({ row, index }))
+  indexed.sort((x, y) => {
+    for (let i = 0; i < specs.length; i++) {
+      const res = compareByColumn(specs[i].col, x.row, y.row)
+      if (res !== 0) return res * specs[i].dir
+    }
+    return x.index - y.index
+  })
+  for (let i = 0; i < indexed.length; i++) rows[i] = indexed[i].row
+  return rows
+}
+
+/** Cycles a column through: (none) -> asc -> desc -> (none), keeping the other sorts. */
+export function toggleSortModel (model, name) {
+  const index = model.findIndex(s => s.name === name)
+  if (index === -1) return model.concat({ name, descending: false })
+  if (model[index].descending === false) {
+    return model.map((s, i) => i === index ? { name, descending: true } : s)
+  }
+  return model.filter((s, i) => i !== index)
+}
+
+/* ------------------------------------------------------------------ pinning */
+
+/** Reorders columns as: pinned left, unpinned, pinned right (stable inside each group). */
+export function partitionPinned (cols, pinOf) {
+  const left = [], middle = [], right = []
+  for (let i = 0; i < cols.length; i++) {
+    const side = pinOf(cols[i])
+    if (side === 'left') left.push(cols[i])
+    else if (side === 'right') right.push(cols[i])
+    else middle.push(cols[i])
+  }
+  return left.concat(middle, right)
+}
+
+/**
+ * Sticky offsets for pinned columns.
+ * @param {Array} cols       visible columns, in display order
+ * @param {Function} pinOf   col -> 'left' | 'right' | null
+ * @param {Function} widthOf col -> px
+ * @param {Number} lead      width of the leading (selection / expand) cells
+ * @returns {Object} name -> { side, offset, edge }
+ */
+export function pinOffsets (cols, pinOf, widthOf, lead) {
+  const out = {}
+  let left = lead || 0
+  let lastLeft = null
+  for (let i = 0; i < cols.length; i++) {
+    if (pinOf(cols[i]) !== 'left') continue
+    out[cols[i].name] = { side: 'left', offset: left, edge: false }
+    left += widthOf(cols[i])
+    lastLeft = cols[i].name
+  }
+  if (lastLeft !== null) out[lastLeft].edge = true
+
+  let right = 0
+  let firstRight = null
+  for (let i = cols.length - 1; i >= 0; i--) {
+    if (pinOf(cols[i]) !== 'right') continue
+    out[cols[i].name] = { side: 'right', offset: right, edge: false }
+    right += widthOf(cols[i])
+    firstRight = cols[i].name
+  }
+  if (firstRight !== null) out[firstRight].edge = true
+  return out
+}
+
+/** '120px' | 120 -> 120 ; anything else -> null */
+export function parseWidth (val) {
+  if (typeof val === 'number' && isFinite(val)) return val
+  if (typeof val === 'string' && /^\d+(\.\d+)?(px)?$/.test(val.trim())) return parseFloat(val)
+  return null
+}
+
+/* ---------------------------------------------------------------- clipboard */
+
+function tsvCell (val) {
+  const str = val === null || val === void 0 ? '' : (Array.isArray(val) ? val.join(', ') : String(val))
+  return str.replace(/[\t\r\n]+/g, ' ')
+}
+
+/** Tab separated values (pastes as cells into Excel / Sheets). */
+export function toTsv (rows, cols, withHeader) {
+  const lines = []
+  if (withHeader !== false) lines.push(cols.map(col => tsvCell(col.label !== void 0 ? col.label : col.name)).join('\t'))
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    lines.push(cols.map(col => tsvCell(getCellValue(row, col))).join('\t'))
+  }
+  return lines.join('\n')
+}

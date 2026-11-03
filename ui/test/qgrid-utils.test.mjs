@@ -169,3 +169,59 @@ test('toCsv: BOM, quoting, formats, arrays', () => {
   const csv = toCsv([{ name: 'He said "hi"', tags: ['a', 'b'] }], [cols.name, cols.tags])
   assert.equal(csv, '﻿"Name","Tags"\r\n"He said ""hi""","a, b"')
 })
+
+/* ----------------------------------------------------------------- v1.2 */
+
+import { sortRows, toggleSortModel, partitionPinned, pinOffsets, parseWidth, toTsv } from '../src/components/qgrid-utils.js'
+
+test('sortRows: multi-column, stable, nulls first, numeric-aware strings, custom sort', () => {
+  const rows = [
+    { cat: 'b', n: 2, s: 'item 10' }, { cat: 'a', n: 2, s: 'item 2' },
+    { cat: 'b', n: 1, s: 'item 1' }, { cat: 'a', n: null, s: 'x' }, { cat: 'a', n: 2, s: 'item 1' }
+  ]
+  const cols = { cat: { name: 'cat', field: 'cat' }, n: { name: 'n', field: 'n' }, s: { name: 's', field: 's' } }
+  const r1 = sortRows(rows.slice(), [{ name: 'cat', descending: false }, { name: 'n', descending: true }], cols)
+  assert.deepEqual(r1.map(r => r.cat + r.n + r.s), ['a2item 2', 'a2item 1', 'anullx', 'b2item 10', 'b1item 1'])
+  const r2 = sortRows(rows.slice(), [{ name: 's', descending: false }], cols)
+  assert.deepEqual(r2.map(r => r.s), ['item 1', 'item 1', 'item 2', 'item 10', 'x'])
+  const pct = { p: { name: 'p', field: 'p', sort: (a, b) => parseInt(a, 10) - parseInt(b, 10) } }
+  assert.deepEqual(sortRows([{ p: '14%' }, { p: '3%' }, { p: '100%' }], [{ name: 'p', descending: true }], pct).map(r => r.p), ['100%', '14%', '3%'])
+  assert.deepEqual(sortRows([1, 2], [{ name: 'missing' }], cols), [1, 2])
+})
+
+test('toggleSortModel cycles asc -> desc -> off and keeps other sorts', () => {
+  let m = toggleSortModel([], 'a')
+  assert.deepEqual(m, [{ name: 'a', descending: false }])
+  m = toggleSortModel(m, 'b')
+  m = toggleSortModel(m, 'a')
+  assert.deepEqual(m, [{ name: 'a', descending: true }, { name: 'b', descending: false }])
+  assert.deepEqual(toggleSortModel(m, 'a'), [{ name: 'b', descending: false }])
+})
+
+test('partitionPinned + pinOffsets', () => {
+  const pins = { a: 'right', c: 'left', e: 'left' }
+  const pinOf = c => pins[c.name] || null
+  const cols = ['a', 'b', 'c', 'd', 'e'].map(name => ({ name }))
+  const ordered = partitionPinned(cols, pinOf)
+  assert.deepEqual(ordered.map(c => c.name), ['c', 'e', 'b', 'd', 'a'])
+  const off = pinOffsets(ordered, pinOf, c => ({ c: 100, e: 50, a: 80 })[c.name] || 10, 40)
+  assert.deepEqual(off, {
+    c: { side: 'left', offset: 40, edge: false },
+    e: { side: 'left', offset: 140, edge: true },
+    a: { side: 'right', offset: 0, edge: true }
+  })
+})
+
+test('parseWidth', () => {
+  assert.equal(parseWidth(120), 120)
+  assert.equal(parseWidth('90px'), 90)
+  assert.equal(parseWidth('90'), 90)
+  assert.equal(parseWidth('20%'), null)
+  assert.equal(parseWidth(undefined), null)
+})
+
+test('toTsv: header, format, tabs/newlines flattened', () => {
+  const cols = [{ name: 'n', label: 'Name', field: 'n' }, { name: 'p', label: 'Price', field: 'p', format: v => '$' + v }]
+  assert.equal(toTsv([{ n: 'a\tb\nc', p: 2 }], cols), 'Name\tPrice\na b c\t$2')
+  assert.equal(toTsv([{ n: 'x', p: 1 }], cols, false), 'x\t$1')
+})
