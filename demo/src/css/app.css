@@ -1,32 +1,340 @@
-/* app global css */
+/*
+ * QGrid docs - design tokens & base styles.
+ * Monochrome, typography-led look: warm off-white surfaces, black pill CTAs,
+ * hairline borders, light-weight display headings.
+ */
 
-.markdown-nav-bar {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 80px;
-  padding: 6px;
-  background: #0d47a1;
-  color: #bbdefb;
-  border-radius: 0 0 6px 6px;
+:root {
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --bg: #ffffff;
+  --bg-page: #f4f2ef;
+  --bg-soft: #fdfcfc;
+  --surface: #f5f3f1;
+  --surface-2: #faf9f7;
+  --surface-hover: rgba(0, 0, 0, .04);
+  --surface-active: rgba(0, 0, 0, .055);
+  --text: #2a2a2a;
+  --text-strong: #000000;
+  --text-2: rgba(0, 0, 0, .61);
+  --text-3: rgba(0, 0, 0, .45);
+  --border: rgba(0, 0, 0, .08);
+  --border-strong: rgba(0, 0, 0, .12);
+  --ring: 0 0 0 .5px rgba(0, 0, 0, .125), 0 1px 2px rgba(0, 0, 0, .06);
+  --btn-bg: #000000;
+  --btn-text: #ffffff;
+  --btn-ghost-bg: #ffffff;
+  --code-bg: #fafafa;
+  --code-border: rgba(0, 0, 0, .08);
+  --kbd-bg: #ffffff;
+  --new: #0f7b3e;
+  --new-bg: rgba(15, 123, 62, .1);
+  --note-bg: #f6f5f3;
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --header-h: 64px;
+  --tabs-h: 46px;
+
+  --q-primary: #141414;
+  --q-dark: #161616;
+  --q-dark-page: #0b0b0b;
 }
 
-.markdown-nav-bar .title {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
-  justify-content: center;
-  font-size: 2.4em;
+body.body--dark {
+  --bg: #0b0b0b;
+  --bg-page: #050505;
+  --bg-soft: #0e0e0e;
+  --surface: #161616;
+  --surface-2: #121212;
+  --surface-hover: rgba(255, 255, 255, .06);
+  --surface-active: rgba(255, 255, 255, .09);
+  --text: #e9e9e9;
+  --text-strong: #ffffff;
+  --text-2: rgba(255, 255, 255, .64);
+  --text-3: rgba(255, 255, 255, .45);
+  --border: rgba(255, 255, 255, .09);
+  --border-strong: rgba(255, 255, 255, .14);
+  --ring: 0 0 0 .5px rgba(255, 255, 255, .18);
+  --btn-bg: #ffffff;
+  --btn-text: #000000;
+  --btn-ghost-bg: #161616;
+  --code-bg: #111111;
+  --code-border: rgba(255, 255, 255, .08);
+  --kbd-bg: #1c1c1c;
+  --new: #5fd393;
+  --new-bg: rgba(95, 211, 147, .12);
+  --note-bg: #141414;
+
+  --q-primary: #ededed;
 }
 
-.markdown-nav-bar .inner {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+/* keep "bg-primary text-white" controls (e.g. QGrid's CSV button) readable in dark mode */
+body.body--dark .bg-primary.text-white,
+body.body--dark .q-btn.bg-primary {
+  color: #000 !important;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+a {
+  color: inherit;
+}
+
+::selection {
+  background: rgba(0, 0, 0, .12);
+}
+
+body.body--dark ::selection {
+  background: rgba(255, 255, 255, .2);
+}
+
+code, kbd, pre, .mono {
+  font-family: var(--font-mono);
+}
+
+/* ------------------------------------------------------------ buttons */
+
+.pill {
+  display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9999px;
+  font: 400 14px/1 var(--font-sans);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s, opacity .15s, transform .15s;
 }
 
+.pill--lg {
+  height: 44px;
+  padding: 0 22px;
+  font-size: 16px;
+}
 
-.markdown-copyright {
-  font-family: Consolas, Monaco, Andale Mono, Ubuntu Mono, monospace
+.pill--solid {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+}
+
+.pill--solid:hover {
+  opacity: .86;
+}
+
+.pill--ghost {
+  background: var(--btn-ghost-bg);
+  color: var(--text-strong);
+  box-shadow: var(--ring);
+}
+
+.pill--ghost:hover {
+  background: var(--surface-hover);
+}
+
+.btn-square {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-2);
+  font: 500 13px/1 var(--font-sans);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-square:hover {
+  background: var(--surface-hover);
+  color: var(--text-strong);
+}
+
+.btn-square--solid {
+  background: #404040;
+  border-color: #404040;
+  color: #fff;
+}
+
+.btn-square--solid:hover {
+  background: #2a2a2a;
+  color: #fff;
+}
+
+body.body--dark .btn-square--solid {
+  background: #f2f2f2;
+  border-color: #f2f2f2;
+  color: #000;
+}
+
+kbd, .kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  background: var(--kbd-bg);
+  color: var(--text-2);
+  font: 500 12px/1 var(--font-mono);
+}
+
+.badge-new {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--new-bg);
+  color: var(--new);
+  font: 600 10px/1 var(--font-sans);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+/* --------------------------------------------------------- doc prose */
+
+.prose {
+  color: var(--text);
+  font-size: 16px;
+  line-height: 28px;
+}
+
+.prose h2 {
+  margin: 48px 0 12px;
+  color: var(--text-strong);
+  font: 700 24px/32px var(--font-sans);
+  letter-spacing: -.02em;
+  scroll-margin-top: calc(var(--header-h) + var(--tabs-h) + 24px);
+}
+
+.prose h3 {
+  margin: 32px 0 8px;
+  color: var(--text-strong);
+  font: 600 18px/26px var(--font-sans);
+  letter-spacing: -.02em;
+  scroll-margin-top: calc(var(--header-h) + var(--tabs-h) + 24px);
+}
+
+.prose p {
+  margin: 0 0 16px;
+}
+
+.prose ul, .prose ol {
+  margin: 0 0 16px;
+  padding-left: 22px;
+}
+
+.prose li {
+  margin: 4px 0;
+}
+
+.prose a:not(.pill):not(.doc-card):not(.btn-square) {
+  color: var(--text-strong);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: var(--border-strong);
+  text-underline-offset: 3px;
+}
+
+.prose a:not(.pill):not(.doc-card):not(.btn-square):hover {
+  text-decoration-color: currentColor;
+}
+
+.prose :not(pre) > code {
+  padding: 2px 6px;
+  border: 1px solid var(--code-border);
+  border-radius: 6px;
+  background: var(--code-bg);
+  color: var(--text-strong);
+  font-size: .86em;
+  white-space: nowrap;
+}
+
+.prose table.doc-table {
+  width: 100%;
+  margin: 8px 0 24px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.prose table.doc-table th {
+  padding: 10px 12px;
+  background: var(--surface-hover);
+  color: var(--text-strong);
+  font-weight: 600;
+  text-align: left;
+}
+
+.prose table.doc-table td {
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.prose table.doc-table td code {
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- misc */
+
+.muted {
+  color: var(--text-2);
+}
+
+.hairline {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 0;
+}
+
+/* make QGrid demos sit naturally on the page */
+.demo-surface .q-table__card {
+  box-shadow: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg);
+}
+
+.demo-surface .q-table__card .q-table__top {
+  padding: 10px 12px;
+}
+
+body.body--dark .demo-surface .q-table__card {
+  background: var(--bg);
+}
+
+.demo-surface .q-table th {
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 12.5px;
 }

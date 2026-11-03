@@ -1,6 +1,8 @@
 # Quasar App Extension qgrid
 
-> Add a short description of your App Extension. What does it do? How is it beneficial? Why would someone want to use it?
+Registers **QGrid** (`<q-grid>`) in your Quasar CLI app: a free data grid on top of QTable with column & header filters, grouping, footer totals, inline editing, drag & drop, real Excel export, virtual scroll and state persistence.
+
+Compatible with `quasar` v2, `@quasar/app-vite` v1 – v3 and `@quasar/app-webpack` v3 – v4.
 
 [![npm](https://img.shields.io/npm/v/quasar-app-extension-qgrid.svg?label=quasar-app-extension-qgrid)](https://www.npmjs.com/package/quasar-app-extension-qgrid)
 [![npm](https://img.shields.io/npm/dt/quasar-app-extension-qgrid.svg)](https://www.npmjs.com/package/quasar-app-extension-qgrid)
@@ -11,20 +13,18 @@ quasar ext add qgrid
 ```
 Quasar CLI will retrieve it from NPM and install the extension.
 
-## Prompts
-
-> If your app extension uses prompts, explain them here, otherwise remove this section and remove prompts.js file.
-
 # Uninstall
 ```bash
 quasar ext remove qgrid
 ```
 
 # Info
-> Add longer information here that will help the user of your app extension.
+The extension:
+- adds a boot file that installs the `quasar-ui-qgrid` Vue plugin,
+- makes webpack transpile the component sources (app-webpack) or keeps Vite's dependency optimizer away from them (app-vite),
+- registers the component API, so `quasar describe QGrid` works.
 
-# Other Info
-> Add other information that's not as important to know
+Docs, examples and API: https://next-quasar-qgrid.netlify.app
 
 # Sponsors
 

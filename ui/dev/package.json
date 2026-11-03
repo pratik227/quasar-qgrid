@@ -1,37 +1,28 @@
 {
   "name": "dev",
   "version": "1.0.0",
-  "description": "A Quasar Framework app",
-  "productName": "Quasar App",
+  "description": "quasar-ui-qgrid playground (test pages)",
+  "productName": "QGrid playground",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "quasar dev",
-    "dev:ssr": "quasar dev -m ssr",
-    "dev:ios": "quasar dev -m ios",
-    "dev:android": "quasar dev -m android",
-    "dev:electron": "quasar dev -m electron"
+    "build": "quasar build",
+    "postinstall": "quasar prepare --silent"
   },
   "dependencies": {
-    "@quasar/extras": "^1.0.0",
-    "core-js": "^3.0.0"
+    "@quasar/extras": "^2.1.0",
+    "quasar": "^2.35.2",
+    "sortablejs": "^1.15.0",
+    "vue": "^3.5.22",
+    "vue-router": "^5.0.6"
   },
   "devDependencies": {
-    "@quasar/app": "^3.3.3"
+    "@quasar/app-vite": "^3.10.3",
+    "autoprefixer": "^10.4.27",
+    "postcss": "^8.5.8"
   },
-  "browserslist": [
-    "last 10 Chrome versions",
-    "last 10 Firefox versions",
-    "last 4 Edge versions",
-    "last 7 Safari versions",
-    "last 8 Android versions",
-    "last 8 ChromeAndroid versions",
-    "last 8 FirefoxAndroid versions",
-    "last 10 iOS versions",
-    "last 5 Opera versions"
-  ],
   "engines": {
-    "node": ">= 8.9.0",
-    "npm": ">= 5.6.0",
-    "yarn": ">= 1.6.0"
+    "node": ">= 26 || ^24 || ^22.12"
   }
 }

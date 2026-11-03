@@ -173,12 +173,10 @@ export default defineComponent({
   setup() {
     return {
       columns,
-      data
-    }
-  },
-  methods:{
-    DraggedColumn(data){
-      console.log(data)
+      data,
+      DraggedColumn (event) {
+        console.log('dragged_column', event)
+      }
     }
   }
 })

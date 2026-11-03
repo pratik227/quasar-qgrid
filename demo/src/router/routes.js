@@ -1,37 +1,41 @@
+import { legacyRedirects } from '../docs/nav.js'
+
+const page = name => () => import(`../pages/docs/${name}.vue`)
 
 const routes = [
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('../layouts/HomeLayout.vue'),
+    children: [{ path: '', component: () => import('../pages/HomePage.vue') }]
+  },
+  {
+    path: '/docs',
+    component: () => import('../layouts/DocsLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/Index.vue') },
-      { path: '/example-qgrid-basic', component: () => import('pages/BasicExample') },
-      { path: '/example-qgrid-column-filter', component: () => import('pages/ColumnFilterExample') },
-      { path: '/example-qgrid-header-filter', component: () => import('pages/HeaderFilterExample') },
-      { path: '/example-qgrid-custom-column', component: () => import('pages/CustomColumnExample') },
-      { path: '/example-qgrid-draggable-rows', component: () => import('pages/DraggableRowsExample') },
-      { path: '/example-qgrid-slot-demo', component: () => import('pages/SlotDemoExample') },
-      { path: '/example-qgrid--selection-slot-demo', component: () => import('pages/SelectionSlotDemoExample.vue') },
-      { path: '/example-qgrid-header-slot-demo', component: () => import('pages/HeaderSlotDemoExample') },
-      { path: '/example-qgrid-select-column-filter', component: () => import('pages/SelectColumnFilterExample') },
-      { path: '/example-qgrid-grouping', component: () => import('pages/GroupingExample') },
-      { path: '/example-qgrid-date-range', component: () => import('pages/DateRangeExample') },
-      { path: '/example-qgrid-number-range', component: () => import('pages/NumberRangeExample') },
-      { path: '/example-qgrid-draggable-columns', component: () => import('pages/DraggableColumnsExample') },
-      { path: '/example-qgrid-draggable-columns-slot', component: () => import('pages/DraggableColumnsWithSlotExample') },
-      { path: '/example-qgrid-filter-customization', component: () => import('pages/FilterCustomizationExample') },
-      { path: '/example-qgrid-array-field', component: () => import('pages/ArrayFieldExample') },
-      // { path: '/example-qhierarchy-slot-demo', component: () => import('pages/SlotDemoExample') },
-      // { path: '/example-qhierarchy-default-expand-all', component: () => import('pages/ExpandAllExample') },
-      { path: '/sponsor', component: () => import('pages/Sponsor') }
+      { path: '', component: page('IntroductionPage'), meta: { section: 'Get started' } },
+      { path: 'installation', component: page('InstallationPage'), meta: { section: 'Get started' } },
+      { path: 'quickstart', component: page('QuickstartPage'), meta: { section: 'Get started' } },
+      { path: 'whats-new', component: page('WhatsNewPage'), meta: { section: 'Get started' } },
+      { path: 'columns', component: page('ColumnsPage'), meta: { section: 'Guides' } },
+      { path: 'filtering', component: page('FilteringPage'), meta: { section: 'Guides' } },
+      { path: 'grouping', component: page('GroupingPage'), meta: { section: 'Guides' } },
+      { path: 'export', component: page('ExportPage'), meta: { section: 'Guides' } },
+      { path: 'editing', component: page('EditingPage'), meta: { section: 'Guides' } },
+      { path: 'drag-and-drop', component: page('DragDropPage'), meta: { section: 'Guides' } },
+      { path: 'large-data', component: page('LargeDataPage'), meta: { section: 'Guides' } },
+      { path: 'customization', component: page('CustomizationPage'), meta: { section: 'Guides' } },
+      { path: 'sponsor', component: page('SponsorPage'), meta: { section: 'Community' } },
+      { path: 'api', component: page('ApiPage'), meta: { section: 'API reference' } },
+      { path: 'examples', component: page('ExamplesIndexPage'), meta: { section: 'Examples' } },
+      { path: 'examples/:slug', component: page('ExamplePage'), meta: { section: 'Examples' } }
     ]
   },
 
-  // Always leave this as last one,
-  // but you can also remove it
+  ...Object.keys(legacyRedirects).map(from => ({ path: from, redirect: legacyRedirects[from] })),
+
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/Error404.vue')
+    component: () => import('../pages/NotFoundPage.vue')
   }
 ]
 
