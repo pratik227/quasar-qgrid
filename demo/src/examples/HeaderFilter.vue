@@ -12,10 +12,11 @@ const columns = [
     label: 'Dessert (100g serving)',
     align: 'left',
     field: 'name',
-    sortable: true
+    sortable: true,
+    show_filter: true
   },
-  {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true},
-  {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
+  {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true, show_filter: true},
+  {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true, show_filter: true},
   {name: 'carbs', label: 'Carbs (g)', field: 'carbs'},
   {name: 'protein', label: 'Protein (g)', field: 'protein'},
   {name: 'sodium', label: 'Sodium (mg)', field: 'sodium'},
@@ -24,7 +25,8 @@ const columns = [
     label: 'Calcium (%)',
     field: 'calcium',
     sortable: true,
-    sort: (a, b) => parseInt(a, 10) - parseInt(b, 10)
+    sort: (a, b) => parseInt(a, 10) - parseInt(b, 10),
+    show_filter: true
   },
   {
     name: 'iron',

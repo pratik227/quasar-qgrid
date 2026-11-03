@@ -1,108 +1,81 @@
 # QGrid
 
-QGrid is a [Quasar App Extension](https://quasar.dev/app-extensions/introduction).  It allows you to filter data for each column, Drag and Drop Rows and also allows you to filter data using header filters. 
-## Install
+[![npm](https://img.shields.io/npm/v/quasar-app-extension-qgrid.svg?label=quasar-app-extension-qgrid)](https://www.npmjs.com/package/quasar-app-extension-qgrid)
+[![npm](https://img.shields.io/npm/v/quasar-ui-qgrid.svg?label=quasar-ui-qgrid)](https://www.npmjs.com/package/quasar-ui-qgrid)
 
-To add this App Extension to your Quasar application, run the following (in your Quasar app folder):
+**QGrid** is a free, open-source data grid for [Quasar](https://quasar.dev) & Vue 3, shipped as a
+[Quasar App Extension](https://quasar.dev/app-extensions/introduction). It renders a regular `QTable`
+and adds the features business tables need — each one is a single prop.
+
+| | |
+|---|---|
+| **Filtering** | Text, select, date-range & number-range column filters · Excel-like searchable header filters · global search |
+| **Data** | Grouping · footer totals (sum / avg / min / max / count / custom) · master/detail rows · inline editing with validation |
+| **Export** | Real **.xlsx** (typed cells, no dependency) and CSV — exactly what is on screen |
+| **Layout** | Drag & drop rows and columns · column chooser · virtual scroll (50k+ rows) · sticky header · fullscreen |
+| **Advanced** | Save & restore state · server-side pagination, sort & column filters · cell/header-cell/detail slots · i18n labels |
+
+📖 **Docs & live examples:** https://next-quasar-qgrid.netlify.app
+
+## Install
 
 ```bash
 quasar ext add qgrid
 ```
 
-# Uninstall
-To remove this App Extension from your Quasar application, run the following (in your Quasar app folder):
+Works with `quasar` v2 and `@quasar/app-vite` v1 – v3 / `@quasar/app-webpack` v3 – v4.
+To remove it: `quasar ext remove qgrid`.
 
+Not using Quasar CLI? `npm i quasar-ui-qgrid` and `app.use(QGrid)` — see [ui/README.md](ui/README.md).
+
+## Usage
+
+```vue
+<template>
+  <q-grid
+    :data="rows"
+    :columns="columns"
+    row_key="name"
+    columns_filter
+    header_filter
+    global_search
+    excel_download
+    file_name="desserts"
+  />
+</template>
+
+<script setup>
+const columns = [
+  { name: 'name', label: 'Dessert', field: 'name', align: 'left', sortable: true, show_filter: true },
+  { name: 'category', label: 'Category', field: 'category', filter_type: 'select', grouping: true },
+  { name: 'calories', label: 'Calories', field: 'calories', sortable: true, filter_type: 'number_range', aggregate: 'avg' },
+  { name: 'added', label: 'Added', field: 'added', filter_type: 'date', date_format: 'DD/MM/YYYY' },
+  { name: 'price', label: 'Price', field: 'price', format: v => '$' + v.toFixed(2), editable: true, edit_type: 'number', aggregate: 'sum' }
+]
+
+const rows = [
+  { name: 'Frozen Yogurt', category: 'Ice cream', calories: 159, added: '12/01/2024', price: 3.5 },
+  { name: 'Eclair', category: 'Pastry', calories: 262, added: '18/02/2024', price: 2.75 }
+  // ...
+]
+</script>
 ```
-quasar ext remove qgrid
+
+See the [API reference](https://next-quasar-qgrid.netlify.app/docs/api) (or run `quasar describe QGrid`)
+and [what's new in 1.1](https://next-quasar-qgrid.netlify.app/docs/whats-new).
+
+## Repository
+
+| Folder | |
+|---|---|
+| [`ui/`](ui) | `quasar-ui-qgrid` — the component (`npm test`, `npm run bench`, `npm run build`) |
+| [`app-extension/`](app-extension) | `quasar-app-extension-qgrid` — the Quasar CLI App Extension |
+| [`demo/`](demo) | Documentation site & playground (`@quasar/app-vite` v3, uses `ui/` sources directly) |
+
+```bash
+cd demo && npm install && npm run dev   # docs on http://localhost:9000
+cd ui && npm install && npm test        # unit tests
 ```
-
-
-# Defining the columns
-
-
-
-        [
-                    {
-                        name: 'name',
-                        required: true,
-                        label: 'Dessert (100g serving)',
-                        align: 'left',
-                        field: 'name',
-                        sortable: true,
-                        filter_type:'select' // Default is text with input filed
-                    },
-                    {name: 'calories', align: 'center', label: 'Calories', field: 'calories', sortable: true},
-                    {name: 'fat', label: 'Fat (g)', field: 'fat', sortable: true},
-                    {name: 'carbs', label: 'Carbs (g)', field: 'carbs'},
-                    {name: 'protein', label: 'Protein (g)', field: 'protein'},
-                    {name: 'sodium', label: 'Sodium (mg)', field: 'sodium'},
-                    {
-                        name: 'calcium',
-                        label: 'Calcium (%)',
-                        field: 'calcium',
-                        sortable: true,
-                        sort: (a, b) => parseInt(a, 10) - parseInt(b, 10)
-                    },
-                    {
-                        name: 'iron',
-                        label: 'Iron (%)',
-                        field: 'iron',
-                        sortable: true,
-                        sort: (a, b) => parseInt(a, 10) - parseInt(b, 10)
-                    }
-                ]
-
-
-# Defining Data
-
-     [
-                    {
-                        name: 'Frozen Yogurt',
-                        calories: 159,
-                        fat: 6.0,
-                        carbs: 24,
-                        protein: 4.0,
-                        sodium: 87,
-                        calcium: '14%',
-                        iron: '1%'
-                    },
-                    {
-                        name: 'Ice cream sandwich',
-                        calories: 237,
-                        fat: 9.0,
-                        carbs: 37,
-                        protein: 4.3,
-                        sodium: 129,
-                        calcium: '8%',
-                        iron: '1%'
-                    },
-                    {
-                        name: 'Eclair',
-                        calories: 262,
-                        fat: 16.0,
-                        carbs: 23,
-                        protein: 6.0,
-                        sodium: 337,
-                        calcium: '6%',
-                        iron: '7%'
-                    }, //....
-      ]
-
-# Source
-
-can be found [here](https://github.com/pratik227/quasar-qgrid).
-
-# Docs
-
-can be found [here](https://next-quasar-qgrid.netlify.app/).
-
-# Examples
-
-can be found [here](https://next-quasar-qgrid.netlify.app/).
-
-# Demo (source) Project.
-
-can be found [here](https://github.com/pratik227/quasar-qgrid/tree/ui/dev).
 
 # Sponsors
 
@@ -122,4 +95,6 @@ Be sure to check out my sponsor page.
 
 Thank you so much!!!
 
+# License
 
+MIT (c) pratikpatelpp802@gmail.com

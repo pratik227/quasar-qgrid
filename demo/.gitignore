@@ -31,3 +31,7 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
+# Quasar CLI (app-vite) generated
+.quasar
+package-lock.json
