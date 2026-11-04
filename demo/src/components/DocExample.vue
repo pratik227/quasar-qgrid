@@ -1,7 +1,7 @@
 <template>
   <div class="doc-example">
     <div class="doc-example__bar">
-      <div class="doc-example__seg" role="tablist">
+      <div class="seg" role="tablist">
         <button
           role="tab"
           :aria-selected="view === 'preview'"
@@ -68,30 +68,6 @@ watch(() => props.file, file => {
   padding: 8px 12px 8px 8px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
-}
-
-.doc-example__seg {
-  display: inline-flex;
-  padding: 3px;
-  border-radius: 10px;
-  background: var(--surface-active);
-}
-
-.doc-example__seg button {
-  height: 28px;
-  padding: 0 14px;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-2);
-  font: 500 13px/1 var(--font-sans);
-  cursor: pointer;
-}
-
-.doc-example__seg button.active {
-  background: var(--bg);
-  color: var(--text-strong);
-  box-shadow: var(--ring);
 }
 
 .doc-example__file {

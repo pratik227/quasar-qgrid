@@ -1,7 +1,7 @@
 <template>
   <div class="api-ref">
     <div class="api-ref__toolbar">
-      <div class="doc-example__seg" role="tablist">
+      <div class="seg" role="tablist" aria-label="API sections">
         <button
           v-for="t in sections"
           :key="t.key"
@@ -9,11 +9,15 @@
           :aria-selected="tab === t.key"
           :class="{ active: tab === t.key }"
           @click="tab = t.key"
-        >{{ t.label }} <span class="api-ref__count">{{ t.count }}</span></button>
+        >{{ t.label }} <span class="seg__count">{{ t.count }}</span></button>
       </div>
-      <q-input v-model="needle" dense outlined clearable placeholder="Filter" class="api-ref__filter">
-        <template #prepend><q-icon name="search" size="18px" /></template>
-      </q-input>
+      <label class="filter-input api-ref__filter">
+        <q-icon name="search" size="18px" />
+        <input v-model="needle" type="search" placeholder="Filter props, slots, events…" aria-label="Filter the API">
+        <button v-if="needle" class="filter-input__clear" aria-label="Clear filter" @click.prevent="needle = ''">
+          <q-icon name="close" size="16px" />
+        </button>
+      </label>
     </div>
 
     <div class="api-ref__list">
@@ -85,19 +89,39 @@ const entries = computed(() => {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-2);
 }
 
-.api-ref__count {
-  margin-left: 4px;
-  color: var(--text-3);
-  font-size: 11px;
+.api-ref__filter {
+  width: 260px;
+  max-width: 100%;
 }
 
-.api-ref__filter {
-  width: 220px;
+.api-ref__filter input::-webkit-search-cancel-button {
+  display: none;
+}
+
+@media (max-width: 599px) {
+  .api-ref__filter {
+    width: 100%;
+  }
+
+  .api-ref .seg {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    width: 100%;
+  }
+
+  .api-ref .seg button {
+    justify-content: center;
+    padding: 0 4px;
+  }
+
+  .api-ref .seg__count {
+    display: none;
+  }
 }
 
 .api-ref__item {

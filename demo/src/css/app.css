@@ -338,3 +338,126 @@ body.body--dark .demo-surface .q-table__card {
   font-weight: 600;
   font-size: 12.5px;
 }
+
+/* ------------------------------------------------- segmented control */
+
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-active);
+}
+
+.seg button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-2);
+  font: 500 13px/1 var(--font-sans);
+  cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+
+.seg button:hover {
+  color: var(--text-strong);
+}
+
+.seg button.active {
+  background: var(--bg);
+  color: var(--text-strong);
+  box-shadow: var(--ring);
+}
+
+.seg button:focus-visible,
+.filter-input:focus-within {
+  outline: 2px solid var(--text-3);
+  outline-offset: 1px;
+}
+
+.seg__count {
+  min-width: 18px;
+  padding: 2px 5px;
+  border-radius: 9999px;
+  background: var(--surface-active);
+  color: var(--text-3);
+  font: 600 10.5px/1 var(--font-sans);
+  text-align: center;
+}
+
+.seg button.active .seg__count {
+  background: var(--surface-hover);
+  color: var(--text-2);
+}
+
+/* ------------------------------------------------------- filter input */
+
+.filter-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  color: var(--text-3);
+  transition: border-color .15s;
+}
+
+.filter-input:hover {
+  border-color: var(--text-3);
+}
+
+.filter-input input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  color: var(--text-strong);
+  font: 400 14px/1 var(--font-sans);
+}
+
+.filter-input input::placeholder {
+  color: var(--text-3);
+}
+
+.filter-input__clear {
+  display: inline-flex;
+  padding: 2px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.filter-input__clear:hover {
+  background: var(--surface-hover);
+  color: var(--text-strong);
+}
+
+@media (max-width: 599px) {
+  .seg {
+    flex-wrap: nowrap;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .seg::-webkit-scrollbar {
+    display: none;
+  }
+
+  .seg button {
+    flex: none;
+    padding: 0 10px;
+  }
+}
